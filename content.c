@@ -31,6 +31,16 @@ int16_t content(uint16_t port, uint16_t length, const uint8_t *src, uint16_t siz
 
 		switch(cmd)
 		{
+			case('e'):
+			{
+				if(length > size)
+					length = size;
+
+				xstrncat(src, length, dst);
+
+				break;
+			}
+
 			case('q'):
 			{
 				return(-1);
@@ -130,7 +140,7 @@ int16_t content(uint16_t port, uint16_t length, const uint8_t *src, uint16_t siz
 
 			default:
 			{
-				xstrncat((uint8_t *)"command:\n\n  ?/h)help\n  q)uit\n  r)eset\n  s)tats\n", size, dst);
+				xstrncat((uint8_t *)"command:\n\n  e)echo\n\n  ?/h)help\n  q)uit\n  r)eset\n  s)tats\n", size, dst);
 				break;
 			}
 		}

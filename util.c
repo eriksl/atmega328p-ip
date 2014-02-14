@@ -30,9 +30,10 @@ void int_to_str(uint16_t in, uint8_t outlen, uint8_t *out)
 	*out = 0;
 }
 
-void xstrncat(uint8_t *in, uint16_t outlen, uint8_t *out)
+void xstrncat(const uint8_t *in, uint16_t outlen, uint8_t *out)
 {
-	uint8_t *from, *to;
+	const uint8_t *from;
+	uint8_t *to;
 
 	for(to = out; (outlen > 1) && *to; outlen--, to++)
 		(void)0;
@@ -43,7 +44,7 @@ void xstrncat(uint8_t *in, uint16_t outlen, uint8_t *out)
 	*to = 0;
 }
 
-uint16_t xstrlen(uint8_t *str)
+uint16_t xstrlen(const uint8_t *str)
 {
 	static uint16_t length;
 	

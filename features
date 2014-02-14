@@ -71,6 +71,18 @@ MODEL 3 (ATMEGA328), VERSION 1, REVISION 1
 	28-29	multiplier temp sensor 7
 	30-31	offset temp sensor 7
 
+	32		mac address octet 0
+	33		mac address octet 1
+	34		mac address octet 2
+	35		mac address octet 3
+	36		mac address octet 4
+	37		mac address octet 5
+
+	38		ipv4 address byte 0
+	39		ipv4 address byte 1
+	40		ipv4 address byte 2
+	41		ipv4 address byte 3
+
 *** FEATURES (BOARD 0, TEST) ***
 
 			SPI			I/O

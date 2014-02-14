@@ -13,12 +13,28 @@
 #include "ipv4.h"
 #include "watchdog.h"
 #include "stats.h"
+#include "eeprom.h"
 
 #define MAX_FRAME_SIZE 256
 #define WATCHDOG_PRESCALER WATCHDOG_PRESCALER_512
 
-static const ipv4_addr_t ipv4	= {{ 10, 1, 10, 126 }};
-static const mac_addr_t mac 	= {{ 0x00, 0x1e, 0xc0, 0x01, 0x01, 0x01 }};
+typedef struct
+{
+	uint16_t	multiplier;
+	uint16_t	offset;
+} temperature_calibration_t;
+
+typedef struct
+{
+	temperature_calibration_t	temp_cal_data[8];
+	mac_addr_t					my_mac_address;
+	ipv4_addr_t					my_ipv4_address;
+} eeprom_t;
+
+static const eeprom_t *eeprom = (eeprom_t *)0;
+
+static ipv4_addr_t my_ipv4_address;
+static mac_addr_t my_mac_address;
 
 static void sleep(uint16_t tm)
 {
@@ -41,7 +57,7 @@ ISR (INT0_vect)
 
 static void init_enc(void)
 {
-	enc_init(MAX_FRAME_SIZE, &mac);
+	enc_init(MAX_FRAME_SIZE, &my_mac_address);
 	enc_set_led(PHLCON_LED_RCV, PHLCON_LED_XMIT);
 
 	PORTD = 0;
@@ -111,6 +127,18 @@ int main(void)
 	sleep(1000);
 	PORTD = 0;
 
+	my_mac_address.byte[0] = eeprom_read_uint8(&eeprom->my_mac_address.byte[0]);
+	my_mac_address.byte[1] = eeprom_read_uint8(&eeprom->my_mac_address.byte[1]);
+	my_mac_address.byte[2] = eeprom_read_uint8(&eeprom->my_mac_address.byte[2]);
+	my_mac_address.byte[3] = eeprom_read_uint8(&eeprom->my_mac_address.byte[3]);
+	my_mac_address.byte[4] = eeprom_read_uint8(&eeprom->my_mac_address.byte[4]);
+	my_mac_address.byte[5] = eeprom_read_uint8(&eeprom->my_mac_address.byte[5]);
+
+	my_ipv4_address.byte[0] = eeprom_read_uint8(&eeprom->my_ipv4_address.byte[0]);
+	my_ipv4_address.byte[1] = eeprom_read_uint8(&eeprom->my_ipv4_address.byte[1]);
+	my_ipv4_address.byte[2] = eeprom_read_uint8(&eeprom->my_ipv4_address.byte[2]);
+	my_ipv4_address.byte[3] = eeprom_read_uint8(&eeprom->my_ipv4_address.byte[3]);
+
 	spi_init();
 	init_enc();
 	watchdog_start(WATCHDOG_PRESCALER);
@@ -164,7 +192,7 @@ int main(void)
 			case(et_arp):
 			{
 				ip_arp_pkt_in++;
-				tx_payload_length = process_arp(rx_payload_length, rx_payload, tx_payload_size, tx_payload, &mac, &ipv4);
+				tx_payload_length = process_arp(rx_payload_length, rx_payload, tx_payload_size, tx_payload, &my_mac_address, &my_ipv4_address);
 				if(tx_payload_length)
 					ip_arp_pkt_out++;
 				break;
@@ -173,7 +201,7 @@ int main(void)
 			case(et_ipv4):
 			{
 				ip_ipv4_pkt_in++;
-				tx_payload_length = process_ipv4(rx_payload_length, rx_payload, tx_payload_size, tx_payload, &mac, &ipv4);
+				tx_payload_length = process_ipv4(rx_payload_length, rx_payload, tx_payload_size, tx_payload, &my_mac_address, &my_ipv4_address);
 				if(tx_payload_length)
 					ip_ipv4_pkt_out++;
 				break;
@@ -184,7 +212,7 @@ int main(void)
 		{
 			PIND = _BV(1);
 			tx_etherframe->destination	= rx_etherframe->source;
-			tx_etherframe->source		= mac;
+			tx_etherframe->source		= my_mac_address;
 			tx_etherframe->ethertype	= rx_etherframe->ethertype;
 			tx_frame_length				= sizeof(etherframe_t) + tx_payload_length;
 

@@ -251,9 +251,6 @@ uint16_t process_tcp4(uint16_t length, const uint8_t *packet,
 		const ipv4_addr_t *src_ipv4, const ipv4_addr_t *dst_ipv4,
 		uint8_t protocol)
 {
-	static uint8_t			state_cmd = state_listen;
-	static uint8_t			state_cli = state_listen;
-
 	static const			segment_t *src;
 	static					segment_t *dst;
 	static uint16_t			max_content_length;

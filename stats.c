@@ -17,5 +17,6 @@ uint16_t ip_tcp4_pkt_in = 0;
 uint16_t ip_tcp4_pkt_out = 0;
 uint16_t ip_other_pkt = 0;
 uint16_t ip_stray_pkt = 0;
+uint16_t ip_bad_checksum = 0;
 
 uint16_t wd_interrupts = 0;

@@ -4,6 +4,7 @@
 #include "tcp4.h"
 #include "ipv4.h"
 #include "content.h"
+#include "stats.h"
 
 typedef enum
 {
@@ -272,7 +273,10 @@ uint16_t process_tcp4(uint16_t length, const uint8_t *packet,
 	checksum_header.length		= htons(length);
 
 	if(ipv4_checksum(sizeof(checksum_header), (uint8_t *)&checksum_header, length, packet) != 0)
+	{
+		ip_bad_checksum++;
 		return(0);
+	}
 
 	for(state_entry = &state[0]; state_entry->dport != 0; state_entry++)
 		if(ntohs(src->dport) == state_entry->dport)

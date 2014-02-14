@@ -106,7 +106,10 @@ uint16_t process_ipv4(uint16_t packet_length, const uint8_t *packet,
 	}
 
 	if(ipv4_checksum(header_length, packet, 0, 0) != 0)
+	{
+		ip_bad_checksum++;
 		return(0);
+	}
 
 	if(!ipv4_address_match(&src->dst, ipv4))
 	{

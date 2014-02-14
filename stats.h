@@ -20,6 +20,7 @@ extern uint16_t ip_tcp4_pkt_in;
 extern uint16_t ip_tcp4_pkt_out;
 extern uint16_t ip_other_pkt;
 extern uint16_t ip_stray_pkt;
+extern uint16_t ip_bad_checksum;
 
 extern uint16_t wd_interrupts;
 

@@ -21,7 +21,7 @@ HEXFILE		=		$(PROGRAM).hex
 ELFFILE		=		$(PROGRAM).elf
 PROGRAMMED	=		.programmed
 CFLAGS		=		-I$(CURDIR) \
-					-g --std=c99 -Wall -Winline -O0 -mmcu=$(MCU) -DF_CPU=$(MCUSPEED) -DUSE_EXT_CRYSTAL=$(USE_EXT_CRYSTAL) -DBOARD=$(BOARD) \
+					-g --std=c99 -Wall -Winline -O2 -mmcu=$(MCU) -DF_CPU=$(MCUSPEED) -DUSE_EXT_CRYSTAL=$(USE_EXT_CRYSTAL) -DBOARD=$(BOARD) \
 					-fpack-struct -fno-keep-static-consts -frename-registers -Wno-unused-variable
 LDFLAGS		=		-Wall -mmcu=$(MCU)
 

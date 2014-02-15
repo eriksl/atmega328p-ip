@@ -82,12 +82,16 @@ uint16_t process_ipv4(uint16_t packet_length, const uint8_t *packet,
 		uint16_t reply_size, uint8_t *reply,
 		const mac_addr_t *mac, const ipv4_addr_t *ipv4)
 {
-	const	ipv4_packet_t *src = (ipv4_packet_t *)packet;
-			ipv4_packet_t *dst = (ipv4_packet_t *)reply;
+	static const	ipv4_packet_t *src;
+	static			ipv4_packet_t *dst;
+	static uint8_t	header_length;
+	static uint16_t	total_length;
+	static uint16_t	reply_length ;
 
-	uint8_t		header_length;
-	uint16_t	total_length;
-	uint16_t	reply_length = 0;
+	src = (ipv4_packet_t *)packet;
+	dst = (ipv4_packet_t *)reply;
+
+	reply_length = 0;
 
 	if(src->version != iv_ipv4)
 		return(0);

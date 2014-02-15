@@ -33,6 +33,8 @@ int16_t content(uint16_t port, uint16_t length, const uint8_t *src, uint16_t siz
 		{
 			case('e'):
 			{
+				length++; // room for null byte
+
 				if(length > size)
 					length = size;
 

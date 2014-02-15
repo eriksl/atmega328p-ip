@@ -88,25 +88,25 @@ MODEL 3 (ATMEGA328), VERSION 1, REVISION 1
 			SPI			I/O
 
 	1		reset
-	2					pd0		status led 0
-	3					pd1		status led 1
+	2					pd0		status led 0				D0	small transparent green
+	3					pd1		status led 1				D1	small transparent red
 	4					int0	enc28j60 int
-	5					pcint19	digital input 0
+	5					pcint19	digital input 0				D3	rectangular green
 	6					(xck)
 	7					Vcc
 	8					GND
 	9					xtal1
 	10					xtal2
-	11					oc0b	output timer 0 pwm B
-	12					oc0a	output timer 0 pwm A
+	11					oc0b	output timer 0 pwm B		D5	large green
+	12					oc0a	output timer 0 pwm A		D6	large red
 	13					pcint23	digital input 1
-	14		/ss
+	14		/ss												square green
 
-	15					oc1a	output timer 1 pwm A
-	16					oc1b	output timer 1 pwm B
-	17		mosi
-	18		miso
-	19		sck
+	15					oc1a	output timer 1 pwm A		B1	small red
+	16					oc1b	output timer 1 pwm B		B2	small green
+	17		mosi											square green
+	18		miso											square red
+	19		sck												square red
 	20					AVcc
 	21					aref
 	22					GND

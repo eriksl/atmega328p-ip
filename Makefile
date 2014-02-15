@@ -15,8 +15,8 @@ PROGRAMMER	=		dragon_isp
 PRGFLAGS	=		-P usb -B 10 -y
 
 PROGRAM		=		main
-OBJFILES	=		$(PROGRAM).o watchdog.o spi.o enc.o net.o ethernet.o arp.o ipv4.o icmp4.o tcp4.o content.o stats.o util.o eeprom.o
-HEADERS		=		             watchdog.h spi.h enc.h net.h ethernet.h arp.h ipv4.h icmp4.h tcp4.h content.h stats.h util.h eeprom.h
+OBJFILES	=		$(PROGRAM).o watchdog.o spi.o enc.o net.o ethernet.o arp.o ipv4.o icmp4.o udp4.o tcp4.o content.o stats.o util.o eeprom.o
+HEADERS		=		             watchdog.h spi.h enc.h net.h ethernet.h arp.h ipv4.h icmp4.h udp4.h tcp4.h content.h stats.h util.h eeprom.h
 HEXFILE		=		$(PROGRAM).hex
 ELFFILE		=		$(PROGRAM).elf
 PROGRAMMED	=		.programmed
@@ -46,13 +46,22 @@ ethernet.o:			$(HEADERS)
 arp.o:				$(HEADERS)
 ipv4.o:				$(HEADERS)
 icmp4.o:			$(HEADERS)
+udp4.o:				$(HEADERS)
 tcp4.o:				$(HEADERS)
 content.o:			content.h
 stats.o:			stats.h
 
-watchdog.o:			watchdog.c
-					@echo "CC(S) $< -> $@"
-					@avr-gcc -c $(CFLAGS) -O2 $< -o $@
+main.o:				main.c
+					@echo "CC(D) $< -> $@"
+					@avr-gcc -c $(CFLAGS) -O0 $< -o $@
+
+ipv4.o:				ipv4.c
+					@echo "CC(D) $< -> $@"
+					@avr-gcc -c $(CFLAGS) -O0 $< -o $@
+
+udp4.o:				udp4.c
+					@echo "CC(D) $< -> $@"
+					@avr-gcc -c $(CFLAGS) -O0 $< -o $@
 
 %.o:				%.c
 					@echo "CC $< -> $@"

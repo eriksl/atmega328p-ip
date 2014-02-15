@@ -1,5 +1,6 @@
 #include "ipv4.h"
 #include "icmp4.h"
+#include "udp4.h"
 #include "tcp4.h"
 #include "stats.h"
 
@@ -122,11 +123,26 @@ uint16_t process_ipv4(uint16_t packet_length, const uint8_t *packet,
 		case(ip4_icmp):
 		{
 			ip_icmp4_pkt_in++;
+
 			reply_length = process_icmp4(total_length - header_length, &packet[header_length],
 					reply_size - sizeof(*dst), &dst->payload[0]);
 
 			if(reply_length)
 				ip_icmp4_pkt_out++;
+
+			break;
+		}
+
+		case(ip4_udp):
+		{
+			ip_udp4_pkt_in++;
+
+			reply_length = process_udp4(total_length - header_length, &packet[header_length],
+					reply_size - sizeof(*dst), &dst->payload[0],
+					&src->src, &src->dst, src->protocol);
+
+			if(reply_length)
+				ip_udp4_pkt_out++;
 
 			break;
 		}

@@ -55,18 +55,6 @@ ISR (INT0_vect)
 	eth_interrupts++;
 }
 
-static void init_enc(void)
-{
-	enc_init(MAX_FRAME_SIZE, &my_mac_address);
-	enc_set_led(PHLCON_LED_RCV, PHLCON_LED_XMIT);
-
-	PORTD = 0;
-	sleep(100);
-	PORTD = _BV(0) | _BV(1) | _BV(3) | _BV(5) | _BV(6);
-	sleep(100);
-	PORTD = 0;
-}
-
 /*
  * B0 = alternative master /SS ("/CS"), pin on B2 is not used
  * B2 = /SS for slave operation, not used
@@ -121,12 +109,6 @@ int main(void)
 
 	set_sleep_mode(SLEEP_MODE_IDLE);
 
-	PORTD = 0;
-	sleep(1000);
-	PORTD = _BV(0) | _BV(1) | _BV(3) | _BV(5) | _BV(6);
-	sleep(1000);
-	PORTD = 0;
-
 	my_mac_address.byte[0] = eeprom_read_uint8(&eeprom->my_mac_address.byte[0]);
 	my_mac_address.byte[1] = eeprom_read_uint8(&eeprom->my_mac_address.byte[1]);
 	my_mac_address.byte[2] = eeprom_read_uint8(&eeprom->my_mac_address.byte[2]);
@@ -139,8 +121,19 @@ int main(void)
 	my_ipv4_address.byte[2] = eeprom_read_uint8(&eeprom->my_ipv4_address.byte[2]);
 	my_ipv4_address.byte[3] = eeprom_read_uint8(&eeprom->my_ipv4_address.byte[3]);
 
+	PORTB = 0;
+	PORTD = 0;
+	sleep(1000);
+	PORTB = _BV(1) | _BV(2);
+	PORTD = _BV(0) | _BV(1) | _BV(3) | _BV(5) | _BV(6);
+	sleep(1000);
+	PORTB = 0;
+	PORTD = 0;
+
 	spi_init();
-	init_enc();
+	enc_init(MAX_FRAME_SIZE, &my_mac_address);
+	enc_set_led(PHLCON_LED_RCV, PHLCON_LED_XMIT);
+
 	watchdog_start(WATCHDOG_PRESCALER);
 	sei();
 
@@ -148,22 +141,21 @@ int main(void)
 	{
 		while(!enc_rx_complete() && !enc_rx_error() && !enc_tx_error())
 		{
-			watchdog_reset();
 			enc_arm_interrupt();
-			//sleep_mode();
+			watchdog_reset();
+			sleep_mode();
 		}
 
 		if(enc_tx_error())
 		{
+			PIND = _BV(5);
 			eth_txerr++;
-			cli();
-			init_enc();
-			sei();
-			continue;
+			enc_clear_errors();
 		}
 
 		if(enc_rx_error())
 		{
+			PIND = _BV(6);
 			eth_rxerr++;
 			enc_clear_errors();
 		}
@@ -218,8 +210,8 @@ int main(void)
 
 			while(!enc_tx_complete() && !enc_rx_error() && !enc_tx_error())
 			{
-				watchdog_reset();
 				enc_arm_interrupt();
+				watchdog_reset();
 				sleep_mode();
 			}
 
@@ -227,15 +219,14 @@ int main(void)
 
 			if(enc_tx_error())
 			{
+				PINB = _BV(1);
 				eth_txerr++;
-				cli();
-				init_enc();
-				sei();
-				continue;
+				enc_clear_errors();
 			}
 
 			if(enc_rx_error())
 			{
+				PINB = _BV(2);
 				eth_rxerr++;
 				enc_clear_errors();
 			}

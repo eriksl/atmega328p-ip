@@ -255,6 +255,12 @@ uint8_t enc_tx_error(void)
 
 void enc_clear_errors(void)
 {
+	if(read_register(EIR) & _BV(EIR_TXERIF)) // transmit stuck, reset
+	{
+		setbits_register(ECON1, _BV(ECON1_TXRST));
+		clearbits_register(ECON1, _BV(ECON1_TXRST));
+	}
+
 	clearbits_register(EIR, _BV(EIR_RXERIF) | _BV(EIR_TXERIF));
 }
 

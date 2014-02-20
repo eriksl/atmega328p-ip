@@ -6,7 +6,9 @@ ifeq ($(BOARD), 0)
 	USE_EXT_CRYSTAL	= 0
 	MCUSPEED	= 8000000
 	LFUSE		= 0xe2
-	#HFUSE		= 0xd7
+# no DebugWire
+#	HFUSE		= 0xd7
+# DebugWire
 	HFUSE		= 0x97
 endif
 

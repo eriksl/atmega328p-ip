@@ -91,7 +91,7 @@ MODEL 3 (ATMEGA328), VERSION 1, REVISION 1
 	2					pd0		status led 0				D0	small transparent green
 	3					pd1		status led 1				D1	small transparent red
 	4					int0	enc28j60 int
-	5					pcint19	digital input 0				D3	rectangular green
+	5					oc2b								D3	rectangular green
 	6					(xck)
 	7					Vcc
 	8					GND

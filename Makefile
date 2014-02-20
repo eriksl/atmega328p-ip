@@ -21,7 +21,7 @@ HEXFILE		=		$(PROGRAM).hex
 ELFFILE		=		$(PROGRAM).elf
 PROGRAMMED	=		.programmed
 CFLAGS		=		-I$(CURDIR) \
-					-g --std=c99 -Wall -Winline -O2 -mmcu=$(MCU) -DF_CPU=$(MCUSPEED) -DUSE_EXT_CRYSTAL=$(USE_EXT_CRYSTAL) -DBOARD=$(BOARD) \
+					--std=c99 -Wall -Winline -g -O0 -mmcu=$(MCU) -DF_CPU=$(MCUSPEED) -DUSE_EXT_CRYSTAL=$(USE_EXT_CRYSTAL) -DBOARD=$(BOARD) \
 					-fpack-struct -fno-keep-static-consts -frename-registers -Wno-unused-variable
 LDFLAGS		=		-Wall -mmcu=$(MCU)
 
@@ -50,18 +50,6 @@ udp4.o:				$(HEADERS)
 tcp4.o:				$(HEADERS)
 content.o:			content.h
 stats.o:			stats.h
-
-main.o:				main.c
-					@echo "CC(D) $< -> $@"
-					@avr-gcc -c $(CFLAGS) -O0 $< -o $@
-
-ipv4.o:				ipv4.c
-					@echo "CC(D) $< -> $@"
-					@avr-gcc -c $(CFLAGS) -O0 $< -o $@
-
-udp4.o:				udp4.c
-					@echo "CC(D) $< -> $@"
-					@avr-gcc -c $(CFLAGS) -O0 $< -o $@
 
 %.o:				%.c
 					@echo "CC $< -> $@"

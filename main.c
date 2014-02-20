@@ -45,12 +45,12 @@ static void sleep(uint16_t tm)
 	}
 }
 
-ISR(WDT_vect)
+ISR(WDT_vect, ISR_NOBLOCK)
 {
 	wd_interrupts++;
 }
 
-ISR (INT0_vect)
+ISR (INT0_vect, ISR_NOBLOCK)
 {
 	eth_interrupts++;
 }

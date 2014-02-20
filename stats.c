@@ -112,4 +112,9 @@ void stats_generate(uint16_t size, uint8_t *dst)
 	int_to_str(ip_stray_pkt, sizeof(conv), conv);
 	xstrncat(conv, size, dst);
 	xstrncat((uint8_t *)"\n", size, dst);
+
+	xstrncat((uint8_t *)"c/s: ", size, dst);
+	int_to_str(ip_bad_checksum, sizeof(conv), conv);
+	xstrncat(conv, size, dst);
+	xstrncat((uint8_t *)"\n", size, dst);
 }

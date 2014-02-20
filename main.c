@@ -55,15 +55,6 @@ ISR (INT0_vect, ISR_NOBLOCK)
 	eth_interrupts++;
 }
 
-/*
- * B0 = alternative master /SS ("/CS"), pin on B2 is not used
- * B2 = /SS for slave operation, not used
- * B3 = MOSI
- * B4 = MISO
- * B5 = SCK
- * D6 = activity led
- */
-
 int main(void)
 {
 	static	uint16_t		rx_frame_length = 0;
@@ -87,14 +78,16 @@ int main(void)
 
 	//	pin		spi		i/o
 	//	b0 		/cs
-	//	b1				oc1a
-	//	b2 		/ss		oc1b
+	//	b1					oc1a
+	//	b2 		/ss			oc1b
 	//	b3		mosi
 	//	b4		miso
 	//	b5		sck
-	//	d3				oc2b
-	//	d5				oc0b
-	//	d6				oc0a
+	//	d3					oc2b
+	//	d5					oc0b
+	//	d6					oc0a
+
+	MCUCR	|= _BV(PUD);
 
 	DDRB	= _BV(1) | _BV(2);
 	DDRC	= 0;

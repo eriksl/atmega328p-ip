@@ -114,14 +114,12 @@ int main(void)
 	my_ipv4_address.byte[2] = eeprom_read_uint8(&eeprom->my_ipv4_address.byte[2]);
 	my_ipv4_address.byte[3] = eeprom_read_uint8(&eeprom->my_ipv4_address.byte[3]);
 
-	PORTB = 0;
-	PORTD = 0;
 	sleep(1000);
-	PORTB = _BV(1) | _BV(2);
-	PORTD = _BV(0) | _BV(1) | _BV(3) | _BV(5) | _BV(6);
+	PINB = _BV(1) | _BV(2);
+	PIND = _BV(0) | _BV(1) | _BV(3) | _BV(5) | _BV(6);
 	sleep(1000);
-	PORTB = 0;
-	PORTD = 0;
+	PINB = _BV(1) | _BV(2);
+	PIND = _BV(0) | _BV(1) | _BV(3) | _BV(5) | _BV(6);
 
 	spi_init();
 	enc_init(MAX_FRAME_SIZE, &my_mac_address);
@@ -134,6 +132,7 @@ int main(void)
 	{
 		while(!enc_rx_complete() && !enc_rx_error() && !enc_tx_error())
 		{
+			PIND = _BV(3);
 			enc_arm_interrupt();
 			watchdog_reset();
 			sleep_mode();
@@ -156,12 +155,12 @@ int main(void)
 		if(!(rx_frame_length = enc_receive_frame(sizeof(rx_frame), rx_frame)))
 			continue;
 
+		PIND = _BV(0);
+
 		eth_pkt_rx++;
 
 		if(rx_frame_length < sizeof(etherframe_t))
 			continue;
-
-		PIND = _BV(0);
 
 		rx_etherframe		= (etherframe_t *)rx_frame;
 		rx_payload			= &rx_etherframe->payload[0];
@@ -212,14 +211,14 @@ int main(void)
 
 			if(enc_tx_error())
 			{
-				PINB = _BV(1);
+				PINB = _BV(2);
 				eth_txerr++;
 				enc_clear_errors();
 			}
 
 			if(enc_rx_error())
 			{
-				PINB = _BV(2);
+				PINB = _BV(1);
 				eth_rxerr++;
 				enc_clear_errors();
 			}

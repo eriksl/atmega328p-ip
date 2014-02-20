@@ -18,9 +18,9 @@ void spi_init(void)
 	//	 d6				oc0a
 
 #if 1
-	SPCR = 0x00; // ensure SPI is properly reset
-	_delay_ms(1);
-	PRR |= _BV(PRSPI); // turn SPI off
+	SPCR = 0x00;		// ensure SPI is properly reset
+	_delay_ms(1);		// this doesn't happen when entering DebugWire
+	PRR |= _BV(PRSPI);	// turn SPI off
 	_delay_ms(1);
 #endif
 	

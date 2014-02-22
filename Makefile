@@ -17,8 +17,8 @@ PROGRAMMER	=		dragon_isp
 PRGFLAGS	=		-P usb -B 10 -y
 
 PROGRAM		=		main
-OBJFILES	=		$(PROGRAM).o watchdog.o spi.o enc.o net.o ethernet.o arp.o ipv4.o icmp4.o udp4.o tcp4.o content.o stats.o util.o eeprom.o
-HEADERS		=		             watchdog.h spi.h enc.h net.h ethernet.h arp.h ipv4.h icmp4.h udp4.h tcp4.h content.h stats.h util.h eeprom.h
+OBJFILES	=		$(PROGRAM).o watchdog.o spi.o twi_master.o enc.o net.o ethernet.o arp.o ipv4.o icmp4.o udp4.o tcp4.o content.o stats.o util.o eeprom.o
+HEADERS		=		             watchdog.h spi.h twi_master.h enc.h net.h ethernet.h arp.h ipv4.h icmp4.h udp4.h tcp4.h content.h stats.h util.h eeprom.h
 HEXFILE		=		$(PROGRAM).hex
 ELFFILE		=		$(PROGRAM).elf
 PROGRAMMED	=		.programmed
@@ -41,7 +41,8 @@ fuse:
 $(PROGRAM).o:		$(PROGRAM).c $(HEADERS)
 
 watchdog.o:			watchdog.h
-spi.o:				$(HEADERS)
+spi.o:				spi.h
+twi_master.o:		twi_master.h
 enc.o:				$(HEADERS) enc-private.h
 net.o:				$(HEADERS)
 ethernet.o:			$(HEADERS)

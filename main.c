@@ -6,6 +6,7 @@
 #include <avr/sleep.h>
 
 #include "spi.h"
+#include "twi_master.h"
 #include "enc.h"
 #include "net.h"
 #include "ethernet.h"
@@ -122,6 +123,7 @@ int main(void)
 	PIND = _BV(0) | _BV(1) | _BV(3) | _BV(5) | _BV(6);
 
 	spi_init();
+	twi_master_init();
 	enc_init(MAX_FRAME_SIZE, &my_mac_address);
 	enc_set_led(PHLCON_LED_RCV, PHLCON_LED_XMIT);
 

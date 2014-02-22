@@ -132,7 +132,6 @@ int main(void)
 	{
 		while(!enc_rx_complete() && !enc_rx_error() && !enc_tx_error())
 		{
-			PIND = _BV(3);
 			enc_arm_interrupt();
 			watchdog_reset();
 			sleep_mode();
@@ -140,22 +139,18 @@ int main(void)
 
 		if(enc_tx_error())
 		{
-			PIND = _BV(5);
 			eth_txerr++;
 			enc_clear_errors();
 		}
 
 		if(enc_rx_error())
 		{
-			PIND = _BV(6);
 			eth_rxerr++;
 			enc_clear_errors();
 		}
 
 		if(!(rx_frame_length = enc_receive_frame(sizeof(rx_frame), rx_frame)))
 			continue;
-
-		PIND = _BV(0);
 
 		eth_pkt_rx++;
 
@@ -194,7 +189,6 @@ int main(void)
 
 		if(tx_payload_length)
 		{
-			PIND = _BV(1);
 			tx_etherframe->destination	= rx_etherframe->source;
 			tx_etherframe->source		= my_mac_address;
 			tx_etherframe->ethertype	= rx_etherframe->ethertype;
@@ -211,14 +205,12 @@ int main(void)
 
 			if(enc_tx_error())
 			{
-				PINB = _BV(2);
 				eth_txerr++;
 				enc_clear_errors();
 			}
 
 			if(enc_rx_error())
 			{
-				PINB = _BV(1);
 				eth_rxerr++;
 				enc_clear_errors();
 			}

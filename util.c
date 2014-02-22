@@ -30,6 +30,14 @@ void int_to_str(uint16_t in, uint8_t outlen, uint8_t *out)
 	*out = 0;
 }
 
+void xstrncpy(const uint8_t *in, uint16_t outlen, uint8_t *out)
+{
+	for(; (outlen > 1) && *in; outlen--, in++, out++)
+		*out = *in;
+
+	*out = 0;
+}
+
 void xstrncat(const uint8_t *in, uint16_t outlen, uint8_t *out)
 {
 	const uint8_t *from;

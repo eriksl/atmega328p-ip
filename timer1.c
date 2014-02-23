@@ -6,8 +6,6 @@ static uint8_t cs[3];
 
 void timer1_init(uint8_t prescaler)
 {
-	static	uint8_t temp, mask;
-
 	PRR &= ~_BV(PRTIM1);
 
 	DDRB |= _BV(1) | _BV(2); // b1=oc1a, b2=oc1b

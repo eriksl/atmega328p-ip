@@ -30,6 +30,56 @@ void int_to_str(uint16_t in, uint8_t outlen, uint8_t *out)
 	*out = 0;
 }
 
+uint8_t hex_to_int(uint16_t *length, uint8_t const **in, uint8_t *value)
+{
+	if(*length < 2)
+		return(0);
+
+	if((**in >= '0') && (**in <= '9'))
+		*value = **in - '0';
+	else
+		if((**in >= 'a') && (**in <= 'f'))
+			*value = **in - 'a' + 10;
+		else
+			return(0);
+
+	(*length)--;
+	(*in)++;
+
+	*value <<= 4;
+
+	if((**in >= '0') && (**in <= '9'))
+		*value |= **in - '0';
+	else
+		if((**in >= 'a') && (**in <= 'f'))
+			*value |= **in - 'a' + 10;
+		else
+			return(0);
+
+	(*length)--;
+	(*in)++;
+
+	return(1);
+}
+
+void int_to_hex(uint8_t *buffer, uint8_t value)
+{
+	static uint8_t nibble_high, nibble_low;
+
+	nibble_high = (value & 0xf0) >> 4;
+	nibble_low  = (value & 0x0f) >> 0;
+
+	if(nibble_high < 10)
+		buffer[0] = nibble_high + '0';
+	else
+		buffer[0] = nibble_high - 10 + 'a';
+
+	if(nibble_low < 10)
+		buffer[1] = nibble_low + '0';
+	else
+		buffer[1] = nibble_low - 10 + 'a';
+}
+
 void xstrncpy(const uint8_t *in, uint16_t outlen, uint8_t *out)
 {
 	for(; (outlen > 1) && *in; outlen--, in++, out++)

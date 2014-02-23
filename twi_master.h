@@ -26,6 +26,7 @@ typedef enum
 	tme_send_address_r	= 0x03,
 	tme_send_byte		= 0x04,
 	tme_receive_byte	= 0x05,
+	tme_send_nack		= 0x06,
 } twi_master_error_t;
 
 void	twi_master_init(void);

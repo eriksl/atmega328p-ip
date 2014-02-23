@@ -9,7 +9,7 @@ static void twi_error(uint16_t size, uint8_t *dst, uint8_t error)
 {
 	static uint8_t numbuf[8];
 
-	xstrncpy((uint8_t *)"TWI error: ", size, dst);
+	xstrncpy((uint8_t *)"Error: ", size, dst);
 	int_to_str((error & 0x0f) >> 0, sizeof(numbuf), numbuf);
 	xstrncat(numbuf, size, dst);
 	xstrncat((uint8_t *)", state: ", size, dst);

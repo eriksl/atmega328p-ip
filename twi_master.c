@@ -18,6 +18,14 @@ static inline void wait(void)
 		(void)0;
 }
 
+static void send_stop(void)
+{
+	TWCR = _BV(TWINT) | _BV(TWSTO) | _BV(TWEN);
+
+	while(TWCR & _BV(TWSTO))
+		(void)0;
+}
+
 static uint8_t send_start(void)
 {
 	static uint8_t stat;
@@ -28,7 +36,10 @@ static uint8_t send_start(void)
 	stat = status();
 
 	if(stat != tms_start_sent)
+	{
+		send_stop();
 		return(tme_send_start | (stat << 4));
+	}
 
 	return(tme_ok);
 }
@@ -46,12 +57,18 @@ static uint8_t send_address(uint8_t address, uint8_t request_write)
 	if(request_write)
 	{
 		if(stat != tms_addr_w_ack)
+		{
+			send_stop();
 			return(tme_send_address_w | (stat << 4));
+		}
 	}
 	else
 	{
 		if(stat != tms_addr_r_ack)
+		{
+			send_stop();
 			return(tme_send_address_r | (stat << 4));
+		}
 	}
 
 	return(tme_ok);
@@ -68,7 +85,10 @@ static uint8_t send_byte(uint8_t data)
 	stat = status();
 
 	if(stat != tms_data_sent_ack)
+	{
+		send_stop();
 		return(tme_send_byte | (stat << 4));
+	}
 
 	return(tme_ok);
 }
@@ -77,25 +97,41 @@ static uint8_t receive_byte(uint8_t *data)
 {
 	static uint8_t stat;
 
-	TWCR = _BV(TWINT) | _BV(TWEA) | _BV(TWEN);
+	TWCR = _BV(TWINT) | _BV(TWEN) | _BV(TWEA);
 
 	wait();
 	stat = status();
 
-	if(stat != tms_data_recvd_ack)
+	if((stat != tms_data_recvd_ack) && (stat != tms_data_recvd_nack))
+	{
+		send_stop();
 		return(tme_receive_byte | (stat << 4));
+	}
 
-	*data = TWDR;
+	if(stat == tms_data_recvd_nack)
+		*data = 0xfe;
+	else
+		*data = TWDR;
 
 	return(tme_ok);
 }
 
-static void send_stop(void)
+static uint8_t send_nack(void)
 {
-	TWCR = _BV(TWINT) | _BV(TWSTO) | _BV(TWEN);
+	static uint8_t stat;
 
-	while(TWCR & _BV(TWSTO))
-		(void)0;
+	TWCR = _BV(TWINT) | _BV(TWEN);
+
+	wait();
+	stat = status();
+
+	if((stat != tms_data_recvd_ack) && (stat != tms_data_recvd_nack))
+	{
+		send_stop();
+		return(tme_send_nack | (stat << 4));
+	}
+
+	return(tme_ok);
 }
 
 void twi_master_init(void)
@@ -170,10 +206,11 @@ uint8_t twi_master_receive(uint8_t address, uint8_t size, uint8_t *buffer)
 		return(rv);
 
 	for(ix = 0; ix < size; ix++)
-	{
 		if((rv = receive_byte(&buffer[ix])) != tme_ok)
 			return(rv);
-	}
+
+	if((rv = send_nack()) != tme_ok)
+		return(rv);
 
 	send_stop();
 

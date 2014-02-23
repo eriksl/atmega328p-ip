@@ -8,6 +8,7 @@
 #include "spi.h"
 #include "twi_master.h"
 #include "timer0.h"
+#include "timer1.h"
 #include "enc.h"
 #include "net.h"
 #include "ethernet.h"
@@ -18,7 +19,7 @@
 #include "eeprom.h"
 
 #define MAX_FRAME_SIZE 256
-#define WATCHDOG_PRESCALER WATCHDOG_PRESCALER_512
+#define WATCHDOG_PRESCALER WATCHDOG_PRESCALER_256
 
 typedef struct
 {
@@ -49,6 +50,21 @@ static void sleep(uint16_t tm)
 
 ISR(WDT_vect, ISR_NOBLOCK)
 {
+	static uint8_t phase0 = 0;
+	static uint8_t phase1 = 0;
+
+	timer0_set_oc0a(_BV(phase0));
+	timer0_set_oc0b(_BV(7 - phase0));
+
+	timer1_set_oc1a(_BV(phase1));
+	timer1_set_oc1b(_BV(15 - phase1));
+
+	if(++phase0 > 7)
+		phase0 = 0;
+
+	if(++phase1 > 15)
+		phase1 = 0;
+
 	wd_interrupts++;
 }
 
@@ -115,7 +131,8 @@ int main(void)
 	sleep(1000);
 	PIND = _BV(0) | _BV(1);
 
-	timer0_init(timer0_1);	// pwm frequency = 32 kHz
+	timer0_init(timer0_1);	// pwm timer 0 resolution:  8 bits, frequency = 32 kHz
+	timer1_init(timer1_1);	// pwm timer 1 resolution: 16 bits, frequency = 122 Hz
 
 	spi_init();
 	twi_master_init();
@@ -126,6 +143,7 @@ int main(void)
 	sei();
 
 	timer0_start();
+	timer1_start();
 
 	for(;;)
 	{

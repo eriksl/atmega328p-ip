@@ -7,6 +7,7 @@
 
 #include "spi.h"
 #include "twi_master.h"
+#include "timer0.h"
 #include "enc.h"
 #include "net.h"
 #include "ethernet.h"
@@ -84,22 +85,16 @@ int main(void)
 	//	b3		mosi
 	//	b4		miso
 	//	b5		sck
+	//	d0							status 0
+	//	d1							status 1
 	//	d3					oc2b
 	//	d5					oc0b
 	//	d6					oc0a
 
-	MCUCR	|= _BV(PUD);
-
-	DDRB	= _BV(1) | _BV(2);
-	DDRC	= 0;
-	DDRD	= _BV(0) | _BV(1) | _BV(3) | _BV(5) | _BV(6);
-
-	PORTB	= 0;
-	PORTC	= 0;
-	PORTD	= 0;
-
-	EICRA	= _BV(ISC01);	//	falling edge
-	EIMSK	= _BV(INT0);	//	enable INT0
+	MCUCR	|= _BV(PUD);		//	disable pullups
+	DDRD	= _BV(0) | _BV(1);	//	enable D0 and D1 for status 
+	EICRA	= _BV(ISC01);		//	INT0 falling edge
+	EIMSK	= _BV(INT0);		//	enable INT0
 
 	set_sleep_mode(SLEEP_MODE_IDLE);
 
@@ -116,11 +111,11 @@ int main(void)
 	my_ipv4_address.byte[3] = eeprom_read_uint8(&eeprom->my_ipv4_address.byte[3]);
 
 	sleep(1000);
-	PINB = _BV(1) | _BV(2);
-	PIND = _BV(0) | _BV(1) | _BV(3) | _BV(5) | _BV(6);
+	PIND = _BV(0) | _BV(1);
 	sleep(1000);
-	PINB = _BV(1) | _BV(2);
-	PIND = _BV(0) | _BV(1) | _BV(3) | _BV(5) | _BV(6);
+	PIND = _BV(0) | _BV(1);
+
+	timer0_init(timer0_1);	// pwm frequency = 16 kHz
 
 	spi_init();
 	twi_master_init();
@@ -129,6 +124,8 @@ int main(void)
 
 	watchdog_start(WATCHDOG_PRESCALER);
 	sei();
+
+	timer0_start();
 
 	for(;;)
 	{

@@ -9,6 +9,7 @@
 #include "twi_master.h"
 #include "timer0.h"
 #include "timer1.h"
+#include "timer2.h"
 #include "enc.h"
 #include "net.h"
 #include "ethernet.h"
@@ -58,6 +59,8 @@ ISR(WDT_vect, ISR_NOBLOCK)
 
 	timer1_set_oc1a(_BV(phase1));
 	timer1_set_oc1b(_BV(15 - phase1));
+
+	timer2_set_oc2b(_BV(phase0));
 
 	if(++phase0 > 7)
 		phase0 = 0;
@@ -133,6 +136,7 @@ int main(void)
 
 	timer0_init(timer0_1);	// pwm timer 0 resolution:  8 bits, frequency = 32 kHz
 	timer1_init(timer1_1);	// pwm timer 1 resolution: 16 bits, frequency = 122 Hz
+	timer2_init(timer2_1);	// pwm timer 2 resolution:  8 bits, frequency = 32 kHz
 
 	spi_init();
 	twi_master_init();
@@ -144,6 +148,7 @@ int main(void)
 
 	timer0_start();
 	timer1_start();
+	timer2_start();
 
 	for(;;)
 	{

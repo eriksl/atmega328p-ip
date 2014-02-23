@@ -307,10 +307,7 @@ void enc_send_frame(uint16_t length, const uint8_t *frame)
 	write_memory_8(0x00); // 0x00 = macon3
 
 	for(current = 0; current < length; current++)
-	{
 		write_memory_8(frame[current]);
-		watchdog_reset();
-	}
 
 	setbits_register(ECON1,	_BV(ECON1_TXRTS));
 }
@@ -338,10 +335,7 @@ uint16_t enc_receive_frame(uint16_t buffer_length, uint8_t *frame)
 		length = 0;
 
 	for(current = 0; current < length; current++)
-	{
-		watchdog_reset();
 		frame[current] = read_memory_8();
-	}
 
 	write_register(ERXRDPTL, (next_frame_pointer >> 0) & 0xff); // move rx pointer, free memory
 	write_register(ERXRDPTH, (next_frame_pointer >> 8) & 0xff);

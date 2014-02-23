@@ -34,7 +34,6 @@ typedef struct
 static state_entry_t state[] =
 {
 	{ 0, 28022, {{ 0, 0, 0, 0 }}, },
-	{ 0, 28023, {{ 0, 0, 0, 0 }}, },
 	{ 0, 0,		{{ 0, 0, 0, 0 }}, },
 };
 
@@ -75,9 +74,8 @@ uint16_t process_udp4(uint16_t length, const uint8_t *packet,
 	state_entry->sport	= ntohs(src->sport);
 	state_entry->src	= *src_ipv4;
 
-	content_length	= content(state_entry->dport,
-			length     - sizeof(*src), &src->payload[0],
-			reply_size - sizeof(*dst), &dst->payload[0]);
+	content_length	= content(	length     - sizeof(*src), &src->payload[0],
+								reply_size - sizeof(*dst), &dst->payload[0]);
 
 	checksum_header.src			= *dst_ipv4;
 	checksum_header.dst			= *src_ipv4;

@@ -102,7 +102,6 @@ typedef struct
 static state_entry_t state[] =
 {
 	{ state_listen, 0, 28022, {{ 0, 0, 0, 0 }}, 0, 0 },
-	{ state_listen, 0, 28023, {{ 0, 0, 0, 0 }}, 0, 0 },
 	{ 0, 0, 0, {{ 0, 0, 0, 0 }}, 0, 0 },
 };
 
@@ -389,8 +388,7 @@ uint16_t process_tcp4(uint16_t length, const uint8_t *packet,
 
 				state_entry->rseq	= ntohl(src->sequence_number) + received_content_length;
 				dst_header_length	= init_segment(state_entry, 0, max_content_length, src, dst);
-				send_content_length	= content(state_entry->dport,
-										received_content_length, &packet[src_header_length],
+				send_content_length	= content(received_content_length, &packet[src_header_length],
 										max_content_length - dst_header_length, &reply[dst_header_length]);
 
 				if(send_content_length >= 0)

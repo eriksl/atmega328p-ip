@@ -21,7 +21,7 @@ void timer0_init(uint8_t prescaler)
 
 	timer0_stop();
 
-	TCCR0A	= _BV(COM0A1) | _BV(COM0B1) | _BV(WGM00); // p/c pwm, top = 0xff
+	TCCR0A	= _BV(COM0A1) | _BV(COM0B1) | _BV(WGM01) | _BV(WGM00); // fast pwm, top = 0xff
 	TCCR0B	= 0x00;	// stop clock
 	OCR0A	= 0x00;
 	OCR0B	= 0x00;

@@ -115,7 +115,7 @@ int main(void)
 	sleep(1000);
 	PIND = _BV(0) | _BV(1);
 
-	timer0_init(timer0_1);	// pwm frequency = 16 kHz
+	timer0_init(timer0_1);	// pwm frequency = 32 kHz
 
 	spi_init();
 	twi_master_init();

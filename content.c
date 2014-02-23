@@ -18,160 +18,184 @@ static void twi_error(uint16_t size, uint8_t *dst, uint8_t error)
 	xstrncat((uint8_t *)"\n", size, dst);
 }
 
-static void twi_receive(uint16_t size, uint8_t *dst)
+static void twi_reset(uint16_t size, uint8_t *dst)
 {
-	static const uint8_t set_ddr[]		= { 0x00, ~(_BV(2) | _BV(3)) };
-	static const uint8_t set_pullup[]	= { 0x06, _BV(1) };
-	static const uint8_t select_gpio[]	= { 0x09 };
-	static uint8_t gpio, rv;
-	static uint8_t numbuf[4];
-
-	if((rv = twi_master_send(0x20, sizeof(set_ddr), set_ddr)) != tme_ok)
-		goto error;
-
-	if((rv = twi_master_send(0x20, sizeof(set_pullup), set_pullup)) != tme_ok)
-		goto error;
-
-	if((rv = twi_master_send(0x20, sizeof(select_gpio), select_gpio)) != tme_ok)
-		goto error;
-
-	if((rv = twi_master_receive(0x20, 1, &gpio)) != tme_ok)
-		goto error;
-
-	xstrncpy((uint8_t *)"OK: ", size, dst);
-	int_to_str(gpio, sizeof(numbuf), numbuf);
-	xstrncat(numbuf, size, dst);
-	xstrncat((uint8_t *)"\n", size, dst);
-
-	return;
-
-error:
-	twi_error(size, dst, rv);
 	twi_master_recover();
+	xstrncpy((uint8_t *)"Reset ok\n", size, dst);
 }
 
-static void twi_send(uint16_t size, uint8_t *dst, uint8_t val)
+static void twi_read(uint16_t length, const uint8_t *src, uint16_t size, uint8_t *dst)
 {
-	static uint8_t rv;
+	static uint8_t addr, rv, rlen, slen, current;
+	static uint8_t buffer[16];
 
-	static const uint8_t set_ddr[] = { 0x00, ~(_BV(2) | _BV(3)) };
-	static uint8_t select_gpio[2];
+	while((*src <= ' ') && (length > 0))
+	{
+		length--;
+		src++;
+	}
 
-	if((rv = twi_master_send(0x20, sizeof(set_ddr), set_ddr)) != tme_ok)
-		goto error;
+	if(!hex_to_int(&length, &src, &addr))
+	{
+		xstrncpy((uint8_t *)"Syntax error (hex/addr)\n", size, dst);
+		return;
+	}
 
-	select_gpio[0] = 0x09;
-	select_gpio[1] = ~val;
+	while((*src <= ' ') && (length > 0))
+	{
+		length--;
+		src++;
+	}
 
-	if((rv = twi_master_send(0x20, sizeof(select_gpio), select_gpio)) != tme_ok)
-		goto error;
+	if(!hex_to_int(&length, &src, &rlen))
+	{
+		xstrncpy((uint8_t *)"Syntax error (hex/datalen)\n", size, dst);
+		return;
+	}
 
-	xstrncpy((uint8_t *)"OK\n", size, dst);
+	if(rlen > sizeof(buffer))
+		rlen = sizeof(buffer);
 
-	return;
+	if((rv = twi_master_receive(addr, rlen, buffer)) != tme_ok)
+		twi_error(size, dst, rv);
+	else
+	{
+		xstrncpy((uint8_t *)"Ok, data:", size, dst);
+		slen = xstrlen(dst);
 
-error:
-	twi_error(size, dst, rv);
-	twi_master_recover();
+		if(slen < size)
+		{
+			dst += slen;
+			size -= slen;
+		}
+
+		for(current = 0; (current < rlen) && ((current + 3) < size); current++, dst += 3, size -= 3)
+		{
+			dst[0] = ' ';
+			int_to_hex(dst + 1, buffer[current]);
+		}
+
+		if(size > 1)
+			*dst++ = '\n';
+
+		*dst = '\0';
+	}
 }
 
-int16_t content(uint16_t port, uint16_t length, const uint8_t *src, uint16_t size, uint8_t *dst)
+static void twi_write(uint16_t length, const uint8_t *src, uint16_t size, uint8_t *dst)
+{
+	static uint8_t addr, rv;
+	static uint8_t buffer[16];
+	static uint8_t buflen;
+
+	while((*src <= ' ') && (length > 0))
+	{
+		length--;
+		src++;
+	}
+
+	if(!hex_to_int(&length, &src, &addr))
+	{
+		xstrncpy((uint8_t *)"Syntax error (hex/addr)\n", size, dst);
+		return;
+	}
+
+	buflen = 0;
+
+	while((buflen < sizeof(buffer)) && (length > 0))
+	{
+		while((*src <= ' ') && (length > 0))
+		{
+			length--;
+			src++;
+		}
+
+		if(!hex_to_int(&length, &src, &buffer[buflen]))
+		{
+			xstrncpy((uint8_t *)"Syntax error (hex/data)\n", size, dst);
+			return;
+		}
+		buflen++;
+	}
+
+	if((rv = twi_master_send(addr, buflen, buffer)) != tme_ok)
+		twi_error(size, dst, rv);
+	else
+		xstrncpy((uint8_t *)"Ok\n", size, dst);
+}
+
+int16_t content(uint16_t length, const uint8_t *src, uint16_t size, uint8_t *dst)
 {
 	static uint8_t conv[8];
 	static uint8_t cmd;
 
-	if(port == 28022)
-	{
-		dst[0] = 't';
-		dst[1] = 'e';
-		dst[2] = 's';
-		dst[3] = 't';
-		dst[4] = '\n';
+	if(size == 0)
+		return(0);
 
-		return(5);
-	}
+	*dst = 0;
+
+	if(length == 0)
+		cmd = '?';
 	else
+		cmd = src[0];
+
+	switch(cmd)
 	{
-		if(size == 0)
-			return(0);
-
-		*dst = 0;
-
-		if(length == 0)
-			cmd = '?';
-		else
-			cmd = src[0];
-
-		switch(cmd)
+		case('e'):
 		{
-			case('0'):
-			{
-				twi_send(size, dst, 0x00);
-				break;
-			}
+			length++; // room for null byte
 
-			case('1'):
-			{
-				twi_send(size, dst, _BV(2));
-				break;
-			}
+			if(length > size)
+				length = size;
 
-			case('2'):
-			{
-				twi_send(size, dst, _BV(3));
-				break;
-			}
+			xstrncat(src, length, dst);
 
-			case('3'):
-			{
-				twi_send(size, dst, _BV(2) | _BV(3));
-				break;
-			}
+			break;
+		}
 
-			case('4'):
-			{
-				twi_receive(size, dst);
-				break;
-			}
+		case('q'):
+		{
+			return(-1);
+			break;
+		}
 
-			case('e'):
-			{
-				length++; // room for null byte
+		case('R'):
+		{
+			// let watchdog do it's job
+			for(;;)
+				(void)0;
 
-				if(length > size)
-					length = size;
+			break;
+		}
 
-				xstrncat(src, length, dst);
+		case('s'):
+		{
+			stats_generate(size, dst);
+			break;
+		}
 
-				break;
-			}
+		case('r'):
+		{
+			twi_read(length - 1, src + 1, size, dst);
+			break;
+		}
 
-			case('q'):
-			{
-				return(-1);
-				break;
-			}
+		case('w'):
+		{
+			twi_write(length - 1, src + 1, size, dst);
+			break;
+		}
 
-			case('r'):
-			{
-				// let watchdog do it's job
-				for(;;)
-					(void)0;
+		case('i'):
+		{
+			twi_reset(size, dst);
+			break;
+		}
 
-				break;
-			}
-
-			case('s'):
-			{
-				stats_generate(size, dst);
-				break;
-			}
-
-			default:
-			{
-				xstrncat((uint8_t *)"command:\n\n  e)echo\n\n  ?/h)help\n  q)uit\n  r)eset\n  s)tats\n", size, dst);
-				break;
-			}
+		default:
+		{
+			xstrncat((uint8_t *)"command:\n\n  e)echo\n\n  ?/h)help\n  q)uit\n  R)eset\n  s)tats\n  r)ead twi\n  w)write twi\n  i)nit/reset twi", size, dst);
+			break;
 		}
 	}
 

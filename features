@@ -85,34 +85,34 @@ MODEL 3 (ATMEGA328), VERSION 1, REVISION 1
 
 *** FEATURES (BOARD 0, TEST) ***
 
-			SPI			I/O
+		PORT	SPI		TWI		I/O
 
-	1		reset
-	2					pd0		status led 0				D0	small transparent green
-	3					pd1		status led 1				D1	small transparent red
-	4					int0	enc28j60 int
-	5					oc2b								D3	rectangular green			output 4 / pwm2b
-	6					(xck)
-	7					Vcc
-	8					GND
-	9					xtal1
-	10					xtal2
-	11					oc0b	output timer 0 pwm B		D5	large green					output 1 / pwm0b
-	12					oc0a	output timer 0 pwm A		D6	large red					output 0 / pwm0a
-	13					pcint23	digital input 1
-	14		/ss												square green
+	1	c6		N/C				RESET
+	2	d0						d0		output	status led 0 life	small transparent green
+	3	d1						d1		output	status led 1 cmd	small transparent red
+	4	d2						int0	input	enc28j60 int
+	5	d3						oc2b	output						rectangular green			output 4
+	6	d4		 				d4		output	status led 2 i2c	small red
+	7	Vcc
+	8	GND
+	9	b6						b6		output	status led 3 spi	small orange
+	10	b7						b7		input	digital input									input 0
+	11	d5						oc0b	output	timer 0 pwm b		large green					output 1
+	12	d6						oc0a	output	timer 0 pwm a		large red					output 0
+	13	d7		N/C
+	14	b0		/ss													square green
 
-	15					oc1a	output timer 1 pwm A		B1	small red					output 2 / pwm1a
-	16					oc1b	output timer 1 pwm B		B2	small green					output 3 / pwm1b
-	17		mosi											square green
-	18		miso											square red
-	19		sck												square red
-	20					AVcc
-	21					aref
-	22					GND
-	23					adc0	analog input 0
-	24					adc1	analog input 1
-	25					adc2	analog input 2
-	26					pcint11	digital input 2
-	27					sda
-	28					scl
+	15	b1						oc1a	output timer 1 pwm a		small red					output 2
+	16	b2						oc1b	output timer 1 pwm b		small green					output 3
+	17	b3		mosi												square green
+	18	b4		miso												square red
+	19	b5		sck													square red
+	20	AVcc
+	21	aref
+	22	GND
+	23	c0						adc0	input	analog input									analog input 0
+	24	c1		N/C
+	25	c2		N/C
+	26	c3		N/C
+	27	c4				sda
+	28	c5				scl

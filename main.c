@@ -19,8 +19,14 @@
 #include "stats.h"
 #include "eeprom.h"
 
-#define MAX_FRAME_SIZE 256
-#define WATCHDOG_PRESCALER WATCHDOG_PRESCALER_256
+enum
+{
+	adc_warmup_init = 8,
+	command_led_timeout = 8,
+	if_active_led_timeout = 2,
+	max_frame_size = 256,
+	watchdog_prescaler = WATCHDOG_PRESCALER_256,
+};
 
 typedef struct
 {
@@ -79,9 +85,9 @@ ISR (INT0_vect, ISR_NOBLOCK)
 int main(void)
 {
 	static	uint16_t		rx_frame_length = 0;
-	static	uint8_t 		rx_frame[MAX_FRAME_SIZE];
+	static	uint8_t 		rx_frame[max_frame_size];
 	static	uint16_t		tx_frame_length;
-	static	uint8_t			tx_frame[MAX_FRAME_SIZE];
+	static	uint8_t			tx_frame[max_frame_size];
 
 	static	etherframe_t	*rx_etherframe;
 	static	uint8_t			*rx_payload;
@@ -140,10 +146,10 @@ int main(void)
 
 	spi_init();
 	twi_master_init();
-	enc_init(MAX_FRAME_SIZE, &my_mac_address);
+	enc_init(max_frame_size, &my_mac_address);
 	enc_set_led(PHLCON_LED_RCV, PHLCON_LED_XMIT);
 
-	watchdog_start(WATCHDOG_PRESCALER);
+	watchdog_start(watchdog_prescaler);
 	sei();
 
 	timer0_start();

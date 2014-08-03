@@ -1,6 +1,5 @@
 #ifndef _twi_master_h_
 #define _twi_master_h_
-
 #include <stdint.h>
 
 typedef enum

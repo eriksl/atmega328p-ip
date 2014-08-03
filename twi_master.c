@@ -20,6 +20,8 @@ static inline void wait(void)
 
 static void send_stop(void)
 {
+	PORTD &= ~_BV(4);
+
 	TWCR = _BV(TWINT) | _BV(TWSTO) | _BV(TWEN);
 
 	while(TWCR & _BV(TWSTO))
@@ -29,6 +31,8 @@ static void send_stop(void)
 static uint8_t send_start(void)
 {
 	static uint8_t stat;
+
+	PORTD |= _BV(4);
 
 	TWCR = _BV(TWINT) | _BV(TWEN) | _BV(TWSTA);
 

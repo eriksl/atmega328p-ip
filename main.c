@@ -20,8 +20,6 @@
 enum
 {
 	adc_warmup_init = 8,
-	command_led_timeout = 8,
-	if_active_led_timeout = 2,
 	max_frame_size = 256,
 	watchdog_prescaler = WATCHDOG_PRESCALER_256,
 };

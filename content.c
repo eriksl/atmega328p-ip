@@ -102,13 +102,16 @@ static void twi_write(uint16_t length, const uint8_t *src, uint16_t size, uint8_
 
 	buflen = 0;
 
-	while((buflen < sizeof(buffer)) && (length > 0))
+	while((buflen < sizeof(buffer)) && (length > 1))
 	{
 		while((*src <= ' ') && (length > 0))
 		{
 			length--;
 			src++;
 		}
+
+		if(length < 2)
+			break;
 
 		if(!hex_to_int(&length, &src, &buffer[buflen]))
 		{

@@ -2,67 +2,6 @@ MODEL 3 (ATMEGA328), VERSION 1, REVISION 1
 
 *** COMMANDS ***
 
-	byte	command (see below)
-	byte*	arguments
-
-	bit		7	6	5	4	3		2	1	0
-
-
-			0	0	0	0	0						0x00	command 0
-			...
-			1	1	1	1	1						0xf8	command 31
-
-									0	0	0		0x00	i/o 0
-									...
-									1	1	1		0x07	i/o 7
-
-			0	0	0	0	0		0	0	0		0x00	identify, returns: 0x00 0x00 0x4a 0xfb A B C D E F G {H} where
-																	 [4] uint8_t A = model (0x06)
-																	 [5] uint8_t B = firmware version (0x01)
-																	 [6] uint8_t C = firmware revision (0x06)
-																	 [7] uint8_t D = digital inputs
-																	 [8] uint8_t E = analog inputs
-																	 [9] uint8_t F = temperature sensors
-																	[10] uint8_t G = digital outputs
-																	[11] uint8_t H = id string[12]
-			0	0	0	0	0		0	0	1		0x01	read analog input, returns 2 bytes sample count, 4 bytes total value, scaled to 16 bits
-			0	0	0	0	0		0	1	0		0x02	read temperature sensor, returns 2 bytes temperature * 10, 2 bytes raw sample count, 4 bytes total raw value
-			0	0	0	0	0		1	1	0		0x06	test watchdog (crash)
-
-			0	0	0	1	0						0x10	read counter, returns 4 bytes
-			0	0	1	0	0						0x20	read/reset counter, returns like read counter
-
-			0	0	1	1	0						0x30	read digital input, returns 1 byte, either 0x00 or 0x01
-
-			0	1	0	0	0						0x40	write	output	static		value=uint16/scaled
-			0	1	0	1	0						0x50	read	output	static		value=uint16/scaled
-			0	1	1	0	0						0x60	write	output	stepping	min_value=uint16/scaled, max_value=uint16/scaled, step=uint16/scaled
-			0	1	1	1	0						0x70	read	output	stepping	min_value=uint16/scaled, max_value=uint16/scaled, step=uint16/scaled, current=uint16/scaled
-
-			1	1	0	0	0						0xc0	select analog input
-
-			1	1	0	1	0						0xd0	select temperature sensor
-			1	1	1	0	0						0xe0	set temperature sensor calibration values, expects 2 bytes (fixed point multiplier * 1000), 2 bytes (fixed point offset * 10)
-			1	1	1	1	0						0xf0	read temperature sensor calibration values, returns same as 0xe0 input
-
-*** REPLY ***
-
-	byte	length of reply minus this length byte
-	byte	error code
-	byte	command this reply relates to
-	byte*	reply information
-	byte	checksum (skip length byte)
-
-	error codes =
-			0	ok
-			1	no command
-			2	unknown command
-			3	parameter out of range
-			4	missing parameter(s)
-			5	not ready
-			6	internal error
-			7	not implemented
-
 *** EEPROM ***
 
 	0-1		multiplier temp sensor 0

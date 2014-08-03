@@ -14,7 +14,7 @@ endif
 
 MCU			=		atmega328p
 PROGRAMMER	=		dragon_isp
-PRGFLAGS	=		-P usb -B 10 -y
+PRGFLAGS	=		-P usb -B 1 -y
 
 PROGRAM		=		main
 OBJFILES	=		$(PROGRAM).o watchdog.o timer0.o timer1.o timer2.o spi.o twi_master.o \

@@ -216,36 +216,36 @@ int main(void)
 			}
 		}
 
-		if(tx_payload_length)
+		if(!tx_payload_length)
+			continue;
+
+		tx_etherframe->destination	= rx_etherframe->source;
+		tx_etherframe->source		= my_mac_address;
+		tx_etherframe->ethertype	= rx_etherframe->ethertype;
+		tx_frame_length				= sizeof(etherframe_t) + tx_payload_length;
+
+		while(!enc_tx_complete() && !enc_rx_error() && !enc_tx_error())
 		{
-			tx_etherframe->destination	= rx_etherframe->source;
-			tx_etherframe->source		= my_mac_address;
-			tx_etherframe->ethertype	= rx_etherframe->ethertype;
-			tx_frame_length				= sizeof(etherframe_t) + tx_payload_length;
-
-			while(!enc_tx_complete() && !enc_rx_error() && !enc_tx_error())
-			{
-				enc_arm_interrupt();
-				watchdog_reset();
-				sleep_mode();
-			}
-
-			eth_pkts_buffered = enc_rx_pkts_buffered();
-
-			if(enc_tx_error())
-			{
-				eth_txerr++;
-				enc_clear_errors();
-			}
-
-			if(enc_rx_error())
-			{
-				eth_rxerr++;
-				enc_clear_errors();
-			}
-
-			enc_send_frame(tx_frame_length, tx_frame);
-			eth_pkt_tx++;
+			enc_arm_interrupt();
+			watchdog_reset();
+			sleep_mode();
 		}
+
+		eth_pkts_buffered = enc_rx_pkts_buffered();
+
+		if(enc_tx_error())
+		{
+			eth_txerr++;
+			enc_clear_errors();
+		}
+
+		if(enc_rx_error())
+		{
+			eth_rxerr++;
+			enc_clear_errors();
+		}
+
+		enc_send_frame(tx_frame_length, tx_frame);
+		eth_pkt_tx++;
 	}
 }

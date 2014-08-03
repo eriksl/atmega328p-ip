@@ -119,7 +119,9 @@ int main(void)
 #endif
 
 	MCUCR	|= _BV(PUD);		//	disable pullups
-	DDRD	= _BV(0) | _BV(1);	//	enable D0 and D1 for status 
+	DDRB	= _BV(0) | _BV(1) | _BV(2) | _BV(3) | _BV(5) | _BV(6);
+	DDRC	= _BV(1) | _BV(2) | _BV(3) | _BV(4) | _BV(5) | _BV(6);
+	DDRD	= _BV(0) | _BV(1) | _BV(3) | _BV(4) | _BV(5) | _BV(6);
 	EICRA	= _BV(ISC01);		//	INT0 falling edge
 	EIMSK	= _BV(INT0);		//	enable INT0
 
@@ -137,6 +139,7 @@ int main(void)
 	my_ipv4_address.byte[2] = eeprom_read_uint8(&eeprom->my_ipv4_address.byte[2]);
 	my_ipv4_address.byte[3] = eeprom_read_uint8(&eeprom->my_ipv4_address.byte[3]);
 
+	PORTD = _BV(0);
 	sleep(1000);
 	PIND = _BV(0) | _BV(1);
 	sleep(1000);

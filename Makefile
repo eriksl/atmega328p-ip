@@ -1,16 +1,11 @@
-# BOARD = 0		testboard 1
-
-BOARD =	0
-
-ifeq ($(BOARD), 0)
-	USE_EXT_CRYSTAL	= 0
-	MCUSPEED	= 8000000
-	LFUSE		= 0xe2
+MCUSPEED	= 8000000
+LFUSE		= 0xe2
 # no DebugWire
-#	HFUSE		= 0xd7
+HFUSE		= 0xd7
 # DebugWire
-	HFUSE		= 0x97
-endif
+HFUSE		= 0x97
+#CCDEBUGFLAGS	= -O3
+CCDEBUGFLAGS	= -O0 -g
 
 MCU			=		atmega328p
 PROGRAMMER	=		dragon_isp
@@ -27,7 +22,7 @@ HEXFILE		=		$(PROGRAM).hex
 ELFFILE		=		$(PROGRAM).elf
 PROGRAMMED	=		.programmed
 CFLAGS		=		-I$(CURDIR) \
-					--std=c99 -Wall -Wno-cpp -Winline -g -O0 -mmcu=$(MCU) -DF_CPU=$(MCUSPEED) -DUSE_EXT_CRYSTAL=$(USE_EXT_CRYSTAL) -DBOARD=$(BOARD) \
+					--std=gnu99 -Wall -Wno-cpp -Winline $(CCDEBUGFLAGS) -mmcu=$(MCU) -DF_CPU=$(MCUSPEED) \
 					-fpack-struct -fno-keep-static-consts -frename-registers -Wno-unused-variable
 LDFLAGS		=		-Wall -mmcu=$(MCU)
 
@@ -64,6 +59,10 @@ stats.o:			stats.h
 %.o:				%.c
 					@echo "CC $< -> $@"
 					@avr-gcc -c $(CFLAGS) $< -o $@
+
+%.i:				%.c
+					@echo "CC $< -> $@"
+					@avr-gcc -E -c $(CFLAGS) $< -o $@
 
 %.o:				%.S
 					@echo "AS $< -> $@"

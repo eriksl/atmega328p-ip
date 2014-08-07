@@ -88,9 +88,31 @@ void xstrncpy(const uint8_t *in, uint16_t outlen, uint8_t *out)
 	*out = 0;
 }
 
+void fxstrncpy(const __flash uint8_t *in, uint16_t outlen, uint8_t *out)
+{
+	for(; (outlen > 1) && *in; outlen--, in++, out++)
+		*out = *in;
+
+	*out = 0;
+}
+
 void xstrncat(const uint8_t *in, uint16_t outlen, uint8_t *out)
 {
 	const uint8_t *from;
+	uint8_t *to;
+
+	for(to = out; (outlen > 1) && *to; outlen--, to++)
+		(void)0;
+
+	for(from = in; (outlen > 1) && *from; outlen--, from++, to++)
+		*to = *from;
+
+	*to = 0;
+}
+
+void fxstrncat(const __flash uint8_t *in, uint16_t outlen, uint8_t *out)
+{
+	const __flash uint8_t *from;
 	uint8_t *to;
 
 	for(to = out; (outlen > 1) && *to; outlen--, to++)

@@ -5,23 +5,34 @@
 #include "stats.h"
 #include "util.h"
 
+static const __flash uint8_t string_usage[]			= "command:\n\n  e)echo\n\n  ?/h)help\n  q)uit\n  R)eset\n  s)tats\n  r)ead twi\n  w)write twi\n  i)nit/reset twi\n";
+static const __flash uint8_t string_error[]			= "Error: ";
+static const __flash uint8_t string_state[]			= ", state: ";
+static const __flash uint8_t string_newline[]		= "\n";
+static const __flash uint8_t string_resetok[]		= "Reset ok\n";
+static const __flash uint8_t string_synhexaddr[]	= "Syntax error (hex/addr)\n";
+static const __flash uint8_t string_synhexdatalen[]	= "Syntax error (hex/datalen)\n";
+static const __flash uint8_t string_synhexdata[]	= "Syntax error (hex/data)\n";
+static const __flash uint8_t string_ok[]			= "Ok\n";
+static const __flash uint8_t string_okdata[]		= "Ok, data:";
+
 static void twi_error(uint16_t size, uint8_t *dst, uint8_t error)
 {
 	static uint8_t numbuf[8];
 
-	xstrncpy((uint8_t *)"Error: ", size, dst);
+	fxstrncpy(string_error, size, dst);
 	int_to_str((error & 0x0f) >> 0, sizeof(numbuf), numbuf);
 	xstrncat(numbuf, size, dst);
-	xstrncat((uint8_t *)", state: ", size, dst);
+	fxstrncat(string_state, size, dst);
 	int_to_str((error & 0xf0) >> 4, sizeof(numbuf), numbuf);
 	xstrncat(numbuf, size, dst);
-	xstrncat((uint8_t *)"\n", size, dst);
+	fxstrncat(string_newline, size, dst);
 }
 
 static void twi_reset(uint16_t size, uint8_t *dst)
 {
 	twi_master_recover();
-	xstrncpy((uint8_t *)"Reset ok\n", size, dst);
+	fxstrncpy(string_resetok, size, dst);
 }
 
 static void twi_read(uint16_t length, const uint8_t *src, uint16_t size, uint8_t *dst)
@@ -37,7 +48,7 @@ static void twi_read(uint16_t length, const uint8_t *src, uint16_t size, uint8_t
 
 	if(!hex_to_int(&length, &src, &addr))
 	{
-		xstrncpy((uint8_t *)"Syntax error (hex/addr)\n", size, dst);
+		fxstrncpy(string_synhexaddr, size, dst);
 		return;
 	}
 
@@ -49,7 +60,7 @@ static void twi_read(uint16_t length, const uint8_t *src, uint16_t size, uint8_t
 
 	if(!hex_to_int(&length, &src, &rlen))
 	{
-		xstrncpy((uint8_t *)"Syntax error (hex/datalen)\n", size, dst);
+		fxstrncpy(string_synhexdatalen, size, dst);
 		return;
 	}
 
@@ -60,7 +71,7 @@ static void twi_read(uint16_t length, const uint8_t *src, uint16_t size, uint8_t
 		twi_error(size, dst, rv);
 	else
 	{
-		xstrncpy((uint8_t *)"Ok, data:", size, dst);
+		fxstrncpy(string_okdata, size, dst);
 		slen = xstrlen(dst);
 
 		if(slen < size)
@@ -96,7 +107,7 @@ static void twi_write(uint16_t length, const uint8_t *src, uint16_t size, uint8_
 
 	if(!hex_to_int(&length, &src, &addr))
 	{
-		xstrncpy((uint8_t *)"Syntax error (hex/addr)\n", size, dst);
+		fxstrncpy(string_synhexaddr, size, dst);
 		return;
 	}
 
@@ -115,7 +126,7 @@ static void twi_write(uint16_t length, const uint8_t *src, uint16_t size, uint8_
 
 		if(!hex_to_int(&length, &src, &buffer[buflen]))
 		{
-			xstrncpy((uint8_t *)"Syntax error (hex/data)\n", size, dst);
+			fxstrncpy(string_synhexdata, size, dst);
 			return;
 		}
 		buflen++;
@@ -124,7 +135,7 @@ static void twi_write(uint16_t length, const uint8_t *src, uint16_t size, uint8_
 	if((rv = twi_master_send(addr, buflen, buffer)) != tme_ok)
 		twi_error(size, dst, rv);
 	else
-		xstrncpy((uint8_t *)"Ok\n", size, dst);
+		fxstrncpy(string_ok, size, dst);
 }
 
 int16_t content(uint16_t length, const uint8_t *src, uint16_t size, uint8_t *dst)
@@ -197,7 +208,7 @@ int16_t content(uint16_t length, const uint8_t *src, uint16_t size, uint8_t *dst
 
 		default:
 		{
-			xstrncat((uint8_t *)"command:\n\n  e)echo\n\n  ?/h)help\n  q)uit\n  R)eset\n  s)tats\n  r)ead twi\n  w)write twi\n  i)nit/reset twi", size, dst);
+			fxstrncat(string_usage, size, dst);
 			break;
 		}
 	}

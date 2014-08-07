@@ -1,6 +1,7 @@
 #ifndef _ethernet_h_
 #define _ethernet_h_
 
+#include "ipv4.h"
 #include "net.h"
 
 typedef enum
@@ -22,4 +23,15 @@ typedef struct
 	uint8_t		payload[];
 } etherframe_t;
 
+extern const mac_addr_t mac_addr_broadcast;
+
+uint16_t ethernet_process_frame(const uint8_t *frame_in, uint16_t frame_in_length,
+		uint8_t *frame_out, uint16_t frame_out_size,
+		const mac_addr_t *my_mac_addr, const ipv4_addr_t *my_ip_addr);
+void ethernet_add_frame_header(etherframe_t *ethernet_frame,
+		uint16_t ethertype, const mac_addr_t *src, const mac_addr_t *dst);
+uint16_t ethernet_receive_frame(uint8_t *ethernet_frame,
+		uint16_t frame_size);
+void ethernet_send_frame(const uint8_t *ethernet_frame,
+		uint16_t frame_length);
 #endif

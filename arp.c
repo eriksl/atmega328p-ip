@@ -3,14 +3,15 @@
 
 #include "arp.h"
 
-uint16_t process_arp(uint16_t length, const uint8_t *packet, uint16_t reply_size, uint8_t *reply,
+uint16_t process_arp(const uint8_t *payload_in, uint16_t payload_in_length,
+		uint8_t *payload_out,
 		const mac_addr_t *mac, const ipv4_addr_t *ipv4)
 {
-	const	ether_arp_pkt_t *src = (ether_arp_pkt_t *)packet;
-			ether_arp_pkt_t *dst = (ether_arp_pkt_t *)reply;
+	static const	ether_arp_pkt_t *src;
+	static			ether_arp_pkt_t *dst;
 
-	if(reply_size <= sizeof(*dst))
-		return(0);
+	src = (ether_arp_pkt_t *)payload_in;
+	dst = (ether_arp_pkt_t *)payload_out;
 
 	if((src->htype == ah_ether) &&
 			(src->ptype == et_ipv4) &&
@@ -27,7 +28,7 @@ uint16_t process_arp(uint16_t length, const uint8_t *packet, uint16_t reply_size
 		dst->tha	= src->sha;
 		dst->tpa	= src->spa;
 
-		return(sizeof(*dst));
+		return(sizeof(ether_arp_pkt_t));
 	}
 
 	return(0);

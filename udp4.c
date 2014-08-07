@@ -6,51 +6,45 @@
 #include "content.h"
 #include "stats.h"
 
-typedef struct
-{
-	uint16_t		sport;
-	uint16_t		dport;
-	uint16_t		length;
-	uint16_t		checksum;
-	uint8_t			payload[];
-} datagram_t;
-
-typedef struct
-{
-	ipv4_addr_t		src;
-	ipv4_addr_t		dst;
-	uint8_t			zero;
-	uint8_t			protocol;
-	uint16_t		length;
-} datagram_checksum_t;
-
-typedef struct
-{
-			uint16_t	sport;
-	const	uint16_t	dport;
-			ipv4_addr_t	src;
-} state_entry_t;
-
 static state_entry_t state[] =
 {
 	{ 0, 28022, {{ 0, 0, 0, 0 }}, },
 	{ 0, 0,		{{ 0, 0, 0, 0 }}, },
 };
 
-static datagram_checksum_t checksum_header;
+static udp4_datagram_checksum_t checksum_header;
+
+void udp4_add_datagram_header(udp4_datagram_t *udp4_datagram,
+		uint16_t udp4_src, uint16_t udp4_dst, uint16_t payload_length,
+		const ipv4_addr_t *ipv4_src, const ipv4_addr_t *ipv4_dst)
+{
+	udp4_datagram->sport	= htons(udp4_src);
+	udp4_datagram->dport	= htons(udp4_dst);
+	udp4_datagram->length	= sizeof(udp4_datagram_t) + payload_length;
+	udp4_datagram->checksum	= 0;
+
+	checksum_header.src			= *ipv4_src;
+	checksum_header.dst			= *ipv4_dst;
+	checksum_header.zero		= 0;
+	checksum_header.protocol	= ip4_udp;
+	checksum_header.length		= sizeof(udp4_datagram_t) + payload_length;
+
+	udp4_datagram->checksum = ipv4_checksum(sizeof(checksum_header), (uint8_t *)&checksum_header,
+			sizeof(*udp4_datagram) + payload_length, (uint8_t *)udp4_datagram);
+}
 
 uint16_t process_udp4(uint16_t length, const uint8_t *packet,
 		uint16_t reply_size, uint8_t *reply,
 		const ipv4_addr_t *src_ipv4, const ipv4_addr_t *dst_ipv4,
 		uint8_t protocol)
 {
-	static const			datagram_t *src;
-	static					datagram_t *dst;
+	static const			udp4_datagram_t *src;
+	static					udp4_datagram_t *dst;
 	static state_entry_t *	state_entry;
 	static int16_t			content_length;
 
-	src = (datagram_t *)packet;
-	dst = (datagram_t *)reply;
+	src = (udp4_datagram_t *)packet;
+	dst = (udp4_datagram_t *)reply;
 
 	checksum_header.src			= *src_ipv4;
 	checksum_header.dst			= *dst_ipv4;

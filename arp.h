@@ -7,16 +7,16 @@
 #include "ethernet.h"
 #include "ipv4.h"
 
-typedef enum
+enum
 {
-	ah_ether	= htons(1),
-} arp_hw_t;
+	ah_ether = htons(1),
+};
 
-typedef enum
+enum
 {
 	ao_request	= htons(1),
 	ao_reply	= htons(2),
-} arp_operation_t;
+};
 
 typedef struct
 {
@@ -31,7 +31,8 @@ typedef struct
 	ipv4_addr_t	tpa;	//	24
 } ether_arp_pkt_t;
 
-uint16_t process_arp(uint16_t length, const uint8_t *packet, uint16_t reply_size, uint8_t *reply,
+uint16_t process_arp(const uint8_t *payload_in, uint16_t payload_in_length,
+		uint8_t *payload_out,
 		const mac_addr_t *mac, const ipv4_addr_t *ipv4);
 
 #endif

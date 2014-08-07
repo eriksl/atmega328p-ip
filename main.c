@@ -8,7 +8,6 @@
 #include "spi.h"
 #include "twi_master.h"
 #include "timer1.h"
-#include "enc.h"
 #include "net.h"
 #include "ethernet.h"
 #include "arp.h"
@@ -71,18 +70,11 @@ ISR (INT0_vect, ISR_NOBLOCK)
 
 int main(void)
 {
-	static	uint16_t		rx_frame_length = 0;
 	static	uint8_t 		rx_frame[max_frame_size];
-	static	uint16_t		tx_frame_length;
 	static	uint8_t			tx_frame[max_frame_size];
 
-	static	etherframe_t	*rx_etherframe;
-	static	uint8_t			*rx_payload;
-	static	uint16_t		rx_payload_length;
-
-	static	etherframe_t	*tx_etherframe;
-	static	uint8_t			*tx_payload;
-	static	uint16_t		tx_payload_size;
+	static	uint16_t		rx_frame_length;
+	static	uint16_t		tx_frame_length;
 	static	uint16_t		tx_payload_length;
 
 	cli();
@@ -159,93 +151,15 @@ int main(void)
 
 	for(;;)
 	{
-		while(!enc_rx_complete() && !enc_rx_error() && !enc_tx_error())
-		{
-			enc_arm_interrupt();
-			watchdog_reset();
-			sleep_mode();
-		}
-
-		if(enc_tx_error())
-		{
-			eth_txerr++;
-			enc_clear_errors();
-		}
-
-		if(enc_rx_error())
-		{
-			eth_rxerr++;
-			enc_clear_errors();
-		}
-
-		if(!(rx_frame_length = enc_receive_frame(sizeof(rx_frame), rx_frame)))
+		//if(!bootp_done && (bootp_timer == 0))
+		//{
+		
+		if((rx_frame_length = ethernet_receive_frame(rx_frame, sizeof(rx_frame))) == 0)
 			continue;
 
-		eth_pkt_rx++;
-
-		if(rx_frame_length < sizeof(etherframe_t))
+		if((tx_frame_length = ethernet_process_frame(rx_frame, rx_frame_length, tx_frame, sizeof(tx_frame), &my_mac_address, &my_ipv4_address)) == 0)
 			continue;
 
-		rx_etherframe		= (etherframe_t *)rx_frame;
-		rx_payload			= &rx_etherframe->payload[0];
-		rx_payload_length	= rx_frame_length - sizeof(etherframe_t);
-
-		tx_etherframe		= (etherframe_t *)tx_frame;
-		tx_payload			= &tx_etherframe->payload[0];
-		tx_payload_size		= sizeof(tx_frame) - sizeof(etherframe_t);
-		tx_payload_length	= 0;
-
-		switch(rx_etherframe->ethertype)
-		{
-			case(et_arp):
-			{
-				ip_arp_pkt_in++;
-				tx_payload_length = process_arp(rx_payload_length, rx_payload, tx_payload_size, tx_payload, &my_mac_address, &my_ipv4_address);
-				if(tx_payload_length)
-					ip_arp_pkt_out++;
-				break;
-			}
-
-			case(et_ipv4):
-			{
-				ip_ipv4_pkt_in++;
-				tx_payload_length = process_ipv4(rx_payload_length, rx_payload, tx_payload_size, tx_payload, &my_mac_address, &my_ipv4_address);
-				if(tx_payload_length)
-					ip_ipv4_pkt_out++;
-				break;
-			}
-		}
-
-		if(!tx_payload_length)
-			continue;
-
-		tx_etherframe->destination	= rx_etherframe->source;
-		tx_etherframe->source		= my_mac_address;
-		tx_etherframe->ethertype	= rx_etherframe->ethertype;
-		tx_frame_length				= sizeof(etherframe_t) + tx_payload_length;
-
-		while(!enc_tx_complete() && !enc_rx_error() && !enc_tx_error())
-		{
-			enc_arm_interrupt();
-			watchdog_reset();
-			sleep_mode();
-		}
-
-		eth_pkts_buffered = enc_rx_pkts_buffered();
-
-		if(enc_tx_error())
-		{
-			eth_txerr++;
-			enc_clear_errors();
-		}
-
-		if(enc_rx_error())
-		{
-			eth_rxerr++;
-			enc_clear_errors();
-		}
-
-		enc_send_frame(tx_frame_length, tx_frame);
-		eth_pkt_tx++;
+		ethernet_send_frame(tx_frame, tx_frame_length);
 	}
 }

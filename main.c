@@ -15,11 +15,12 @@
 #include "watchdog.h"
 #include "stats.h"
 #include "eeprom.h"
+#include "enc.h"
 
 enum
 {
 	adc_warmup_init = 8,
-	max_frame_size = 256,
+	max_frame_size = 384,
 	watchdog_prescaler = WATCHDOG_PRESCALER_256,
 };
 
@@ -76,6 +77,13 @@ int main(void)
 	static	uint16_t		rx_frame_length;
 	static	uint16_t		tx_frame_length;
 	static	uint16_t		tx_payload_length;
+
+	//static struct
+	//{
+		//unsigned int bootp_done:1;
+	//} flags = { 0 };
+
+	//static uint16_t boot_timer = 0;
 
 	cli();
 	watchdog_stop();

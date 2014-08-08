@@ -69,6 +69,69 @@ ISR (INT0_vect, ISR_NOBLOCK)
 	eth_interrupts++;
 }
 
+uint16_t receive_frame(uint8_t *frame, uint16_t frame_size)
+{
+	static uint16_t frame_length;
+
+	while(!enc_rx_complete() && !enc_rx_error() && !enc_tx_error())
+	{
+		enc_arm_interrupt();
+		watchdog_reset();
+		sleep_mode();
+	}
+
+	if(enc_tx_error())
+	{
+		eth_txerr++;
+		enc_clear_errors();
+		return(0);
+	}
+
+	if(enc_rx_error())
+	{
+		eth_rxerr++;
+		enc_clear_errors();
+		return(0);
+	}
+
+	if(!(frame_length = enc_receive_frame(frame_size, frame)))
+		return(0);
+
+	eth_pkt_rx++;
+
+	if(frame_length < sizeof(etherframe_t))
+		return(0);
+
+	return(frame_length);
+}
+
+void send_frame(const uint8_t *frame, uint16_t frame_length)
+{
+	while(!enc_tx_complete() && !enc_rx_error() && !enc_tx_error())
+	{
+		enc_arm_interrupt();
+		watchdog_reset();
+		sleep_mode();
+	}
+
+	eth_pkts_buffered = enc_rx_pkts_buffered();
+
+	if(enc_tx_error())
+	{
+		eth_txerr++;
+		enc_clear_errors();
+	}
+
+	if(enc_rx_error())
+	{
+		eth_rxerr++;
+		enc_clear_errors();
+	}
+
+	enc_send_frame(frame_length, frame);
+	eth_pkt_tx++;
+}
+
 int main(void)
 {
 	static	uint8_t 		rx_frame[max_frame_size];
@@ -162,12 +225,12 @@ int main(void)
 		//if(!bootp_done && (bootp_timer == 0))
 		//{
 		
-		if((rx_frame_length = ethernet_receive_frame(rx_frame, sizeof(rx_frame))) == 0)
+		if((rx_frame_length = receive_frame(rx_frame, sizeof(rx_frame))) == 0)
 			continue;
 
 		if((tx_frame_length = ethernet_process_frame(rx_frame, rx_frame_length, tx_frame, sizeof(tx_frame), &my_mac_address, &my_ipv4_address)) == 0)
 			continue;
 
-		ethernet_send_frame(tx_frame, tx_frame_length);
+		send_frame(tx_frame, tx_frame_length);
 	}
 }

@@ -30,8 +30,4 @@ uint16_t ethernet_process_frame(const uint8_t *frame_in, uint16_t frame_in_lengt
 		const mac_addr_t *my_mac_addr, const ipv4_addr_t *my_ip_addr);
 void ethernet_add_frame_header(etherframe_t *ethernet_frame,
 		uint16_t ethertype, const mac_addr_t *src, const mac_addr_t *dst);
-uint16_t ethernet_receive_frame(uint8_t *ethernet_frame,
-		uint16_t frame_size);
-void ethernet_send_frame(const uint8_t *ethernet_frame,
-		uint16_t frame_length);
 #endif

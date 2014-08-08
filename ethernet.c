@@ -1,12 +1,9 @@
 #include "ethernet.h"
 #include "net.h"
-#include "enc.h"
 #include "stats.h"
 #include "watchdog.h"
 #include "arp.h"
 #include "ipv4.h"
-
-#include "avr/sleep.h"
 
 const mac_addr_t mac_addr_broadcast = {{ 0xff, 0xff, 0xff, 0xff, 0xff, 0xff }};
 
@@ -63,67 +60,4 @@ void ethernet_add_frame_header(etherframe_t *ethernet_frame, uint16_t ethertype,
 	ethernet_frame->source		= *src;
 	ethernet_frame->destination	= *dst;
 	ethernet_frame->ethertype	= htons(ethertype);
-}
-
-uint16_t ethernet_receive_frame(uint8_t *frame, uint16_t frame_size)
-{
-	static uint16_t frame_length;
-
-	while(!enc_rx_complete() && !enc_rx_error() && !enc_tx_error())
-	{
-		enc_arm_interrupt();
-		watchdog_reset();
-		sleep_mode();
-	}
-
-	if(enc_tx_error())
-	{
-		eth_txerr++;
-		enc_clear_errors();
-		return(0);
-	}
-
-	if(enc_rx_error())
-	{
-		eth_rxerr++;
-		enc_clear_errors();
-		return(0);
-	}
-
-	if(!(frame_length = enc_receive_frame(frame_size, frame)))
-		return(0);
-
-	eth_pkt_rx++;
-
-	if(frame_length < sizeof(etherframe_t))
-		return(0);
-
-	return(frame_length);
-}
-
-void ethernet_send_frame(const uint8_t *frame, uint16_t frame_length)
-{
-	while(!enc_tx_complete() && !enc_rx_error() && !enc_tx_error())
-	{
-		enc_arm_interrupt();
-		watchdog_reset();
-		sleep_mode();
-	}
-
-	eth_pkts_buffered = enc_rx_pkts_buffered();
-
-	if(enc_tx_error())
-	{
-		eth_txerr++;
-		enc_clear_errors();
-	}
-
-	if(enc_rx_error())
-	{
-		eth_rxerr++;
-		enc_clear_errors();
-	}
-
-	enc_send_frame(frame_length, frame);
-	eth_pkt_tx++;
 }

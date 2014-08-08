@@ -25,7 +25,7 @@ typedef struct
 
 static state_entry_t state[] =
 {
-	{ state_listen, 0, 28022, {{ 0, 0, 0, 0 }}, 0, 0 },
+	{ state_listen, 0, 23, {{ 0, 0, 0, 0 }}, 0, 0 },
 	{ 0, 0, 0, {{ 0, 0, 0, 0 }}, 0, 0 },
 };
 

@@ -45,7 +45,8 @@ uint16_t process_udp4(uint16_t length, const uint8_t *packet,
 		uint8_t protocol);
 
 void udp4_add_datagram_header(udp4_datagram_t *udp4_datagram,
-		uint16_t udp4_src, uint16_t udpp4_dst, uint16_t payload_length,
-		const ipv4_addr_t *ipv4_src, const ipv4_addr_t *ipv4_dst);
+		const ipv4_addr_t *ipv4_src, const ipv4_addr_t *ipv4_dst,
+		uint16_t udp4_src, uint16_t udp4_dst,
+		uint16_t payload_length);
 
 #endif

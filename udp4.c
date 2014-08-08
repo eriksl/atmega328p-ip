@@ -8,29 +8,30 @@
 
 static state_entry_t state[] =
 {
-	{ 0, 28022, {{ 0, 0, 0, 0 }}, },
-	{ 0, 0,		{{ 0, 0, 0, 0 }}, },
+	{ 0, 23, {{ 0, 0, 0, 0 }}, },
+	{ 0, 0,	 {{ 0, 0, 0, 0 }}, },
 };
 
 static udp4_datagram_checksum_t checksum_header;
 
-void udp4_add_datagram_header(udp4_datagram_t *udp4_datagram,
-		uint16_t udp4_src, uint16_t udp4_dst, uint16_t payload_length,
-		const ipv4_addr_t *ipv4_src, const ipv4_addr_t *ipv4_dst)
+void udp4_add_datagram_header(udp4_datagram_t *datagram,
+		const ipv4_addr_t *ipv4_src, const ipv4_addr_t *ipv4_dst,
+		uint16_t udp4_src, uint16_t udp4_dst,
+		uint16_t payload_length)
 {
-	udp4_datagram->sport	= htons(udp4_src);
-	udp4_datagram->dport	= htons(udp4_dst);
-	udp4_datagram->length	= sizeof(udp4_datagram_t) + payload_length;
-	udp4_datagram->checksum	= 0;
+	datagram->sport		= htons(udp4_src);
+	datagram->dport		= htons(udp4_dst);
+	datagram->length	= htons(sizeof(udp4_datagram_t) + payload_length);
+	datagram->checksum	= 0;
 
 	checksum_header.src			= *ipv4_src;
 	checksum_header.dst			= *ipv4_dst;
 	checksum_header.zero		= 0;
 	checksum_header.protocol	= ip4_udp;
-	checksum_header.length		= sizeof(udp4_datagram_t) + payload_length;
+	checksum_header.length		= datagram->length;
 
-	udp4_datagram->checksum = ipv4_checksum(sizeof(checksum_header), (uint8_t *)&checksum_header,
-			sizeof(*udp4_datagram) + payload_length, (uint8_t *)udp4_datagram);
+	datagram->checksum = ipv4_checksum(sizeof(udp4_datagram_checksum_t), (uint8_t *)&checksum_header,
+			sizeof(udp4_datagram_t) + payload_length, (uint8_t *)datagram);
 }
 
 uint16_t process_udp4(uint16_t length, const uint8_t *packet,
@@ -41,7 +42,7 @@ uint16_t process_udp4(uint16_t length, const uint8_t *packet,
 	static const			udp4_datagram_t *src;
 	static					udp4_datagram_t *dst;
 	static state_entry_t *	state_entry;
-	static int16_t			content_length;
+	static int16_t			payload_length;
 
 	src = (udp4_datagram_t *)packet;
 	dst = (udp4_datagram_t *)reply;
@@ -68,21 +69,10 @@ uint16_t process_udp4(uint16_t length, const uint8_t *packet,
 	state_entry->sport	= ntohs(src->sport);
 	state_entry->src	= *src_ipv4;
 
-	content_length	= content(	length     - sizeof(*src), &src->payload[0],
+	payload_length	= content(	length     - sizeof(*src), &src->payload[0],
 								reply_size - sizeof(*dst), &dst->payload[0]);
 
-	checksum_header.src			= *dst_ipv4;
-	checksum_header.dst			= *src_ipv4;
-	checksum_header.zero		= 0;
-	checksum_header.protocol	= protocol;
-	checksum_header.length		= htons(sizeof(*dst) + content_length);
+	udp4_add_datagram_header(dst, dst_ipv4, src_ipv4, ntohs(src->dport), ntohs(src->sport), payload_length);
 
-	dst->sport		= src->dport;
-	dst->dport		= src->sport;
-	dst->length		= htons(sizeof(*dst) + content_length);
-	dst->checksum	= 0;
-
-	dst->checksum = ipv4_checksum(sizeof(checksum_header), (uint8_t *)&checksum_header, sizeof(*dst) + content_length, (uint8_t *)dst);
-
-	return(sizeof(*dst) + content_length);
+	return(sizeof(udp4_datagram_t) + payload_length);
 }

@@ -6,8 +6,8 @@
 
 typedef enum
 {
-	et_ipv4	= htons(0x0800),
-	et_arp	= htons(0x0806),
+	et_ipv4	= 0x0800,
+	et_arp	= 0x0806,
 } ether_type_t;
 
 typedef struct

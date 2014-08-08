@@ -14,7 +14,7 @@ uint16_t process_arp(const uint8_t *payload_in, uint16_t payload_in_length,
 	dst = (ether_arp_pkt_t *)payload_out;
 
 	if((src->htype == ah_ether) &&
-			(src->ptype == et_ipv4) &&
+			(ntohs(src->ptype) == et_ipv4) &&
 			(src->oper == ao_request) &&
 			ipv4_address_match(&src->tpa, ipv4))
 	{

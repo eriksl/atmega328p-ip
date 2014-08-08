@@ -19,7 +19,7 @@ uint16_t ethernet_process_frame(const uint8_t *frame_in, uint16_t frame_in_lengt
 	etherframe_out		= (etherframe_t *)frame_out;
 	payload_length_out	= 0;
 
-	switch(etherframe_in->ethertype)
+	switch(ntohs(etherframe_in->ethertype))
 	{
 		case(et_arp):
 		{

@@ -1,5 +1,3 @@
-#include <avr/io.h>
-
 #include "net.h"
 #include "udp4.h"
 #include "ipv4.h"
@@ -37,7 +35,8 @@ void udp4_add_datagram_header(udp4_datagram_t *datagram,
 uint16_t process_udp4(uint16_t length, const uint8_t *packet,
 		uint16_t reply_size, uint8_t *reply,
 		const ipv4_addr_t *src_ipv4, const ipv4_addr_t *dst_ipv4,
-		uint8_t protocol)
+		uint8_t protocol,
+		const mac_addr_t *my_mac_addr, ipv4_addr_t *my_ipv4_addr)
 {
 	static const			udp4_datagram_t *src;
 	static					udp4_datagram_t *dst;
@@ -69,8 +68,8 @@ uint16_t process_udp4(uint16_t length, const uint8_t *packet,
 	state_entry->sport	= ntohs(src->sport);
 	state_entry->src	= *src_ipv4;
 
-	payload_length	= content(	length     - sizeof(*src), &src->payload[0],
-								reply_size - sizeof(*dst), &dst->payload[0]);
+	payload_length	= content(	length     - sizeof(udp4_datagram_t), &src->payload[0],
+								reply_size - sizeof(udp4_datagram_t), &dst->payload[0]);
 
 	udp4_add_datagram_header(dst, dst_ipv4, src_ipv4, ntohs(src->dport), ntohs(src->sport), payload_length);
 

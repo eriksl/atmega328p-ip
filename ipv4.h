@@ -3,6 +3,8 @@
 
 #include <stdint.h>
 
+#include "ethernet_macaddr.h"
+#include "ipv4_addr.h"
 #include "net.h"
 
 enum
@@ -16,11 +18,6 @@ enum
 {
 	iv_ipv4 = 0x4,
 };
-
-typedef struct
-{
-	uint8_t byte[4];
-} ipv4_addr_t;
 
 typedef struct
 {
@@ -53,10 +50,10 @@ uint16_t ipv4_checksum(uint16_t length1, const uint8_t *data1,
 
 uint16_t process_ipv4(const uint8_t *payload_in, uint16_t payload_in_length,
 		uint8_t *payload_out, uint16_t payload_out_length,
-		const ipv4_addr_t *my_ipv4);
+		const mac_addr_t *my_mac_addr, ipv4_addr_t *my_ipv4);
 
 void ipv4_add_packet_header(ipv4_packet_t *ipv4_packet,
 		const ipv4_addr_t *src, const ipv4_addr_t *dst,
-		uint8_t protocol, uint16_t payload_length);
+		uint16_t id, uint8_t protocol, uint16_t payload_length);
 
 #endif

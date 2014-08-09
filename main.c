@@ -73,7 +73,7 @@ uint16_t receive_frame(uint8_t *frame, uint16_t frame_size)
 {
 	static uint16_t frame_length;
 
-	while(!enc_rx_complete() && !enc_rx_error() && !enc_tx_error())
+	if(!enc_rx_complete() && !enc_tx_error() && !enc_tx_error())
 	{
 		enc_arm_interrupt();
 		watchdog_reset();
@@ -93,6 +93,9 @@ uint16_t receive_frame(uint8_t *frame, uint16_t frame_size)
 		enc_clear_errors();
 		return(0);
 	}
+
+	if(!enc_rx_complete())
+		return(0);
 
 	if(!(frame_length = enc_receive_frame(frame_size, frame)))
 		return(0);
@@ -203,10 +206,12 @@ int main(void)
 	my_ipv4_address.byte[3] = eeprom_read_uint8(&eeprom->my_ipv4_address.byte[3]);
 
 	PORTD = _BV(0);
-	sleep(1000);
+	sleep(500);
 	PIND = _BV(0) | _BV(1);
-	sleep(1000);
+	sleep(500);
 	PIND = _BV(0) | _BV(1);
+	sleep(500);
+	PORTD = 0;
 
 	timer1_init(timer1_1);	// pwm timer 1 resolution: 16 bits, frequency = 122 Hz
 

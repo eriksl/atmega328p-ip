@@ -7,19 +7,13 @@
 const ipv4_addr_t ipv4_addr_zero = {{ 0x00, 0x00, 0x00, 0x00 }};
 const ipv4_addr_t ipv4_addr_broadcast  = {{ 0xff, 0xff, 0xff, 0xff }};
 
-uint8_t ipv4_address_match(const ipv4_addr_t *a, const ipv4_addr_t *b)
+uint8_t ipv4_address_match(const ipv4_addr_t *address1, const ipv4_addr_t *address2)
 {
-	if(a->byte[0] != b->byte[0])
-		return(0);
+	static uint8_t ix;
 
-	if(a->byte[1] != b->byte[1])
-		return(0);
-
-	if(a->byte[2] != b->byte[2])
-		return(0);
-
-	if(a->byte[3] != b->byte[3])
-		return(0);
+	for(ix = 0; ix < sizeof(ipv4_addr_t); ix++)
+		if(address1->byte[ix] != address2->byte[ix])
+			return(0);
 
 	return(1);
 }
@@ -55,31 +49,33 @@ uint16_t ipv4_checksum(uint16_t length1, const uint8_t *data1,
 	return(htons(sum & 0xffff));
 }
 
-void ipv4_add_packet_header(ipv4_packet_t *ipv4_packet,
-		const ipv4_addr_t *src, const ipv4_addr_t *dst, uint8_t protocol,
-		uint16_t payload_length)
+void ipv4_add_packet_header(ipv4_packet_t *packet,
+		const ipv4_addr_t *src, const ipv4_addr_t *dst,
+		uint16_t id, uint8_t protocol, uint16_t payload_length)
 {
-	ipv4_packet->version			= iv_ipv4;
-	ipv4_packet->header_length		= sizeof(*ipv4_packet) >> 2;
-	ipv4_packet->dscp				= 0x00;
-	ipv4_packet->ecn				= 0x00;
-	ipv4_packet->total_length		= htons(sizeof(*ipv4_packet) + payload_length);
-	ipv4_packet->id					= 0;
-	ipv4_packet->fragment_offset_1	= 0x00;
-	ipv4_packet->fragment_offset_2	= 0x00;
-	ipv4_packet->flag_reserved		= 0;
-	ipv4_packet->flag_df			= 1;
-	ipv4_packet->flag_mf			= 0;
-	ipv4_packet->ttl				= 0x40;
-	ipv4_packet->protocol			= protocol;
-	ipv4_packet->checksum			= 0;
-	ipv4_packet->src				= *src;
-	ipv4_packet->dst				= *dst;
+	packet->version				= iv_ipv4;
+	packet->header_length		= sizeof(ipv4_packet_t) >> 2;
+	packet->dscp				= 0x00;
+	packet->ecn					= 0x00;
+	packet->total_length		= htons(sizeof(ipv4_packet_t) + payload_length);
+	packet->id					= htons(id);
+	packet->fragment_offset_1	= 0x00;
+	packet->fragment_offset_2	= 0x00;
+	packet->flag_reserved		= 0;
+	packet->flag_df				= 1;
+	packet->flag_mf				= 0;
+	packet->ttl					= 0x40;
+	packet->protocol			= protocol;
+	packet->checksum			= 0;
+	packet->src					= *src;
+	packet->dst					= *dst;
+
+	packet->checksum			= ipv4_checksum(sizeof(ipv4_packet_t), (uint8_t *)packet, 0, 0);
 }
 
 uint16_t process_ipv4(const uint8_t *payload_in, uint16_t payload_in_length,
 		uint8_t *payload_out, uint16_t payload_out_size,
-		const ipv4_addr_t *ipv4)
+		const mac_addr_t *my_mac_addr, ipv4_addr_t *my_ipv4_addr)
 {
 	static const	ipv4_packet_t *src;
 	static			ipv4_packet_t *dst;
@@ -115,7 +111,8 @@ uint16_t process_ipv4(const uint8_t *payload_in, uint16_t payload_in_length,
 		return(0);
 	}
 
-	if(!ipv4_address_match(&src->dst, ipv4))
+	if(!ipv4_address_match(&src->dst, my_ipv4_addr) &&
+			!ipv4_address_match(&src->dst, &ipv4_addr_broadcast))
 	{
 		ip_stray_pkt++;
 		return(0);
@@ -142,7 +139,7 @@ uint16_t process_ipv4(const uint8_t *payload_in, uint16_t payload_in_length,
 
 			payload_out_length = process_udp4(total_length - header_length, &payload_in[header_length],
 					payload_out_size - sizeof(ipv4_packet_t), &dst->payload[0],
-					&src->src, &src->dst, src->protocol);
+					&src->src, &src->dst, src->protocol, my_mac_addr, my_ipv4_addr);
 
 			if(payload_out_length)
 				ip_udp4_pkt_out++;
@@ -170,28 +167,12 @@ uint16_t process_ipv4(const uint8_t *payload_in, uint16_t payload_in_length,
 		}
 	}
 
-	if(payload_out_length)
+	if(payload_out_length > 0)
 	{
-		payload_out_length = payload_out_length + sizeof(ipv4_packet_t);
+		ipv4_add_packet_header(dst, &src->dst, &src->src,
+				ntohs(src->id), src->protocol, payload_out_length);
 
-		dst->version			= iv_ipv4;
-		dst->header_length		= sizeof(ipv4_packet_t) >> 2;
-		dst->dscp				= 0x00;
-		dst->ecn				= 0x00;
-		dst->total_length		= htons(payload_out_length); // header + payload
-		dst->id					= src->id;
-		dst->fragment_offset_1	= 0x00;
-		dst->fragment_offset_2	= 0x00;
-		dst->flag_reserved		= 0;
-		dst->flag_df			= 1;
-		dst->flag_mf			= 0;
-		dst->ttl				= 0x40;
-		dst->protocol			= src->protocol;
-		dst->checksum			= 0;
-		dst->src				= src->dst;
-		dst->dst				= src->src;
-
-		dst->checksum = ipv4_checksum(sizeof(ipv4_packet_t), payload_out, 0, 0);
+		payload_out_length += sizeof(ipv4_packet_t);
 	}
 
 	return(payload_out_length);

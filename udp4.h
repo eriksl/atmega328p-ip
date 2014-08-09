@@ -37,12 +37,13 @@ typedef struct
 	ipv4_packet_t	ipv4_header;
 	udp4_datagram_t	udp4_header;
 	uint8_t			payload[];
-} udp4_composite_header;
+} udp4_composite_header_t;
 
 uint16_t process_udp4(uint16_t length, const uint8_t *packet,
 		uint16_t reply_size, uint8_t *reply,
-		const ipv4_addr_t *src_ipv4, const ipv4_addr_t *dst_ipv4,
-		uint8_t protocol);
+		const ipv4_addr_t *src_ipv4_addr, const ipv4_addr_t *dst_ipv4_addr,
+		uint8_t protocol,
+		const mac_addr_t *my_mac_addr, ipv4_addr_t *my_ipv4_addr);
 
 void udp4_add_datagram_header(udp4_datagram_t *udp4_datagram,
 		const ipv4_addr_t *ipv4_src, const ipv4_addr_t *ipv4_dst,

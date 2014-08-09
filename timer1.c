@@ -4,7 +4,7 @@
 
 static uint8_t cs[3];
 
-void timer1_init(uint8_t prescaler)
+void timer1_init_pwm1a1b(uint8_t prescaler)
 {
 	PRR &= ~_BV(PRTIM1);
 

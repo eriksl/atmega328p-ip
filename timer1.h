@@ -17,7 +17,7 @@ typedef enum
 	timer1_ext_rising,
 } timer1_prescaler_t;
 
-void		timer1_init(uint8_t prescaler);
+void		timer1_init_pwm1a1b(uint8_t prescaler);
 void		timer1_start(void);
 void		timer1_stop(void);
 void		timer1_set_oc1a(uint16_t value);

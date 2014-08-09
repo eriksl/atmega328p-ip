@@ -141,7 +141,7 @@ static void twi_write(uint16_t length, const uint8_t *src, uint16_t size, uint8_
 
 void application_init(void)
 {
-	timer1_init(timer1_1);	// pwm timer 1 resolution: 16 bits, frequency = 122 Hz
+	timer1_init_pwm1a1b(timer1_1);	// pwm timer 1 resolution: 16 bits, frequency = 122 Hz
 	timer1_start();
 }
 

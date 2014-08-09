@@ -54,5 +54,7 @@ typedef struct
 	uint8_t			vend[64];	// 236-300
 } bootp_packet_t;
 
-uint16_t bootp_create_request_frame(uint8_t *buffer, const mac_addr_t *src);
+uint16_t bootp_create_request(uint8_t *frame, const mac_addr_t *src);
+void bootp_process_reply(const uint8_t *payload, uint16_t length,
+		const mac_addr_t *my_mac_addr, ipv4_addr_t *my_ipv4_addr);
 #endif

@@ -12,6 +12,7 @@
 #include "ethernet.h"
 #include "arp.h"
 #include "ipv4.h"
+#include "bootp.h"
 #include "watchdog.h"
 #include "stats.h"
 #include "eeprom.h"
@@ -34,13 +35,13 @@ typedef struct
 {
 	temperature_calibration_t	temp_cal_data[8];
 	mac_addr_t					my_mac_address;
-	ipv4_addr_t					my_ipv4_address;
 } eeprom_t;
 
 static const eeprom_t *eeprom = (eeprom_t *)0;
 
 static ipv4_addr_t my_ipv4_address;
 static mac_addr_t my_mac_address;
+static uint16_t bootp_timer = 0;
 
 static void sleep(uint16_t tm)
 {
@@ -144,13 +145,6 @@ int main(void)
 	static	uint16_t		tx_frame_length;
 	static	uint16_t		tx_payload_length;
 
-	//static struct
-	//{
-		//unsigned int bootp_done:1;
-	//} flags = { 0 };
-
-	//static uint16_t boot_timer = 0;
-
 	cli();
 	watchdog_stop();
 
@@ -200,10 +194,10 @@ int main(void)
 	my_mac_address.byte[4] = eeprom_read_uint8(&eeprom->my_mac_address.byte[4]);
 	my_mac_address.byte[5] = eeprom_read_uint8(&eeprom->my_mac_address.byte[5]);
 
-	my_ipv4_address.byte[0] = eeprom_read_uint8(&eeprom->my_ipv4_address.byte[0]);
-	my_ipv4_address.byte[1] = eeprom_read_uint8(&eeprom->my_ipv4_address.byte[1]);
-	my_ipv4_address.byte[2] = eeprom_read_uint8(&eeprom->my_ipv4_address.byte[2]);
-	my_ipv4_address.byte[3] = eeprom_read_uint8(&eeprom->my_ipv4_address.byte[3]);
+	my_ipv4_address.byte[0] = 0;
+	my_ipv4_address.byte[1] = 0;
+	my_ipv4_address.byte[2] = 0;
+	my_ipv4_address.byte[3] = 0;
 
 	PORTD = _BV(0);
 	sleep(500);
@@ -227,8 +221,18 @@ int main(void)
 
 	for(;;)
 	{
-		//if(!bootp_done && (bootp_timer == 0))
-		//{
+		if(ipv4_address_match(&my_ipv4_address, &ipv4_addr_zero))
+		{
+			if(bootp_timer == 0)
+			{
+				tx_frame_length = bootp_create_request(tx_frame, &my_mac_address);
+				send_frame(tx_frame, tx_frame_length);
+				bootp_timer = 40;
+			}
+
+			if(bootp_timer > 0)
+				bootp_timer--;
+		}
 		
 		if((rx_frame_length = receive_frame(rx_frame, sizeof(rx_frame))) == 0)
 			continue;

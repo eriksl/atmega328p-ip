@@ -1,6 +1,7 @@
 #include "net.h"
 #include "udp4.h"
 #include "ipv4.h"
+#include "bootp.h"
 #include "content.h"
 #include "stats.h"
 
@@ -55,6 +56,12 @@ uint16_t process_udp4(uint16_t length, const uint8_t *packet,
 	if(ipv4_checksum(sizeof(checksum_header), (uint8_t *)&checksum_header, length, packet) != 0)
 	{
 		ip_bad_checksum++;
+		return(0);
+	}
+
+	if((ntohs(src->sport) == bp_port_bootps) && (ntohs(src->dport) == bp_port_bootpc))
+	{
+		bootp_process_reply(&src->payload[0], length - sizeof(udp4_datagram_t), my_mac_addr, my_ipv4_addr);
 		return(0);
 	}
 

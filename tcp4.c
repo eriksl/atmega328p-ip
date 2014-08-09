@@ -3,7 +3,7 @@
 #include "net.h"
 #include "tcp4.h"
 #include "ipv4.h"
-#include "content.h"
+#include "application.h"
 #include "stats.h"
 
 typedef enum
@@ -312,8 +312,8 @@ uint16_t process_tcp4(uint16_t length, const uint8_t *packet,
 
 				state_entry->rseq	= ntohl(src->sequence_number) + received_content_length;
 				dst_header_length	= init_segment(state_entry, 0, max_content_length, src, dst);
-				send_content_length	= content(received_content_length, &packet[src_header_length],
-										max_content_length - dst_header_length, &reply[dst_header_length]);
+				send_content_length	= application_content(	received_content_length,				&packet[src_header_length],
+															max_content_length - dst_header_length,	&reply[dst_header_length]);
 
 				if(send_content_length >= 0)
 				{

@@ -2,7 +2,7 @@
 #include "udp4.h"
 #include "ipv4.h"
 #include "bootp.h"
-#include "content.h"
+#include "application.h"
 #include "stats.h"
 
 static state_entry_t state[] =
@@ -75,8 +75,8 @@ uint16_t process_udp4(uint16_t length, const uint8_t *packet,
 	state_entry->sport	= ntohs(src->sport);
 	state_entry->src	= *src_ipv4;
 
-	payload_length	= content(	length     - sizeof(udp4_datagram_t), &src->payload[0],
-								reply_size - sizeof(udp4_datagram_t), &dst->payload[0]);
+	payload_length	= application_content(	length     - sizeof(udp4_datagram_t), &src->payload[0],
+											reply_size - sizeof(udp4_datagram_t), &dst->payload[0]);
 
 	udp4_add_datagram_header(dst, dst_ipv4, src_ipv4, ntohs(src->dport), ntohs(src->sport), payload_length);
 

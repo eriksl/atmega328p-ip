@@ -1,6 +1,8 @@
 #ifndef _timer1_h_
 #define _timer1_h_
 
+#include <avr/io.h>
+
 #include <stdint.h>
 
 typedef enum

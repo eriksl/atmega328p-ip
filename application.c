@@ -1,9 +1,10 @@
-#include <avr/io.h>
-
-#include "content.h"
+#include "application.h"
+#include "timer1.h"
 #include "twi_master.h"
 #include "stats.h"
 #include "util.h"
+
+#include <stdint.h>
 
 static const __flash uint8_t string_usage[]			= "command:\n\n  e)echo\n\n  ?/h)help\n  q)uit\n  R)eset\n  s)tats\n  r)ead twi\n  w)write twi\n  i)nit/reset twi\n";
 static const __flash uint8_t string_error[]			= "Error: ";
@@ -138,7 +139,24 @@ static void twi_write(uint16_t length, const uint8_t *src, uint16_t size, uint8_
 		fxstrncpy(string_ok, size, dst);
 }
 
-int16_t content(uint16_t length, const uint8_t *src, uint16_t size, uint8_t *dst)
+void application_init(void)
+{
+	timer1_init(timer1_1);	// pwm timer 1 resolution: 16 bits, frequency = 122 Hz
+	timer1_start();
+}
+
+void application_idle(void)
+{
+	static uint8_t phase = 0;
+
+	timer1_set_oc1a(_BV(phase));
+	timer1_set_oc1b(_BV(15 - phase));
+
+	if(++phase > 15)
+		phase = 0;
+}
+
+int16_t application_content(uint16_t length, const uint8_t *src, uint16_t size, uint8_t *dst)
 {
 	static uint8_t conv[8];
 	static uint8_t cmd;

@@ -6,7 +6,6 @@
 
 #include "spi.h"
 #include "twi_master.h"
-#include "timer1.h"
 #include "net.h"
 #include "ethernet.h"
 #include "arp.h"
@@ -16,10 +15,11 @@
 #include "stats.h"
 #include "eeprom.h"
 #include "enc.h"
+#include "application.h"
+#include "util.h"
 
 enum
 {
-	adc_warmup_init = 8,
 	max_frame_size = 384,
 	watchdog_prescaler = WATCHDOG_PRESCALER_256,
 };
@@ -44,14 +44,6 @@ static uint16_t bootp_timer = 0;
 
 ISR(WDT_vect, ISR_NOBLOCK)
 {
-	static uint8_t phase1 = 0;
-
-	timer1_set_oc1a(_BV(phase1));
-	timer1_set_oc1b(_BV(15 - phase1));
-
-	if(++phase1 > 15)
-		phase1 = 0;
-
 	wd_interrupts++;
 }
 
@@ -190,8 +182,6 @@ int main(void)
 	sleep(500);
 	PORTD = 0;
 
-	timer1_init(timer1_1);	// pwm timer 1 resolution: 16 bits, frequency = 122 Hz
-
 	spi_init();
 	twi_master_init();
 	enc_init(max_frame_size, &my_mac_address);
@@ -200,10 +190,12 @@ int main(void)
 	watchdog_start(watchdog_prescaler);
 	sei();
 
-	timer1_start();
+	application_init();
 
 	for(;;)
 	{
+		application_idle();
+
 		if(ipv4_address_match(&my_ipv4_address, &ipv4_addr_zero))
 		{
 			if(bootp_timer == 0)

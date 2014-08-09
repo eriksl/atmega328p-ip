@@ -14,10 +14,10 @@ PRGFLAGS	=		-P usb -B 1 -y
 PROGRAM		=		main
 OBJFILES	=		$(PROGRAM).o watchdog.o timer0.o timer1.o timer2.o spi.o twi_master.o \
 						enc.o net.o ethernet.o arp.o ipv4.o icmp4.o udp4.o tcp4.o bootp.o \
-						content.o stats.o util.o eeprom.o
+						application.o stats.o util.o eeprom.o
 HEADERS		=			watchdog.h timer0.h timer1.h timer2.h spi.h twi_master.h \
 						enc.h net.h ethernet.h ethernet_macaddr.h arp.h ipv4.h ipv4_addr.h icmp4.h udp4.h tcp4.h bootp.h \
-						content.h stats.h util.h eeprom.h
+						application.h stats.h util.h eeprom.h
 HEXFILE		=		$(PROGRAM).hex
 ELFFILE		=		$(PROGRAM).elf
 PROGRAMMED	=		.programmed
@@ -53,7 +53,7 @@ ipv4.o:				$(HEADERS)
 icmp4.o:			$(HEADERS)
 udp4.o:				$(HEADERS)
 tcp4.o:				$(HEADERS)
-content.o:			content.h
+application.o:		application.h
 stats.o:			stats.h
 
 %.o:				%.c

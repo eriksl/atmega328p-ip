@@ -1,6 +1,5 @@
 #include <stdint.h>
 #include <avr/interrupt.h>
-#include <util/delay.h>
 #include <string.h>
 #include <avr/io.h>
 #include <avr/sleep.h>
@@ -43,15 +42,6 @@ static ipv4_addr_t my_ipv4_address;
 static mac_addr_t my_mac_address;
 static uint16_t bootp_timer = 0;
 
-static void sleep(uint16_t tm)
-{
-	while(tm-- > 0)
-	{
-		_delay_ms(1);
-		watchdog_reset();
-	}
-}
-
 ISR(WDT_vect, ISR_NOBLOCK)
 {
 	static uint8_t phase1 = 0;
@@ -63,11 +53,6 @@ ISR(WDT_vect, ISR_NOBLOCK)
 		phase1 = 0;
 
 	wd_interrupts++;
-}
-
-ISR (INT0_vect, ISR_NOBLOCK)
-{
-	eth_interrupts++;
 }
 
 uint16_t receive_frame(uint8_t *frame, uint16_t frame_size)
@@ -182,8 +167,6 @@ int main(void)
 	DDRB	= _BV(0) | _BV(1) | _BV(2) | _BV(3) | _BV(5) | _BV(6);
 	DDRC	= _BV(1) | _BV(2) | _BV(3) | _BV(4) | _BV(5) | _BV(6);
 	DDRD	= _BV(0) | _BV(1) | _BV(3) | _BV(4) | _BV(5) | _BV(6);
-	EICRA	= _BV(ISC01);		//	INT0 falling edge
-	EIMSK	= _BV(INT0);		//	enable INT0
 
 	set_sleep_mode(SLEEP_MODE_IDLE);
 

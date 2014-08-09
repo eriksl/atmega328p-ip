@@ -1,4 +1,18 @@
 #include "util.h"
+#include "watchdog.h"
+
+#include <util/delay.h>
+
+#include <stdint.h>
+
+void sleep(uint16_t ms)
+{
+	while(ms-- > 0)
+	{
+		_delay_ms(1);
+		watchdog_reset();
+	}
+}
 
 void int_to_str(uint16_t in, uint8_t outlen, uint8_t *out)
 {

@@ -1,12 +1,19 @@
-#include <stdint.h>
 #include <avr/io.h>
-#include <util/delay.h>
+#include <avr/interrupt.h>
 
 #include "enc-private.h"
 #include "enc.h"
 #include "spi.h"
-#include "ethernet.h"
 #include "watchdog.h"
+#include "stats.h"
+#include "util.h"
+
+#include <stdint.h>
+
+ISR (INT0_vect, ISR_NOBLOCK)
+{
+	eth_interrupts++;
+}
 
 static uint16_t next_frame_pointer;
 
@@ -178,7 +185,11 @@ static void write_register(uint16_t reg, uint16_t data)
 void enc_init(uint16_t max_frame_size, const mac_addr_t *mac)
 {
 	sc();			// reset
-	_delay_ms(100);	// see erratum
+	sleep(100);		// see erratum
+
+	EICRA &= ~_BV(ISC00);	// INT0
+	EICRA |=  _BV(ISC01);	// falling edge
+	EIMSK &=  _BV(INT0);	// disable INT0
 
 	write_register(EIE, 0);	// disable all interrupts
 	write_register(EIR, 0);	// clear all errors
@@ -281,11 +292,15 @@ uint8_t enc_rx_pkts_buffered(void)
 
 void enc_arm_interrupt(void)
 {
+	EIMSK &= ~_BV(INT0);
+
 	write_register(EIE, 0x00);
 	clearbits_register(EIR, _BV(EIR_PKTIF) |
 			_BV(EIR_TXIF) | _BV(EIR_TXERIF) | _BV(EIR_RXERIF));
 	write_register(EIE, _BV(EIE_INTIE) | _BV(EIE_PKTIE) |
 			_BV(EIE_TXIE) | _BV(EIE_TXERIE) | _BV(EIE_RXERIE));
+
+	EIMSK |= _BV(INT0);
 }
 
 void enc_send_frame(uint16_t length, const uint8_t *frame)

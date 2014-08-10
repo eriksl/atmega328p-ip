@@ -193,9 +193,7 @@ int16_t application_content(uint16_t length, const uint8_t *src, uint16_t size, 
 
 		case('R'):
 		{
-			// let watchdog do it's job
-			for(;;)
-				(void)0;
+			reset();
 
 			break;
 		}

@@ -2,8 +2,18 @@
 #include "watchdog.h"
 
 #include <util/delay.h>
+#include <avr/interrupt.h>
 
 #include <stdint.h>
+
+void reset(void)
+{
+	cli();
+	watchdog_stop();
+	watchdog_start(WATCHDOG_PRESCALER_16);
+	for(;;)
+		sleep_mode();
+}
 
 void sleep(uint16_t ms)
 {

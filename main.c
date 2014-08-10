@@ -2,7 +2,6 @@
 #include <avr/interrupt.h>
 #include <string.h>
 #include <avr/io.h>
-#include <avr/sleep.h>
 
 #include "spi.h"
 #include "twi_master.h"
@@ -159,8 +158,6 @@ int main(void)
 	DDRB	= _BV(0) | _BV(1) | _BV(2) | _BV(3) | _BV(5) | _BV(6);
 	DDRC	= _BV(1) | _BV(2) | _BV(3) | _BV(4) | _BV(5) | _BV(6);
 	DDRD	= _BV(0) | _BV(1) | _BV(3) | _BV(4) | _BV(5) | _BV(6);
-
-	set_sleep_mode(SLEEP_MODE_IDLE);
 
 	my_mac_address.byte[0] = eeprom_read_uint8(&eeprom->my_mac_address.byte[0]);
 	my_mac_address.byte[1] = eeprom_read_uint8(&eeprom->my_mac_address.byte[1]);

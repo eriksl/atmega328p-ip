@@ -154,11 +154,8 @@ uint16_t xstrlen(const uint8_t *str)
 	
 	length = 0;
 
-	for(;;)
+	while(*str)
 	{
-		if(!*str)
-			break;
-
 		str++;
 		length++;
 	}

@@ -32,7 +32,7 @@ void		enc_set_led(uint8_t how1, uint8_t how2);
 uint8_t		enc_rx_error(void);
 uint8_t		enc_tx_error(void);
 void		enc_clear_errors(void);
-void		enc_arm_interrupt(void);
+void		enc_wait_interrupt(uint8_t mode); // 0 = receive, 1 = send
 uint8_t		enc_rx_complete(void);
 uint8_t		enc_tx_complete(void);
 uint8_t		enc_rx_pkts_buffered(void);

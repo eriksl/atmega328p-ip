@@ -46,70 +46,60 @@ ISR(WDT_vect, ISR_NOBLOCK)
 	wd_interrupts++;
 }
 
-uint16_t receive_frame(uint8_t *frame, uint16_t frame_size)
+static uint16_t receive_frame(uint8_t *frame, uint16_t frame_size)
 {
 	static uint16_t frame_length;
 
-	if(!enc_rx_complete() && !enc_tx_error() && !enc_tx_error())
+	if(!enc_rx_complete() && !enc_rx_error())
 	{
-		enc_arm_interrupt();
-		watchdog_reset();
-		sleep_mode();
-	}
-
-	if(enc_tx_error())
-	{
-		eth_txerr++;
-		enc_clear_errors();
-		return(0);
+		PORTD |= _BV(5);
+		enc_wait_interrupt(0);	// wait for frame having been received
+		PORTD &= ~_BV(5);
 	}
 
 	if(enc_rx_error())
 	{
 		eth_rxerr++;
 		enc_clear_errors();
-		return(0);
 	}
 
-	if(!enc_rx_complete())
-		return(0);
-
-	if(!(frame_length = enc_receive_frame(frame_size, frame)))
-		return(0);
-
-	eth_pkt_rx++;
+	frame_length = enc_receive_frame(frame_size, frame);
 
 	if(frame_length < sizeof(etherframe_t))
-		return(0);
+		frame_length = 0;
+
+	eth_pkt_rx++;
 
 	return(frame_length);
 }
 
-void send_frame(const uint8_t *frame, uint16_t frame_length)
+static void send_frame_wait_ready(void)
 {
-	while(!enc_tx_complete() && !enc_rx_error() && !enc_tx_error())
+	while(!enc_tx_complete())
 	{
-		enc_arm_interrupt();
-		watchdog_reset();
-		sleep_mode();
+		if(enc_tx_error())
+		{
+			eth_txerr++;
+			enc_clear_errors();
+			continue;
+		}
+
+		PORTD |= _BV(6);
+		enc_wait_interrupt(1);	// wait for frame having been sent
+		PORTD &= ~_BV(6);
 	}
+}
+
+static void send_frame(const uint8_t *frame, uint16_t frame_length)
+{
+	send_frame_wait_ready();
 
 	eth_pkts_buffered = enc_rx_pkts_buffered();
 
-	if(enc_tx_error())
-	{
-		eth_txerr++;
-		enc_clear_errors();
-	}
-
-	if(enc_rx_error())
-	{
-		eth_rxerr++;
-		enc_clear_errors();
-	}
-
 	enc_send_frame(frame_length, frame);
 	eth_pkt_tx++;
+
+	send_frame_wait_ready();
 }
 
 int main(void)
@@ -191,6 +181,8 @@ int main(void)
 
 	for(;;)
 	{
+		watchdog_reset();
+
 		application_idle();
 
 		if(ipv4_address_match(&my_ipv4_address, &ipv4_addr_zero))

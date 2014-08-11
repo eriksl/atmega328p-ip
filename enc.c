@@ -182,6 +182,32 @@ static void write_register(uint16_t reg, uint16_t data)
 	}
 }
 
+static void enc_clear_interrupts(void)
+{
+	EIMSK &= ~_BV(INT0);
+
+	write_register(EIE, 0x00);
+	write_register(EIR, 0x00);
+}
+
+void enc_wait_interrupt(uint8_t mode) // mode = 0: receive, 1 = send
+{
+	enc_clear_interrupts();
+
+	if(mode) // send
+		write_register(EIE, _BV(EIE_INTIE) | _BV(EIE_TXIE)  | _BV(EIE_TXERIE));
+	else // receive
+		write_register(EIE, _BV(EIE_INTIE) | _BV(EIE_PKTIE) | _BV(EIE_RXERIE));
+
+	EIMSK |= _BV(INT0);
+
+	if(PIND & _BV(2))	// interrupt de-asserted
+		pause();		// otherwise won't wakeup from sleep
+
+	enc_clear_interrupts();
+}
+
+
 void enc_init(uint16_t max_frame_size, const mac_addr_t *mac)
 {
 	sc();			// reset
@@ -189,10 +215,9 @@ void enc_init(uint16_t max_frame_size, const mac_addr_t *mac)
 
 	EICRA &= ~_BV(ISC00);	// INT0
 	EICRA |=  _BV(ISC01);	// falling edge
-	EIMSK &=  _BV(INT0);	// disable INT0
+	EIMSK &= ~_BV(INT0);	// disable INT0
 
-	write_register(EIE, 0);	// disable all interrupts
-	write_register(EIR, 0);	// clear all errors
+	enc_clear_interrupts();
 
 	next_frame_pointer = RXBUFFER;
 
@@ -243,7 +268,6 @@ void enc_init(uint16_t max_frame_size, const mac_addr_t *mac)
 	write_register(PHCON1, _BV(PHCON1_PDPXMD));	// enable full duplex
 	write_register(PHCON2, _BV(PHCON2_HDLDIS));	// disable loopback
 
-	enc_arm_interrupt();
 	setbits_register(ECON1, _BV(ECON1_RXEN));
 	setbits_register(ECON2, _BV(ECON2_AUTOINC));
 }
@@ -288,19 +312,6 @@ uint8_t enc_tx_complete(void)
 uint8_t enc_rx_pkts_buffered(void)
 {
 	return(read_register(EPKTCNT));
-}
-
-void enc_arm_interrupt(void)
-{
-	EIMSK &= ~_BV(INT0);
-
-	write_register(EIE, 0x00);
-	clearbits_register(EIR, _BV(EIR_PKTIF) |
-			_BV(EIR_TXIF) | _BV(EIR_TXERIF) | _BV(EIR_RXERIF));
-	write_register(EIE, _BV(EIE_INTIE) | _BV(EIE_PKTIE) |
-			_BV(EIE_TXIE) | _BV(EIE_TXERIE) | _BV(EIE_RXERIE));
-
-	EIMSK |= _BV(INT0);
 }
 
 void enc_send_frame(uint16_t length, const uint8_t *frame)

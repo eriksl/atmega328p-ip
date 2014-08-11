@@ -3,6 +3,7 @@
 #include "twi_master.h"
 #include "stats.h"
 #include "util.h"
+#include "watchdog.h"
 
 #include <stdint.h>
 
@@ -139,10 +140,12 @@ static void twi_write(uint16_t length, const uint8_t *src, uint16_t size, uint8_
 		fxstrncpy(string_ok, size, dst);
 }
 
-void application_init(void)
+uint8_t application_init(void)
 {
 	timer1_init_pwm1a1b(timer1_1);	// pwm timer 1 resolution: 16 bits, frequency = 122 Hz
 	timer1_start();
+
+	return(WATCHDOG_PRESCALER_8192);
 }
 
 void application_idle(void)

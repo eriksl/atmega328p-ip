@@ -20,7 +20,6 @@
 enum
 {
 	max_frame_size = 384,
-	watchdog_prescaler = WATCHDOG_PRESCALER_256,
 };
 
 typedef struct
@@ -173,11 +172,9 @@ int main(void)
 	twi_master_init();
 	enc_init(max_frame_size, &my_mac_address);
 	enc_set_led(PHLCON_LED_RCV, PHLCON_LED_XMIT);
+	watchdog_start(application_init());
 
-	watchdog_start(watchdog_prescaler);
 	sei();
-
-	application_init();
 
 	for(;;)
 	{

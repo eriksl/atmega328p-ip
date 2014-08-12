@@ -207,7 +207,6 @@ void enc_wait_interrupt(uint8_t mode) // mode = 0: receive, 1 = send
 	enc_clear_interrupts();
 }
 
-
 void enc_init(uint16_t max_frame_size, const mac_addr_t *mac)
 {
 	sc();			// reset

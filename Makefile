@@ -23,9 +23,10 @@ HEXFILE		=		$(PROGRAM).hex
 ELFFILE		=		$(PROGRAM).elf
 PROGRAMMED	=		.programmed
 CFLAGS		=		-I$(CURDIR) \
-					--std=gnu99 -Wall -Wno-cpp -Winline $(CCDEBUGFLAGS) -mmcu=$(MCU) -DF_CPU=$(MCUSPEED) \
-					-fpack-struct -fno-keep-static-consts -frename-registers -Wno-unused-variable
-LDFLAGS		=		-Wall -mmcu=$(MCU)
+					--std=gnu99 -Wall -Winline $(CCOPTFLAGS) -mmcu=$(MCU) -DF_CPU=$(MCUSPEED) \
+					-fpack-struct -fno-keep-static-consts -frename-registers -Wno-unused-variable \
+					-fdata-sections -ffunction-sections
+LDFLAGS		=		-Wall -mmcu=$(MCU) -Wl,-gc-sections
 
 .PHONY:				all clean hex
 .SUFFIXES:

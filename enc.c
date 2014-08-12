@@ -15,7 +15,8 @@ ISR (INT0_vect, ISR_NOBLOCK)
 	eth_interrupts++;
 }
 
-static uint16_t next_frame_pointer;
+static uint8_t	shadow_packet_counter;
+static uint16_t	next_frame_pointer;
 
 static void sc(void)
 {
@@ -218,7 +219,8 @@ void enc_init(uint16_t max_frame_size, const mac_addr_t *mac)
 
 	enc_clear_interrupts();
 
-	next_frame_pointer = RXBUFFER;
+	shadow_packet_counter	= 0;
+	next_frame_pointer		= RXBUFFER;
 
 	// read buffer
 
@@ -300,7 +302,7 @@ void enc_clear_errors(void)
 
 uint8_t enc_rx_complete(void)
 {
-	return(read_register(EPKTCNT) > 0);
+	return(enc_rx_pkts_buffered() > 0);
 }
 
 uint8_t enc_tx_complete(void)
@@ -310,7 +312,14 @@ uint8_t enc_tx_complete(void)
 
 uint8_t enc_rx_pkts_buffered(void)
 {
-	return(read_register(EPKTCNT));
+	while(read_register(EPKTCNT) > 0)
+	{
+		if(shadow_packet_counter < 255)
+			shadow_packet_counter++;
+		setbits_register(ECON2, _BV(ECON2_PKTDEC));
+	}
+
+	return(shadow_packet_counter);
 }
 
 void enc_send_frame(uint16_t length, const uint8_t *frame)
@@ -371,7 +380,7 @@ uint16_t enc_receive_frame(uint16_t buffer_length, uint8_t *frame)
 	write_register(ERXRDPTL, (next_frame_pointer >> 0) & 0xff); // move rx pointer, free memory
 	write_register(ERXRDPTH, (next_frame_pointer >> 8) & 0xff);
 
-	setbits_register(ECON2, _BV(ECON2_PKTDEC));
+	shadow_packet_counter--;
 
 	return(length);
 }

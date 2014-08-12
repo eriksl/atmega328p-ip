@@ -1,9 +1,11 @@
 #ifndef _util_h_
 #define _util_h_
 
-#include <avr/sleep.h>
-
 #include <stdint.h>
+
+void reset(void);
+void sleep(uint16_t ms);
+void pause(void);
 
 void int_to_str(uint16_t in, uint8_t outlen, uint8_t *out);
 uint8_t hex_to_int(uint16_t *length, uint8_t const **in, uint8_t *value);
@@ -13,14 +15,5 @@ void fxstrncpy(const __flash uint8_t *in, uint16_t outlen, uint8_t *out);
 void xstrncat(const uint8_t *in, uint16_t outlen, uint8_t *out);
 void fxstrncat(const __flash uint8_t *in, uint16_t outlen, uint8_t *out);
 uint16_t xstrlen(const uint8_t *str);
-
-void reset(void);
-void sleep(uint16_t ms);
-
-static inline void pause()
-{
-	set_sleep_mode(SLEEP_MODE_IDLE);
-	sleep_mode();
-}
 
 #endif

@@ -3,6 +3,7 @@
 
 #include <util/delay.h>
 #include <avr/interrupt.h>
+#include <avr/sleep.h>
 
 #include <stdint.h>
 
@@ -22,6 +23,12 @@ void sleep(uint16_t ms)
 		_delay_ms(1);
 		watchdog_reset();
 	}
+}
+
+void pause(void)
+{
+	set_sleep_mode(SLEEP_MODE_IDLE);
+	sleep_mode();
 }
 
 void int_to_str(uint16_t in, uint8_t outlen, uint8_t *out)

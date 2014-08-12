@@ -159,11 +159,11 @@ int main(void)
 	my_ipv4_address.byte[2] = 0;
 	my_ipv4_address.byte[3] = 0;
 
+	PORTD = 0;
+	sleep(500);
 	PORTD = _BV(0);
 	sleep(500);
-	PIND = _BV(0) | _BV(1);
-	sleep(500);
-	PIND = _BV(0) | _BV(1);
+	PORTD = _BV(1);
 	sleep(500);
 	PORTD = 0;
 

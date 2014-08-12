@@ -161,7 +161,6 @@ void application_idle(void)
 
 int16_t application_content(uint16_t length, const uint8_t *src, uint16_t size, uint8_t *dst)
 {
-	static uint8_t conv[8];
 	static uint8_t cmd;
 
 	if(size == 0)

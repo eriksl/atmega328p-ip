@@ -108,7 +108,6 @@ int main(void)
 
 	static	uint16_t		rx_frame_length;
 	static	uint16_t		tx_frame_length;
-	static	uint16_t		tx_payload_length;
 
 	cli();
 	watchdog_stop();

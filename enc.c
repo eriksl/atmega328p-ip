@@ -124,7 +124,6 @@ static uint16_t read_memory_16(void)
 
 uint16_t read_register(uint16_t reg)
 {
-	uint8_t mistat;
 	uint8_t	rvh, rvl;
 	uint16_t rv = 0;
 
@@ -344,7 +343,7 @@ void enc_send_frame(uint16_t length, const uint8_t *frame)
 uint16_t enc_receive_frame(uint16_t buffer_length, uint8_t *frame)
 {
 	uint16_t length, current;
-	uint8_t	 rxstat, reg_tmp;
+	uint8_t	 rxstat;
 
 	if(!enc_rx_complete())
 		return(0);

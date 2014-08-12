@@ -184,27 +184,9 @@ static void write_register(uint16_t reg, uint16_t data)
 
 static void enc_clear_interrupts(void)
 {
-	EIMSK &= ~_BV(INT0);
-
-	write_register(EIE, 0x00);
 	write_register(EIR, 0x00);
-}
 
-void enc_wait_interrupt(uint8_t mode) // mode = 0: receive, 1 = send
-{
-	enc_clear_interrupts();
-
-	if(mode) // send
-		write_register(EIE, _BV(EIE_INTIE) | _BV(EIE_TXIE)  | _BV(EIE_TXERIE));
-	else // receive
-		write_register(EIE, _BV(EIE_INTIE) | _BV(EIE_PKTIE) | _BV(EIE_RXERIE));
-
-	EIMSK |= _BV(INT0);
-
-	if(PIND & _BV(2))	// interrupt de-asserted
-		pause();		// otherwise won't wakeup from sleep
-
-	enc_clear_interrupts();
+	enc_rx_complete(); // clears frames buffered interrupt
 }
 
 void enc_init(uint16_t max_frame_size, const mac_addr_t *mac)
@@ -214,8 +196,9 @@ void enc_init(uint16_t max_frame_size, const mac_addr_t *mac)
 
 	EICRA &= ~_BV(ISC00);	// INT0
 	EICRA |=  _BV(ISC01);	// falling edge
-	EIMSK &= ~_BV(INT0);	// disable INT0
+	EIMSK |=  _BV(INT0);	// enable INT0
 
+	write_register(EIE, 0x00);
 	enc_clear_interrupts();
 
 	shadow_packet_counter	= 0;
@@ -319,6 +302,39 @@ uint8_t enc_rx_pkts_buffered(void)
 	}
 
 	return(shadow_packet_counter);
+}
+
+void enc_wait_interrupt(uint8_t mode) // mode = 0: receive, 1 = send
+{
+	if(mode) // send
+		write_register(EIE, _BV(EIE_INTIE) | _BV(EIE_TXIE)  | _BV(EIE_TXERIE));
+	else // receive
+		write_register(EIE, _BV(EIE_INTIE) | _BV(EIE_PKTIE) | _BV(EIE_RXERIE));
+
+	enc_clear_interrupts();
+
+	// deassert interrupt and wait for it to be deasserted (go high)
+
+	PORTD |= _BV(0);
+	PORTD &= ~_BV(1);
+
+	while(!(PIND & _BV(2)))
+		(void)0;
+
+	pause();
+
+	// deassert interrupt and wait for it to be deasserted (go high)
+
+	enc_clear_interrupts();
+
+	PORTD |=  _BV(0);
+	PORTD |=  _BV(1);
+
+	while(!(PIND & _BV(2)))
+		(void)0;
+
+	PORTD &= ~_BV(0);
+	PORTD &= ~_BV(1);
 }
 
 void enc_send_frame(uint16_t length, const uint8_t *frame)

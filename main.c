@@ -59,7 +59,7 @@ static uint16_t receive_frame(uint8_t *frame, uint16_t frame_size)
 	if(enc_rx_error())
 	{
 		eth_rxerr++;
-		enc_clear_errors();
+		enc_clear_rx_error();
 	}
 
 	frame_length = enc_receive_frame(frame_size, frame);
@@ -79,7 +79,7 @@ static void send_frame_wait_ready(void)
 		if(enc_tx_error())
 		{
 			eth_txerr++;
-			enc_clear_errors();
+			enc_clear_tx_error();
 			continue;
 		}
 

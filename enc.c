@@ -271,7 +271,12 @@ uint8_t enc_tx_error(void)
 	return(!!(read_register(EIR) & _BV(EIR_TXERIF)));
 }
 
-void enc_clear_errors(void)
+void enc_clear_rx_error(void)
+{
+	clearbits_register(EIR, _BV(EIR_RXERIF));
+}
+
+void enc_clear_tx_error(void)
 {
 	if(read_register(EIR) & _BV(EIR_TXERIF)) // transmit stuck, reset
 	{
@@ -279,7 +284,7 @@ void enc_clear_errors(void)
 		clearbits_register(ECON1, _BV(ECON1_TXRST));
 	}
 
-	clearbits_register(EIR, _BV(EIR_RXERIF) | _BV(EIR_TXERIF));
+	clearbits_register(EIR, _BV(EIR_TXERIF));
 }
 
 uint8_t enc_rx_complete(void)

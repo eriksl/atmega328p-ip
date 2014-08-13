@@ -11,13 +11,13 @@ static state_entry_t state[] =
 	{ 0, 0,	 {{ 0, 0, 0, 0 }}, },
 };
 
-static udp4_datagram_checksum_t checksum_header;
-
 void udp4_add_datagram_header(udp4_datagram_t *datagram,
 		const ipv4_addr_t *ipv4_src, const ipv4_addr_t *ipv4_dst,
 		uint16_t udp4_src, uint16_t udp4_dst,
 		uint16_t payload_length)
 {
+	udp4_datagram_checksum_t checksum_header;
+
 	datagram->sport		= htons(udp4_src);
 	datagram->dport		= htons(udp4_dst);
 	datagram->length	= htons(sizeof(udp4_datagram_t) + payload_length);
@@ -39,10 +39,12 @@ uint16_t process_udp4(uint16_t length, const uint8_t *packet,
 		uint8_t protocol,
 		const mac_addr_t *my_mac_addr, ipv4_addr_t *my_ipv4_addr)
 {
-	static const			udp4_datagram_t *src;
-	static					udp4_datagram_t *dst;
-	static state_entry_t *	state_entry;
-	static int16_t			payload_length;
+	udp4_datagram_checksum_t checksum_header;
+
+	udp4_datagram_t		*src;
+	udp4_datagram_t		*dst;
+	state_entry_t		*state_entry;
+	int16_t				payload_length;
 
 	src = (udp4_datagram_t *)packet;
 	dst = (udp4_datagram_t *)reply;

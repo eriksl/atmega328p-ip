@@ -6,7 +6,7 @@
 
 static inline uint8_t status(void)
 {
-	static uint8_t twsr;
+	uint8_t twsr;
 
 	twsr = TWSR & 0xf8;
 	return(twsr >> 3);
@@ -30,7 +30,7 @@ static void send_stop(void)
 
 static uint8_t send_start(void)
 {
-	static uint8_t stat;
+	uint8_t stat;
 
 	PORTD |= _BV(4);
 
@@ -50,7 +50,7 @@ static uint8_t send_start(void)
 
 static uint8_t send_address(uint8_t address, uint8_t request_write)
 {
-	static uint8_t stat;
+	uint8_t stat;
 
 	TWDR = (address << 1) | (request_write ? 0 : 1);
 	TWCR = _BV(TWINT) | _BV(TWEN);
@@ -80,7 +80,7 @@ static uint8_t send_address(uint8_t address, uint8_t request_write)
 
 static uint8_t send_byte(uint8_t data)
 {
-	static uint8_t stat;
+	uint8_t stat;
 
 	TWDR = data;
 	TWCR = _BV(TWINT) | _BV(TWEN);
@@ -99,7 +99,7 @@ static uint8_t send_byte(uint8_t data)
 
 static uint8_t receive_byte(uint8_t *data)
 {
-	static uint8_t stat;
+	uint8_t stat;
 
 	TWCR = _BV(TWINT) | _BV(TWEN) | _BV(TWEA);
 
@@ -122,7 +122,7 @@ static uint8_t receive_byte(uint8_t *data)
 
 static uint8_t send_nack(void)
 {
-	static uint8_t stat;
+	uint8_t stat;
 
 	TWCR = _BV(TWINT) | _BV(TWEN);
 
@@ -153,7 +153,7 @@ void twi_master_init(void)
 
 void twi_master_recover(void)
 {
-	static uint8_t ix;
+	uint8_t ix;
 
 	// try to send stop condition
 
@@ -182,7 +182,7 @@ void twi_master_recover(void)
 
 uint8_t twi_master_send(uint8_t address, uint8_t length, const uint8_t *buffer)
 {
-	static uint8_t rv;
+	uint8_t rv;
 
 	if((rv = send_start()) != tme_ok)
 		return(rv);
@@ -201,7 +201,7 @@ uint8_t twi_master_send(uint8_t address, uint8_t length, const uint8_t *buffer)
 
 uint8_t twi_master_receive(uint8_t address, uint8_t size, uint8_t *buffer)
 {
-	static uint8_t rv, ix;
+	uint8_t rv, ix;
 
 	if((rv = send_start()) != tme_ok)
 		return(rv);

@@ -9,7 +9,7 @@ const mac_addr_t mac_addr_broadcast = {{ 0xff, 0xff, 0xff, 0xff, 0xff, 0xff }};
 
 uint8_t ethernet_address_match(const mac_addr_t *address1, const mac_addr_t *address2)
 {
-	static uint8_t ix;
+	uint8_t ix;
 
 	for(ix = 0; ix < sizeof(mac_addr_t); ix++)
 		if(address1->byte[ix] != address2->byte[ix])
@@ -22,9 +22,9 @@ uint16_t ethernet_process_frame(const uint8_t *frame_in, uint16_t frame_in_lengt
 		uint8_t *frame_out, uint16_t frame_out_size,
 		const mac_addr_t *my_mac_address, ipv4_addr_t *my_ipv4_address)
 {
-	static etherframe_t	*etherframe_in;
-	static etherframe_t	*etherframe_out;
-	static uint16_t		payload_length_out;
+	etherframe_t	*etherframe_in;
+	etherframe_t	*etherframe_out;
+	uint16_t		payload_length_out;
 
 	etherframe_in		= (etherframe_t *)frame_in;
 	etherframe_out		= (etherframe_t *)frame_out;

@@ -103,11 +103,11 @@ static void send_frame(const uint8_t *frame, uint16_t frame_length)
 
 int main(void)
 {
-	static	uint8_t 		rx_frame[max_frame_size];
-	static	uint8_t			tx_frame[max_frame_size];
+	uint8_t 		rx_frame[max_frame_size];
+	uint8_t			tx_frame[max_frame_size];
 
-	static	uint16_t		rx_frame_length;
-	static	uint16_t		tx_frame_length;
+	uint16_t		rx_frame_length;
+	uint16_t		tx_frame_length;
 
 	cli();
 	watchdog_stop();

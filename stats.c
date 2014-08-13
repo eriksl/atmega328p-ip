@@ -26,7 +26,7 @@ stats_t wd_interrupts = 0;
 
 void stats_generate(uint16_t size, uint8_t *dst)
 {
-	static uint8_t conv[8];
+	uint8_t conv[8];
 
 	xstrncat((uint8_t *)"wd int: ", size, dst);
 	int_to_str(wd_interrupts, sizeof(conv), conv);

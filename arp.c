@@ -7,8 +7,8 @@ uint16_t process_arp(const uint8_t *payload_in, uint16_t payload_in_length,
 		uint8_t *payload_out,
 		const mac_addr_t *mac, const ipv4_addr_t *ipv4)
 {
-	static const	ether_arp_pkt_t *src;
-	static			ether_arp_pkt_t *dst;
+	const	ether_arp_pkt_t *src;
+			ether_arp_pkt_t *dst;
 
 	src = (ether_arp_pkt_t *)payload_in;
 	dst = (ether_arp_pkt_t *)payload_out;

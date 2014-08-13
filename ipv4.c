@@ -9,7 +9,7 @@ const ipv4_addr_t ipv4_addr_broadcast  = {{ 0xff, 0xff, 0xff, 0xff }};
 
 uint8_t ipv4_address_match(const ipv4_addr_t *address1, const ipv4_addr_t *address2)
 {
-	static uint8_t ix;
+	uint8_t ix;
 
 	for(ix = 0; ix < sizeof(ipv4_addr_t); ix++)
 		if(address1->byte[ix] != address2->byte[ix])
@@ -21,8 +21,8 @@ uint8_t ipv4_address_match(const ipv4_addr_t *address1, const ipv4_addr_t *addre
 uint16_t ipv4_checksum(uint16_t length1, const uint8_t *data1,
 					uint16_t length2, const uint8_t *data2)
 {
-	static uint16_t	offset;
-	static uint32_t	sum;
+	uint16_t	offset;
+	uint32_t	sum;
 
 	sum = 0;
 
@@ -77,11 +77,11 @@ uint16_t process_ipv4(const uint8_t *payload_in, uint16_t payload_in_length,
 		uint8_t *payload_out, uint16_t payload_out_size,
 		const mac_addr_t *my_mac_addr, ipv4_addr_t *my_ipv4_addr)
 {
-	static const	ipv4_packet_t *src;
-	static			ipv4_packet_t *dst;
-	static uint8_t	header_length;
-	static uint16_t	total_length;
-	static uint16_t	payload_out_length;
+	const	ipv4_packet_t	*src;
+			ipv4_packet_t	*dst;
+			uint8_t			header_length;
+			uint16_t		total_length;
+			uint16_t		payload_out_length;
 
 	src = (ipv4_packet_t *)payload_in;
 	dst = (ipv4_packet_t *)payload_out;

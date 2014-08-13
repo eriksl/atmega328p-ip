@@ -33,9 +33,9 @@ void pause(void)
 
 void int_to_str(uint16_t in, uint8_t outlen, uint8_t *out)
 {
-	static uint16_t divisor;
-	static uint8_t current;
-	static uint8_t leading;
+	uint16_t divisor;
+	uint8_t current;
+	uint8_t leading;
 
 	divisor = 10000;
 	leading = 1;
@@ -95,7 +95,7 @@ uint8_t hex_to_int(uint16_t *length, uint8_t const **in, uint8_t *value)
 
 void int_to_hex(uint8_t *buffer, uint8_t value)
 {
-	static uint8_t nibble_high, nibble_low;
+	uint8_t nibble_high, nibble_low;
 
 	nibble_high = (value & 0xf0) >> 4;
 	nibble_low  = (value & 0x0f) >> 0;
@@ -157,7 +157,7 @@ void fxstrncat(const __flash uint8_t *in, uint16_t outlen, uint8_t *out)
 
 uint16_t xstrlen(const uint8_t *str)
 {
-	static uint16_t length;
+	uint16_t length;
 	
 	length = 0;
 

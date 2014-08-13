@@ -4,10 +4,23 @@
 #include "stats.h"
 #include "util.h"
 #include "watchdog.h"
+#include "stackmonitor.h"
 
 #include <stdint.h>
 
-static const __flash uint8_t string_usage[]			= "command:\n\n  e)echo\n\n  ?/h)help\n  q)uit\n  R)eset\n  s)tats\n  r)ead twi\n  w)write twi\n  i)nit/reset twi\n";
+static const __flash uint8_t string_usage[] =
+	"command:\n"
+	"\n"
+	"  ?/h)help\n"
+	"  e)echo\n\n"
+	"  q)uit\n"
+	"  R)eset\n"
+	"  s)tats\n"
+	"  r)ead twi\n"
+	"  w)write twi\n"
+	"  i)nit/reset twi\n"
+	"  S)tack usage\n";
+
 static const __flash uint8_t string_error[]			= "Error: ";
 static const __flash uint8_t string_state[]			= ", state: ";
 static const __flash uint8_t string_newline[]		= "\n";
@@ -17,10 +30,11 @@ static const __flash uint8_t string_synhexdatalen[]	= "Syntax error (hex/datalen
 static const __flash uint8_t string_synhexdata[]	= "Syntax error (hex/data)\n";
 static const __flash uint8_t string_ok[]			= "Ok\n";
 static const __flash uint8_t string_okdata[]		= "Ok, data:";
+static const __flash uint8_t string_bytes[]			= " bytes free\n";
 
 static void twi_error(uint16_t size, uint8_t *dst, uint8_t error)
 {
-	static uint8_t numbuf[8];
+	uint8_t numbuf[8];
 
 	fxstrncpy(string_error, size, dst);
 	int_to_str((error & 0x0f) >> 0, sizeof(numbuf), numbuf);
@@ -39,8 +53,8 @@ static void twi_reset(uint16_t size, uint8_t *dst)
 
 static void twi_read(uint16_t length, const uint8_t *src, uint16_t size, uint8_t *dst)
 {
-	static uint8_t addr, rv, rlen, slen, current;
-	static uint8_t buffer[16];
+	uint8_t addr, rv, rlen, slen, current;
+	uint8_t buffer[16];
 
 	while((*src <= ' ') && (length > 0))
 	{
@@ -97,9 +111,9 @@ static void twi_read(uint16_t length, const uint8_t *src, uint16_t size, uint8_t
 
 static void twi_write(uint16_t length, const uint8_t *src, uint16_t size, uint8_t *dst)
 {
-	static uint8_t addr, rv;
-	static uint8_t buffer[16];
-	static uint8_t buflen;
+	uint8_t addr, rv;
+	uint8_t buffer[16];
+	uint8_t buflen;
 
 	while((*src <= ' ') && (length > 0))
 	{
@@ -161,7 +175,7 @@ void application_idle(void)
 
 int16_t application_content(uint16_t length, const uint8_t *src, uint16_t size, uint8_t *dst)
 {
-	static uint8_t cmd;
+	uint8_t cmd;
 
 	if(size == 0)
 		return(0);
@@ -203,6 +217,13 @@ int16_t application_content(uint16_t length, const uint8_t *src, uint16_t size, 
 		case('s'):
 		{
 			stats_generate(size, dst);
+			break;
+		}
+
+		case('S'):
+		{
+			int_to_str(stackmonitor_free(), size, dst);
+			fxstrncat(string_bytes, size, dst);
 			break;
 		}
 

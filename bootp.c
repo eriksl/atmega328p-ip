@@ -7,8 +7,8 @@
 
 uint16_t bootp_create_request(uint8_t *frame, const mac_addr_t *src)
 {
-	static udp4_composite_header_t	*composite_header;
-	static bootp_packet_t			*packet;
+	udp4_composite_header_t	*composite_header;
+	bootp_packet_t			*packet;
 
 	composite_header	= (udp4_composite_header_t *)frame;
 	packet				= (bootp_packet_t *)&composite_header->payload;
@@ -42,7 +42,7 @@ uint16_t bootp_create_request(uint8_t *frame, const mac_addr_t *src)
 void bootp_process_reply(const uint8_t *payload, uint16_t length,
 		const mac_addr_t *dst, ipv4_addr_t *my_ipv4_addr)
 {
-	static bootp_packet_t *packet;
+	bootp_packet_t *packet;
 
 	packet	= (bootp_packet_t *)payload;
 

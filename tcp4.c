@@ -41,8 +41,6 @@ static void reset_state(state_entry_t *st)
 	st->rseq		= 0;
 }
 
-static segment_checksum_t checksum_header;
-
 static uint16_t init_segment(const state_entry_t *state_entry, uint8_t add_syn_options,
 							uint16_t mss, const segment_t *src, segment_t *dst)
 {
@@ -101,6 +99,8 @@ static uint16_t init_segment(const state_entry_t *state_entry, uint8_t add_syn_o
 static void finish_segment(uint16_t header_plus_data_length, const segment_t *src, segment_t *dst,
 		const ipv4_addr_t *src_ipv4, const ipv4_addr_t *dst_ipv4)
 {
+	segment_checksum_t checksum_header;
+
 	checksum_header.src			= *src_ipv4;
 	checksum_header.dst			= *dst_ipv4;
 	checksum_header.zero		= 0;
@@ -175,13 +175,14 @@ uint16_t process_tcp4(uint16_t length, const uint8_t *packet,
 		const ipv4_addr_t *src_ipv4, const ipv4_addr_t *dst_ipv4,
 		uint8_t protocol)
 {
-	static const			segment_t *src;
-	static					segment_t *dst;
-	static uint16_t			max_content_length;
-	static int16_t			received_content_length, send_content_length;
-	static uint8_t			src_header_length, dst_header_length;
-	static state_entry_t	*state_entry;
-	static uint16_t			rv;
+	const				segment_t *src;
+						segment_t *dst;
+	uint16_t			max_content_length;
+	int16_t				received_content_length, send_content_length;
+	uint8_t				src_header_length, dst_header_length;
+	state_entry_t		*state_entry;
+	uint16_t			rv;
+	segment_checksum_t	checksum_header;
 
 	src = (segment_t *)packet;
 	dst = (segment_t *)reply;

@@ -9,11 +9,8 @@
 
 void reset(void)
 {
-	cli();
-	watchdog_stop();
-	watchdog_start(WATCHDOG_PRESCALER_16);
 	for(;;)
-		sleep_mode();
+		(void)0;
 }
 
 void sleep(uint16_t ms)

@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 
-typedef uint8_t stats_t;
+typedef uint16_t stats_t;
 
 extern stats_t eth_interrupts;
 extern stats_t eth_pkt_rx;

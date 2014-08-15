@@ -6,9 +6,12 @@
 #include "watchdog.h"
 #include "stackmonitor.h"
 
+#include <avr/pgmspace.h>
+#include <string.h>
 #include <stdint.h>
+#include <stdio.h>
 
-static const __flash uint8_t string_usage[] =
+static const __flash char string_usage[] =
 	"command:\n"
 	"\n"
 	"  ?/h)help\n"
@@ -21,38 +24,29 @@ static const __flash uint8_t string_usage[] =
 	"  i)nit/reset twi\n"
 	"  S)tack usage\n";
 
-static const __flash uint8_t string_error[]			= "Error: ";
-static const __flash uint8_t string_state[]			= ", state: ";
-static const __flash uint8_t string_newline[]		= "\n";
-static const __flash uint8_t string_resetok[]		= "Reset ok\n";
-static const __flash uint8_t string_synhexaddr[]	= "Syntax error (hex/addr)\n";
-static const __flash uint8_t string_synhexdatalen[]	= "Syntax error (hex/datalen)\n";
-static const __flash uint8_t string_synhexdata[]	= "Syntax error (hex/data)\n";
-static const __flash uint8_t string_ok[]			= "Ok\n";
-static const __flash uint8_t string_okdata[]		= "Ok, data:";
-static const __flash uint8_t string_bytes[]			= " bytes free\n";
+static const __flash char synhexaddr[]	= "Syntax error (hex/addr)\n";
 
 static void twi_error(uint16_t size, uint8_t *dst, uint8_t error)
 {
-	uint8_t numbuf[8];
+	static const __flash char format_string[] = "Error: %x, state %x\n";
 
-	fxstrncpy(string_error, size, dst);
-	int_to_str((error & 0x0f) >> 0, sizeof(numbuf), numbuf);
-	xstrncat(numbuf, size, dst);
-	fxstrncat(string_state, size, dst);
-	int_to_str((error & 0xf0) >> 4, sizeof(numbuf), numbuf);
-	xstrncat(numbuf, size, dst);
-	fxstrncat(string_newline, size, dst);
+	snprintf_P((char *)dst, (size_t)size, format_string,
+			error & 0x0f, (error & 0xf0) >> 4);
 }
 
 static void twi_reset(uint16_t size, uint8_t *dst)
 {
+	static const __flash char return_string[] = "Reset ok\n";
+
 	twi_master_recover();
-	fxstrncpy(string_resetok, size, dst);
+	strlcpy_P((char *)dst, return_string, size);
 }
 
 static void twi_read(uint16_t length, const uint8_t *src, uint16_t size, uint8_t *dst)
 {
+	static const __flash char synhexdatalen[]	= "Syntax error (hex/datalen)\n";
+	static const __flash char okdata[]			= "Ok, data:";
+
 	uint8_t addr, rv, rlen, slen, current;
 	uint8_t buffer[16];
 
@@ -64,7 +58,7 @@ static void twi_read(uint16_t length, const uint8_t *src, uint16_t size, uint8_t
 
 	if(!hex_to_int(&length, &src, &addr))
 	{
-		fxstrncpy(string_synhexaddr, size, dst);
+		strlcpy_P((char *)dst, synhexaddr, size);
 		return;
 	}
 
@@ -76,7 +70,7 @@ static void twi_read(uint16_t length, const uint8_t *src, uint16_t size, uint8_t
 
 	if(!hex_to_int(&length, &src, &rlen))
 	{
-		fxstrncpy(string_synhexdatalen, size, dst);
+		strlcpy_P((char *)dst, synhexdatalen, size);
 		return;
 	}
 
@@ -87,8 +81,8 @@ static void twi_read(uint16_t length, const uint8_t *src, uint16_t size, uint8_t
 		twi_error(size, dst, rv);
 	else
 	{
-		fxstrncpy(string_okdata, size, dst);
-		slen = xstrlen(dst);
+		strlcpy_P((char *)dst, okdata, size);
+		slen = strlen((const char *)dst);
 
 		if(slen < size)
 		{
@@ -111,6 +105,9 @@ static void twi_read(uint16_t length, const uint8_t *src, uint16_t size, uint8_t
 
 static void twi_write(uint16_t length, const uint8_t *src, uint16_t size, uint8_t *dst)
 {
+	static const __flash char synhexdata[]	= "Syntax error (hex/data)\n";
+	static const __flash char ok[]			= "Ok\n";
+
 	uint8_t addr, rv;
 	uint8_t buffer[16];
 	uint8_t buflen;
@@ -123,7 +120,7 @@ static void twi_write(uint16_t length, const uint8_t *src, uint16_t size, uint8_
 
 	if(!hex_to_int(&length, &src, &addr))
 	{
-		fxstrncpy(string_synhexaddr, size, dst);
+		strlcpy_P((char *)dst, synhexaddr, size);
 		return;
 	}
 
@@ -142,7 +139,7 @@ static void twi_write(uint16_t length, const uint8_t *src, uint16_t size, uint8_
 
 		if(!hex_to_int(&length, &src, &buffer[buflen]))
 		{
-			fxstrncpy(string_synhexdata, size, dst);
+			strlcpy_P((char *)dst, synhexdata, size);
 			return;
 		}
 		buflen++;
@@ -151,7 +148,7 @@ static void twi_write(uint16_t length, const uint8_t *src, uint16_t size, uint8_
 	if((rv = twi_master_send(addr, buflen, buffer)) != tme_ok)
 		twi_error(size, dst, rv);
 	else
-		fxstrncpy(string_ok, size, dst);
+		strlcpy_P((char *)dst, ok, size);
 }
 
 uint8_t application_init(void)
@@ -175,6 +172,8 @@ void application_idle(void)
 
 int16_t application_content(uint16_t length, const uint8_t *src, uint16_t size, uint8_t *dst)
 {
+	static const __flash char stackfree_fmt [] = "Stackmonitor: %d bytes free\n";
+
 	uint8_t cmd;
 
 	if(size == 0)
@@ -189,6 +188,11 @@ int16_t application_content(uint16_t length, const uint8_t *src, uint16_t size, 
 
 	switch(cmd)
 	{
+		case(0xff):
+		{
+			return(0); // telnet protocol
+		}
+
 		case('e'):
 		{
 			length++; // room for null byte
@@ -196,7 +200,7 @@ int16_t application_content(uint16_t length, const uint8_t *src, uint16_t size, 
 			if(length > size)
 				length = size;
 
-			xstrncat(src, length, dst);
+			strlcat((char *)dst, (const char *)src, length);
 
 			break;
 		}
@@ -222,8 +226,7 @@ int16_t application_content(uint16_t length, const uint8_t *src, uint16_t size, 
 
 		case('S'):
 		{
-			int_to_str(stackmonitor_free(), size, dst);
-			fxstrncat(string_bytes, size, dst);
+			snprintf_P((char *)dst, (size_t)size, stackfree_fmt, stackmonitor_free());
 			break;
 		}
 
@@ -247,10 +250,10 @@ int16_t application_content(uint16_t length, const uint8_t *src, uint16_t size, 
 
 		default:
 		{
-			fxstrncat(string_usage, size, dst);
+			strlcat_P((char *)dst, string_usage, size);
 			break;
 		}
 	}
 
-	return((int16_t)xstrlen(dst));
+	return(strlen((const char *)dst));
 }

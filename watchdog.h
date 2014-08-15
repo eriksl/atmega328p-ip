@@ -1,5 +1,5 @@
-#ifndef _watchdog_h_
-#define _watchdog_h_
+#ifndef watchdog_h
+#define watchdog_h
 
 #include <avr/wdt.h>
 
@@ -19,8 +19,12 @@ enum
 	WATCHDOG_PRESCALER_8192		=	WDTO_8S,
 };
 
-void watchdog_reset(void);
 void watchdog_stop(void);
 void watchdog_start(uint8_t scaler);
+
+static void inline watchdog_rearm(void)
+{
+	WDTCSR |= _BV(WDIE);
+}
 
 #endif

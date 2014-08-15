@@ -119,7 +119,7 @@ int main(void)
 
 	for(;;)
 	{
-		watchdog_reset();
+		watchdog_rearm();
 
 		application_idle();
 

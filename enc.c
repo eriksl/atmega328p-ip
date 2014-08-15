@@ -307,7 +307,7 @@ void enc_send_frame(const uint8_t *frame, uint16_t length)
 
 	for(current = 0; current < length; current++)
 	{
-		watchdog_reset();
+		watchdog_rearm();
 		write_memory_8(frame[current]);
 	}
 
@@ -401,7 +401,7 @@ uint16_t enc_receive_frame(uint8_t *frame, uint16_t buffer_length)
 
 	for(current = 0; current < length; current++)
 	{
-		watchdog_reset();
+		watchdog_rearm();
 		frame[current] = read_memory_8();
 	}
 

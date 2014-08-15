@@ -21,7 +21,7 @@ void sleep(uint16_t ms)
 	while(ms-- > 0)
 	{
 		_delay_ms(1);
-		watchdog_reset();
+		watchdog_rearm();
 	}
 }
 

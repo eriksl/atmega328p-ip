@@ -32,7 +32,7 @@ void spi_init(void)
 	PRR &= ~_BV(PRSPI); // turn SPI on
 	_delay_ms(1);
 
-	SPCR = _BV(SPE) | _BV(MSTR) | _BV(SPR0); // use clock / 16 = 500 kHz
+	SPCR = _BV(SPE) | _BV(MSTR);  // use clock / 4 = 2 Mhz
 	SPSR = 0;
 }
 

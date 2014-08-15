@@ -197,7 +197,9 @@ static uint8_t rx_pkts_buffered(void)
 static void clear_interrupt_flags(void)
 {
 	write_register(EIR, 0x00);
+	sleep(1);
 	rx_pkts_buffered();
+	sleep(1);
 }
 
 void enc_init(uint16_t max_frame_size, const mac_addr_t *mac)

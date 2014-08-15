@@ -34,71 +34,13 @@ typedef struct
 	mac_addr_t					my_mac_address;
 } eeprom_t;
 
-static const eeprom_t *eeprom = (eeprom_t *)0;
-
-static ipv4_addr_t my_ipv4_address;
-static mac_addr_t my_mac_address;
-static uint16_t bootp_timer = 0;
+static const	eeprom_t	*eeprom = (eeprom_t *)0;
+static 			ipv4_addr_t	my_ipv4_address;
+static			mac_addr_t	my_mac_address;
 
 ISR(WDT_vect, ISR_NOBLOCK)
 {
 	wd_interrupts++;
-}
-
-static uint16_t receive_frame(uint8_t *frame, uint16_t frame_size)
-{
-	static uint16_t frame_length;
-
-	if(!enc_rx_complete() && !enc_rx_error())
-	{
-		PORTD |= _BV(5);
-		enc_wait_interrupt(0);	// wait for frame having been received
-		PORTD &= ~_BV(5);
-	}
-
-	if(enc_rx_error())
-	{
-		eth_rxerr++;
-		enc_clear_rx_error();
-	}
-
-	frame_length = enc_receive_frame(frame_size, frame);
-
-	if(frame_length < sizeof(etherframe_t))
-		frame_length = 0;
-
-	eth_pkt_rx++;
-
-	return(frame_length);
-}
-
-static void send_frame_wait_ready(void)
-{
-	while(!enc_tx_complete())
-	{
-		if(enc_tx_error())
-		{
-			eth_txerr++;
-			enc_clear_tx_error();
-			continue;
-		}
-
-		PORTD |= _BV(6);
-		enc_wait_interrupt(1);	// wait for frame having been sent
-		PORTD &= ~_BV(6);
-	}
-}
-
-static void send_frame(const uint8_t *frame, uint16_t frame_length)
-{
-	send_frame_wait_ready();
-
-	eth_pkts_buffered = enc_rx_pkts_buffered();
-
-	enc_send_frame(frame_length, frame);
-	eth_pkt_tx++;
-
-	send_frame_wait_ready();
 }
 
 int main(void)
@@ -183,23 +125,16 @@ int main(void)
 
 		if(ipv4_address_match(&my_ipv4_address, &ipv4_addr_zero))
 		{
-			if(bootp_timer == 0)
-			{
-				tx_frame_length = bootp_create_request(tx_frame, &my_mac_address);
-				send_frame(tx_frame, tx_frame_length);
-				bootp_timer = 40;
-			}
-
-			if(bootp_timer > 0)
-				bootp_timer--;
+			tx_frame_length = bootp_create_request(tx_frame, &my_mac_address);
+			enc_send_frame(tx_frame, tx_frame_length);
 		}
-		
-		if((rx_frame_length = receive_frame(rx_frame, sizeof(rx_frame))) == 0)
+
+		if((rx_frame_length = enc_receive_frame(rx_frame, sizeof(rx_frame))) == 0)
 			continue;
 
 		if((tx_frame_length = ethernet_process_frame(rx_frame, rx_frame_length, tx_frame, sizeof(tx_frame), &my_mac_address, &my_ipv4_address)) == 0)
 			continue;
 
-		send_frame(tx_frame, tx_frame_length);
+		enc_send_frame(tx_frame, tx_frame_length);
 	}
 }

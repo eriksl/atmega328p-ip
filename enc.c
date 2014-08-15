@@ -182,11 +182,22 @@ static void write_register(uint16_t reg, uint16_t data)
 	}
 }
 
-static void enc_clear_interrupts(void)
+static uint8_t rx_pkts_buffered(void)
+{
+	while(read_register(EPKTCNT) > 0)
+	{
+		if(shadow_packet_counter < 255)
+			shadow_packet_counter++;
+		setbits_register(ECON2, _BV(ECON2_PKTDEC));
+	}
+
+	return(shadow_packet_counter);
+}
+
+static void clear_interrupt_flags(void)
 {
 	write_register(EIR, 0x00);
-
-	enc_rx_complete(); // clears frames buffered interrupt
+	rx_pkts_buffered();
 }
 
 void enc_init(uint16_t max_frame_size, const mac_addr_t *mac)
@@ -199,7 +210,7 @@ void enc_init(uint16_t max_frame_size, const mac_addr_t *mac)
 	EIMSK |=  _BV(INT0);	// enable INT0
 
 	write_register(EIE, 0x00);
-	enc_clear_interrupts();
+	clear_interrupt_flags();
 
 	shadow_packet_counter	= 0;
 	next_frame_pointer		= RXBUFFER;
@@ -261,90 +272,22 @@ void enc_set_led(uint8_t how1, uint8_t how2)
 		_BV(PHLCON_LFRQ1) | _BV(PHLCON_STRCH));
 }
 
-uint8_t enc_rx_error(void)
-{
-	return(!!(read_register(EIR) & _BV(EIR_RXERIF)));
-}
-
-uint8_t enc_tx_error(void)
-{
-	return(!!(read_register(EIR) & _BV(EIR_TXERIF)));
-}
-
-void enc_clear_rx_error(void)
-{
-	clearbits_register(EIR, _BV(EIR_RXERIF));
-}
-
-void enc_clear_tx_error(void)
-{
-	if(read_register(EIR) & _BV(EIR_TXERIF)) // transmit stuck, reset
-	{
-		setbits_register(ECON1, _BV(ECON1_TXRST));
-		clearbits_register(ECON1, _BV(ECON1_TXRST));
-	}
-
-	clearbits_register(EIR, _BV(EIR_TXERIF));
-}
-
-uint8_t enc_rx_complete(void)
-{
-	return(enc_rx_pkts_buffered() > 0);
-}
-
-uint8_t enc_tx_complete(void)
-{
-	return(!(read_register(ECON1) & _BV(ECON1_TXRTS)));
-}
-
-uint8_t enc_rx_pkts_buffered(void)
-{
-	while(read_register(EPKTCNT) > 0)
-	{
-		if(shadow_packet_counter < 255)
-			shadow_packet_counter++;
-		setbits_register(ECON2, _BV(ECON2_PKTDEC));
-	}
-
-	return(shadow_packet_counter);
-}
-
-void enc_wait_interrupt(uint8_t mode) // mode = 0: receive, 1 = send
-{
-	if(mode) // send
-		write_register(EIE, _BV(EIE_INTIE) | _BV(EIE_TXIE)  | _BV(EIE_TXERIE));
-	else // receive
-		write_register(EIE, _BV(EIE_INTIE) | _BV(EIE_PKTIE) | _BV(EIE_RXERIE));
-
-	enc_clear_interrupts();
-
-	// deassert interrupt and wait for it to be deasserted (go high)
-
-	PORTD |= _BV(0);
-	PORTD &= ~_BV(1);
-
-	while(!(PIND & _BV(2)))
-		(void)0;
-
-	pause();
-
-	// deassert interrupt and wait for it to be deasserted (go high)
-
-	enc_clear_interrupts();
-
-	PORTD |=  _BV(0);
-	PORTD |=  _BV(1);
-
-	while(!(PIND & _BV(2)))
-		(void)0;
-
-	PORTD &= ~_BV(0);
-	PORTD &= ~_BV(1);
-}
-
-void enc_send_frame(uint16_t length, const uint8_t *frame)
+void enc_send_frame(const uint8_t *frame, uint16_t length)
 {
 	uint16_t current;
+
+	if(read_register(EIR) & _BV(EIR_TXERIF)) // transmit stuck, reset
+	{
+		eth_txerr++;
+		setbits_register  (ECON1, _BV(ECON1_TXRST));
+		clearbits_register(ECON1, _BV(ECON1_TXRST));
+		clearbits_register(EIR,   _BV(EIR_TXERIF));
+	}
+
+	PORTD |= _BV(5);
+	while(read_register(ECON1) & (_BV(ECON1_TXRTS) | _BV(ECON1_DMAST)))
+		(void)0;
+	PORTD &= ~_BV(5);
 
 	/* frame start */
 
@@ -366,16 +309,79 @@ void enc_send_frame(uint16_t length, const uint8_t *frame)
 		write_memory_8(frame[current]);
 	}
 
+	clearbits_register(EIR, _BV(EIR_TXIF) | _BV(EIR_TXERIF));
 	setbits_register(ECON1,	_BV(ECON1_TXRTS));
+
+	PORTD |= _BV(6);
+	while(read_register(ECON1) & (_BV(ECON1_TXRTS) | _BV(ECON1_DMAST)))
+		(void)0;
+	PORTD &= ~_BV(6);
+
+	eth_pkt_tx++;
 }
 
-uint16_t enc_receive_frame(uint16_t buffer_length, uint8_t *frame)
+uint16_t enc_receive_frame(uint8_t *frame, uint16_t buffer_length)
 {
 	uint16_t length, current;
 	uint8_t	 rxstat;
 
-	if(!enc_rx_complete())
+	if(rx_pkts_buffered() == 0)
+	{
+		if(read_register(EIR) & _BV(EIR_RXERIF))
+		{
+			eth_rxerr++;
+			clearbits_register(EIR, _BV(EIR_RXERIF));
+		}
+
+		clear_interrupt_flags();
+		write_register(EIE, _BV(EIE_INTIE) | _BV(EIE_PKTIE) | _BV(EIE_RXERIE));
+
+		// deassert interrupt and wait for it to be deasserted (go high)
+
+		PORTD |= _BV(0);
+		PORTD |= _BV(1);
+
+		while(!(PIND & _BV(2)))
+			(void)0;
+
+		// wait for interrupt to be asserted (go low)
+
+		pause();
+
+		PORTD &= ~_BV(0);
+		PORTD |=  _BV(1);
+
+		// deassert interrupt and wait for it to be deasserted (go high)
+
+		clear_interrupt_flags();
+		write_register(EIE, 0x00);
+
+		PORTD |=  _BV(0);
+		PORTD &= ~_BV(1);
+
+		while(!(PIND & _BV(2)))
+			(void)0;
+
+		PORTD &= ~_BV(0);
+		PORTD &= ~_BV(1);
+	}
+
+	eth_pkt_rx++;
+
+	// now there is a frame (or an error)
+
+	if(read_register(ECON1) & _BV(EIR_RXERIF))
+	{
+		eth_rxerr++;
+		clearbits_register(EIR, _BV(EIR_RXERIF));
 		return(0);
+	}
+
+	if(rx_pkts_buffered() == 0)
+	{
+		eth_rxerr++;
+		return(0);
+	}
 
 	write_register(ERDPTL, (next_frame_pointer >> 0) & 0xff);
 	write_register(ERDPTH, (next_frame_pointer >> 8) & 0xff);
@@ -400,7 +406,8 @@ uint16_t enc_receive_frame(uint16_t buffer_length, uint8_t *frame)
 	write_register(ERXRDPTL, (next_frame_pointer >> 0) & 0xff); // move rx pointer, free memory
 	write_register(ERXRDPTH, (next_frame_pointer >> 8) & 0xff);
 
-	shadow_packet_counter--;
+	if(shadow_packet_counter > 0)
+		shadow_packet_counter--;
 
 	return(length);
 }

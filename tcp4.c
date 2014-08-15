@@ -355,8 +355,11 @@ uint16_t process_tcp4(uint16_t length, const uint8_t *packet,
 
 		case(state_close):
 		{
-			if(src->ack && !src->fin)		// ACK on FIN/ACK, wait for FIN
+			if(src->ack && !src->fin)		// ACK on FIN/ACK
+			{
+				reset_state(state_entry);
 				rv = 0;
+			}
 			else
 			{
 				if(src->fin)				// FIN or FIN/ACK

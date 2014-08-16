@@ -11,18 +11,69 @@
 #include <stdint.h>
 #include <stdio.h>
 
-static const __flash char string_usage[] =
-	"command:\n"
-	"\n"
-	"  ?/h)help\n"
-	"  e)echo\n\n"
-	"  q)uit\n"
-	"  R)eset\n"
-	"  s)tats\n"
-	"  r)ead twi\n"
-	"  w)write twi\n"
-	"  i)nit/reset twi\n"
-	"  S)tack usage\n";
+enum
+{
+	num_args = 8,
+	length_args = 8,
+};
+
+typedef uint8_t (*application_function_t)(uint8_t nargs, uint8_t args[num_args][length_args], uint16_t size, uint8_t *dst);
+
+typedef struct
+{
+	const char					*id;
+	uint8_t						required_args;
+	application_function_t		function;
+	const __flash char			*description;
+} application_function_table_t;
+
+static uint8_t application_function_dump(uint8_t nargs, uint8_t args[num_args][length_args], uint16_t size, uint8_t *dst);
+static uint8_t application_function_help(uint8_t nargs, uint8_t args[num_args][length_args], uint16_t size, uint8_t *dst);
+static uint8_t application_function_quit(uint8_t nargs, uint8_t args[num_args][length_args], uint16_t size, uint8_t *dst);
+
+static const __flash char description_dump[] = "debug command line processing";
+static const __flash char description_help[] = "help";
+static const __flash char description_quit[] = "quit";
+
+static const __flash application_function_table_t application_function_table[] =
+{
+	{
+		"dump",
+		0,
+		application_function_dump,
+		description_dump,
+	},
+	{
+		"help",
+		0,
+		application_function_help,
+		description_help,
+	},
+	{
+		"?",
+		0,
+		application_function_help,
+		description_help,
+	},
+	{
+		"q",
+		0,
+		application_function_quit,
+		description_quit,
+	},
+	{
+		"quit",
+		0,
+		application_function_quit,
+		description_quit,
+	},
+	{
+		"",
+		0,
+		(application_function_t)0,
+		0,
+	},
+};
 
 static const __flash char synhexaddr[]	= "Syntax error (hex/addr)\n";
 
@@ -170,10 +221,77 @@ void application_idle(void)
 		phase = 0;
 }
 
-int16_t application_content(uint16_t length, const uint8_t *src, uint16_t size, uint8_t *dst)
+int16_t application_content(uint16_t src_length, const uint8_t *src, uint16_t size, uint8_t *dst)
 {
-	static const __flash char stackfree_fmt [] = "Stackmonitor: %d bytes free\n";
+	static const __flash char stackfree_fmt[]	= "Stackmonitor: %d bytes free\n";
+	static const __flash char error_fmt[]		= "Command \"%s\" unknown\n";
 
+	uint8_t args[num_args][length_args];
+	uint8_t args_count, arg_current;
+	uint8_t src_current = 0;
+	uint8_t ws_skipped;
+	uint8_t tmp[length_args + 10];
+	const application_function_table_t __flash *tableptr;
+
+	if((src_length == 0) || (src[0] == 0x0ff)) // telnet options
+		return(0);
+
+	for(args_count = 0; (src_length > 0) && (args_count < num_args);)
+	{
+		ws_skipped = 0;
+
+		for(arg_current = 0;
+				(src_length > 0) && (arg_current < (length_args - 1));
+				src_current++, src_length--)
+		{
+			if((src[src_current] <= ' ') || (src[src_current] > '~'))
+			{
+				if(!ws_skipped)
+					continue;
+				else
+					break;
+			}
+
+			ws_skipped = 1;
+
+			args[args_count][arg_current++] = src[src_current];
+		}
+
+		args[args_count][arg_current] = '\0';
+
+		if(arg_current)
+			args_count++;
+
+		while((src_length > 0) && (src[src_current] > ' ') && (src[src_current] <= '~'))
+		{
+			src_length--;
+			src_current++;
+		}
+	}
+
+	*dst = '\0';
+
+	if(args_count == 0)
+		return(0);
+
+	for(tableptr = application_function_table; tableptr->function; tableptr++)
+		if(!strcmp((const char *)args[0], tableptr->id))
+			break;
+
+	if(tableptr->function)
+	{
+		if(tableptr->function(args_count, args, size, dst))
+			return(strlen((const char *)dst));
+		else
+			return(-1);
+	}
+
+	snprintf_P((char *)dst, size, error_fmt, args[0]);
+
+	return(strlen((char *)dst));
+}
+
+#if 0
 	uint8_t cmd;
 
 	if(size == 0)
@@ -256,4 +374,65 @@ int16_t application_content(uint16_t length, const uint8_t *src, uint16_t size, 
 	}
 
 	return(strlen((const char *)dst));
+#endif
+
+static uint8_t application_function_dump(uint8_t nargs, uint8_t args[num_args][length_args], uint16_t size, uint8_t *dst)
+{
+	static const __flash char format[] = "> arg %d: \"%s\"\n";
+
+	uint8_t narg, offset;
+
+	for(narg = 0; narg < nargs; narg++)
+	{
+		offset = snprintf_P((char *)dst, size, format, narg, args[narg]);
+		dst += offset;
+		size -= offset;
+	}
+
+	return(1);
+}
+
+static uint8_t application_function_help(uint8_t nargs, uint8_t args[num_args][length_args], uint16_t size, uint8_t *dst)
+{
+	static const __flash char header[] = "> ";
+	static const __flash char footer[] = "\n";
+	const application_function_table_t __flash *tableptr;
+	uint8_t offset;
+
+	for(tableptr = application_function_table; tableptr->function; tableptr++)
+	{
+		offset = strlen_P(header);
+		strlcpy_P((char *)dst, header, size);
+		dst += offset;
+		size -= offset;
+
+		offset = strlen(tableptr->id);
+		strlcpy((char *)dst, (const char *)tableptr->id, size);
+		dst += offset;
+		size -= offset;
+
+		offset = snprintf((char *)dst, size, "(%d): ", tableptr->required_args);
+		dst += offset;
+		size -= offset;
+
+		if(tableptr->description)
+		{
+			offset = strlen_P(tableptr->description);
+			strlcpy_P((char *)dst, tableptr->description, size);
+			dst += offset;
+			size -= offset;
+		}
+
+		offset = strlen_P(footer);
+		strlcat_P((char *)dst, footer, size);
+		dst += offset;
+		size -= offset;
+	}
+
+	return(1);
+}
+
+static uint8_t application_function_quit(uint8_t nargs, uint8_t args[num_args][length_args], uint16_t size, uint8_t *dst)
+{
+	return(0);
 }

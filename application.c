@@ -33,6 +33,7 @@ static uint8_t application_function_quit(uint8_t nargs, uint8_t args[num_args][l
 static uint8_t application_function_reset(uint8_t nargs, uint8_t args[num_args][length_args], uint16_t size, uint8_t *dst);
 static uint8_t application_function_stack(uint8_t nargs, uint8_t args[num_args][length_args], uint16_t size, uint8_t *dst);
 static uint8_t application_function_stats(uint8_t nargs, uint8_t args[num_args][length_args], uint16_t size, uint8_t *dst);
+static uint8_t application_function_twireset(uint8_t nargs, uint8_t args[num_args][length_args], uint16_t size, uint8_t *dst);
 
 static const __flash char description_dump[] = "debug command line processing";
 static const __flash char description_help[] = "help";
@@ -40,6 +41,7 @@ static const __flash char description_quit[] = "quit";
 static const __flash char description_reset[] = "reset system";
 static const __flash char description_stack[] = "stack monitor (free memory)";
 static const __flash char description_stats[] = "statistics";
+static const __flash char description_twireset[] = "reset TWI interface";
 
 static const __flash application_function_table_t application_function_table[] =
 {
@@ -104,6 +106,12 @@ static const __flash application_function_table_t application_function_table[] =
 		description_stats,
 	},
 	{
+		"twirst",
+		0,
+		application_function_twireset,
+		description_twireset,
+	},
+	{
 		"",
 		0,
 		(application_function_t)0,
@@ -119,14 +127,6 @@ static void twi_error(uint16_t size, uint8_t *dst, uint8_t error)
 
 	snprintf_P((char *)dst, (size_t)size, format_string,
 			error & 0x0f, (error & 0xf0) >> 4);
-}
-
-static void twi_reset(uint16_t size, uint8_t *dst)
-{
-	static const __flash char return_string[] = "Reset ok\n";
-
-	twi_master_recover();
-	strlcpy_P((char *)dst, return_string, size);
 }
 
 static void twi_read(uint16_t length, const uint8_t *src, uint16_t size, uint8_t *dst)
@@ -334,9 +334,6 @@ int16_t application_content(uint16_t src_length, const uint8_t *src, uint16_t si
 }
 
 #if 0
-	switch(cmd)
-	{
-
 		case('r'):
 		{
 			twi_read(length - 1, src + 1, size, dst);
@@ -348,21 +345,6 @@ int16_t application_content(uint16_t src_length, const uint8_t *src, uint16_t si
 			twi_write(length - 1, src + 1, size, dst);
 			break;
 		}
-
-		case('i'):
-		{
-			twi_reset(size, dst);
-			break;
-		}
-
-		default:
-		{
-			strlcat_P((char *)dst, string_usage, size);
-			break;
-		}
-	}
-
-	return(strlen((const char *)dst));
 #endif
 
 static uint8_t application_function_dump(uint8_t nargs, uint8_t args[num_args][length_args], uint16_t size, uint8_t *dst)
@@ -445,6 +427,17 @@ static uint8_t application_function_stack(uint8_t nargs, uint8_t args[num_args][
 	static const __flash char stackfree_fmt[] = "Stackmonitor: %d bytes free\n";
 
 	snprintf_P((char *)dst, (size_t)size, stackfree_fmt, stackmonitor_free());
+
+	return(1);
+}
+
+static uint8_t application_function_twireset(uint8_t nargs, uint8_t args[num_args][length_args], uint16_t size, uint8_t *dst)
+{
+	static const __flash char ok[] = "> TWI Reset ok\n";
+
+	twi_master_recover();
+
+	strlcpy_P((char *)dst, ok, size);
 
 	return(1);
 }

@@ -259,7 +259,8 @@ void application_idle(void)
 
 int16_t application_content(uint16_t src_length, const uint8_t *src, uint16_t size, uint8_t *dst)
 {
-	static const __flash char error_fmt[] = "Command \"%s\" unknown\n";
+	static const __flash char error_fmt_unknown[] = "Command \"%s\" unknown\n";
+	static const __flash char error_fmt_args[] = "Insufficient arguments: %d (%d required)\n";
 
 	uint8_t args[num_args][length_args];
 	uint8_t args_count, arg_current;
@@ -315,13 +316,19 @@ int16_t application_content(uint16_t src_length, const uint8_t *src, uint16_t si
 
 	if(tableptr->function)
 	{
+		if(args_count < (tableptr->required_args + 1))
+		{
+			snprintf_P((char *)dst, size, error_fmt_args, args_count - 1, tableptr->required_args);
+			return(strlen((char *)dst));
+		}
+
 		if(tableptr->function(args_count, args, size, dst))
 			return(strlen((const char *)dst));
 		else
 			return(-1);
 	}
 
-	snprintf_P((char *)dst, size, error_fmt, args[0]);
+	snprintf_P((char *)dst, size, error_fmt_unknown, args[0]);
 
 	return(strlen((char *)dst));
 }

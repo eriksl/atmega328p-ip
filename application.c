@@ -30,11 +30,13 @@ typedef struct
 static uint8_t application_function_dump(uint8_t nargs, uint8_t args[num_args][length_args], uint16_t size, uint8_t *dst);
 static uint8_t application_function_help(uint8_t nargs, uint8_t args[num_args][length_args], uint16_t size, uint8_t *dst);
 static uint8_t application_function_quit(uint8_t nargs, uint8_t args[num_args][length_args], uint16_t size, uint8_t *dst);
+static uint8_t application_function_stack(uint8_t nargs, uint8_t args[num_args][length_args], uint16_t size, uint8_t *dst);
 static uint8_t application_function_stats(uint8_t nargs, uint8_t args[num_args][length_args], uint16_t size, uint8_t *dst);
 
 static const __flash char description_dump[] = "debug command line processing";
 static const __flash char description_help[] = "help";
 static const __flash char description_quit[] = "quit";
+static const __flash char description_stack[] = "stack monitor (free memory)";
 static const __flash char description_stats[] = "statistics";
 
 static const __flash application_function_table_t application_function_table[] =
@@ -68,6 +70,18 @@ static const __flash application_function_table_t application_function_table[] =
 		0,
 		application_function_quit,
 		description_quit,
+	},
+	{
+		"S",
+		0,
+		application_function_stack,
+		description_stack,
+	},
+	{
+		"stack",
+		0,
+		application_function_stack,
+		description_stack,
 	},
 	{
 		"s",
@@ -237,8 +251,7 @@ void application_idle(void)
 
 int16_t application_content(uint16_t src_length, const uint8_t *src, uint16_t size, uint8_t *dst)
 {
-	static const __flash char stackfree_fmt[]	= "Stackmonitor: %d bytes free\n";
-	static const __flash char error_fmt[]		= "Command \"%s\" unknown\n";
+	static const __flash char error_fmt[] = "Command \"%s\" unknown\n";
 
 	uint8_t args[num_args][length_args];
 	uint8_t args_count, arg_current;
@@ -306,18 +319,6 @@ int16_t application_content(uint16_t src_length, const uint8_t *src, uint16_t si
 }
 
 #if 0
-	uint8_t cmd;
-
-	if(size == 0)
-		return(0);
-
-	*dst = 0;
-
-	if(length == 0)
-		cmd = '?';
-	else
-		cmd = src[0];
-
 	switch(cmd)
 	{
 
@@ -328,12 +329,6 @@ int16_t application_content(uint16_t src_length, const uint8_t *src, uint16_t si
 			break;
 		}
 
-
-		case('S'):
-		{
-			snprintf_P((char *)dst, (size_t)size, stackfree_fmt, stackmonitor_free());
-			break;
-		}
 
 		case('r'):
 		{
@@ -427,6 +422,15 @@ static uint8_t application_function_quit(uint8_t nargs, uint8_t args[num_args][l
 static uint8_t application_function_stats(uint8_t nargs, uint8_t args[num_args][length_args], uint16_t size, uint8_t *dst)
 {
 	stats_generate(size, dst);
+
+	return(1);
+}
+
+static uint8_t application_function_stack(uint8_t nargs, uint8_t args[num_args][length_args], uint16_t size, uint8_t *dst)
+{
+	static const __flash char stackfree_fmt[] = "Stackmonitor: %d bytes free\n";
+
+	snprintf_P((char *)dst, (size_t)size, stackfree_fmt, stackmonitor_free());
 
 	return(1);
 }

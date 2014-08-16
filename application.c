@@ -30,12 +30,14 @@ typedef struct
 static uint8_t application_function_dump(uint8_t nargs, uint8_t args[num_args][length_args], uint16_t size, uint8_t *dst);
 static uint8_t application_function_help(uint8_t nargs, uint8_t args[num_args][length_args], uint16_t size, uint8_t *dst);
 static uint8_t application_function_quit(uint8_t nargs, uint8_t args[num_args][length_args], uint16_t size, uint8_t *dst);
+static uint8_t application_function_reset(uint8_t nargs, uint8_t args[num_args][length_args], uint16_t size, uint8_t *dst);
 static uint8_t application_function_stack(uint8_t nargs, uint8_t args[num_args][length_args], uint16_t size, uint8_t *dst);
 static uint8_t application_function_stats(uint8_t nargs, uint8_t args[num_args][length_args], uint16_t size, uint8_t *dst);
 
 static const __flash char description_dump[] = "debug command line processing";
 static const __flash char description_help[] = "help";
 static const __flash char description_quit[] = "quit";
+static const __flash char description_reset[] = "reset system";
 static const __flash char description_stack[] = "stack monitor (free memory)";
 static const __flash char description_stats[] = "statistics";
 
@@ -70,6 +72,12 @@ static const __flash application_function_table_t application_function_table[] =
 		0,
 		application_function_quit,
 		description_quit,
+	},
+	{
+		"reset",
+		0,
+		application_function_reset,
+		description_reset,
 	},
 	{
 		"S",
@@ -322,14 +330,6 @@ int16_t application_content(uint16_t src_length, const uint8_t *src, uint16_t si
 	switch(cmd)
 	{
 
-		case('R'):
-		{
-			reset();
-
-			break;
-		}
-
-
 		case('r'):
 		{
 			twi_read(length - 1, src + 1, size, dst);
@@ -416,6 +416,13 @@ static uint8_t application_function_help(uint8_t nargs, uint8_t args[num_args][l
 
 static uint8_t application_function_quit(uint8_t nargs, uint8_t args[num_args][length_args], uint16_t size, uint8_t *dst)
 {
+	return(0);
+}
+
+static uint8_t application_function_reset(uint8_t nargs, uint8_t args[num_args][length_args], uint16_t size, uint8_t *dst)
+{
+	reset();
+
 	return(0);
 }
 

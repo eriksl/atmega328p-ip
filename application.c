@@ -30,10 +30,12 @@ typedef struct
 static uint8_t application_function_dump(uint8_t nargs, uint8_t args[num_args][length_args], uint16_t size, uint8_t *dst);
 static uint8_t application_function_help(uint8_t nargs, uint8_t args[num_args][length_args], uint16_t size, uint8_t *dst);
 static uint8_t application_function_quit(uint8_t nargs, uint8_t args[num_args][length_args], uint16_t size, uint8_t *dst);
+static uint8_t application_function_stats(uint8_t nargs, uint8_t args[num_args][length_args], uint16_t size, uint8_t *dst);
 
 static const __flash char description_dump[] = "debug command line processing";
 static const __flash char description_help[] = "help";
 static const __flash char description_quit[] = "quit";
+static const __flash char description_stats[] = "statistics";
 
 static const __flash application_function_table_t application_function_table[] =
 {
@@ -66,6 +68,18 @@ static const __flash application_function_table_t application_function_table[] =
 		0,
 		application_function_quit,
 		description_quit,
+	},
+	{
+		"s",
+		0,
+		application_function_stats,
+		description_stats,
+	},
+	{
+		"stats",
+		0,
+		application_function_stats,
+		description_stats,
 	},
 	{
 		"",
@@ -306,28 +320,6 @@ int16_t application_content(uint16_t src_length, const uint8_t *src, uint16_t si
 
 	switch(cmd)
 	{
-		case(0xff):
-		{
-			return(0); // telnet protocol
-		}
-
-		case('e'):
-		{
-			length++; // room for null byte
-
-			if(length > size)
-				length = size;
-
-			strlcat((char *)dst, (const char *)src, length);
-
-			break;
-		}
-
-		case('q'):
-		{
-			return(-1);
-			break;
-		}
 
 		case('R'):
 		{
@@ -336,11 +328,6 @@ int16_t application_content(uint16_t src_length, const uint8_t *src, uint16_t si
 			break;
 		}
 
-		case('s'):
-		{
-			stats_generate(size, dst);
-			break;
-		}
 
 		case('S'):
 		{
@@ -435,4 +422,11 @@ static uint8_t application_function_help(uint8_t nargs, uint8_t args[num_args][l
 static uint8_t application_function_quit(uint8_t nargs, uint8_t args[num_args][length_args], uint16_t size, uint8_t *dst)
 {
 	return(0);
+}
+
+static uint8_t application_function_stats(uint8_t nargs, uint8_t args[num_args][length_args], uint16_t size, uint8_t *dst)
+{
+	stats_generate(size, dst);
+
+	return(1);
 }

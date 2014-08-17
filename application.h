@@ -1,7 +1,13 @@
-#ifndef _application_h_
-#define _application_h_
+#ifndef application_h
+#define application_h
 
 #include <stdint.h>
+
+enum
+{
+	application_num_args = 8,
+	application_length_args = 8,
+};
 
 uint8_t application_init(void); // return requested idle frequency
 void application_idle(void);

@@ -1,6 +1,7 @@
 #include "application.h"
+#include "application-temperature.h"
+#include "application-twi.h"
 #include "timer1.h"
-#include "twi_master.h"
 #include "stats.h"
 #include "util.h"
 #include "watchdog.h"
@@ -12,13 +13,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-enum
-{
-	num_args = 8,
-	length_args = 8,
-};
-
-typedef uint8_t (*application_function_t)(uint8_t nargs, uint8_t args[num_args][length_args], uint16_t size, uint8_t *dst);
+typedef uint8_t (*application_function_t)(uint8_t nargs, uint8_t args[application_num_args][application_length_args], uint16_t size, uint8_t *dst);
 
 typedef struct
 {
@@ -28,19 +23,12 @@ typedef struct
 	const __flash char			*description;
 } application_function_table_t;
 
-static uint8_t twi_address = 0;
-
-static uint8_t application_function_dump(uint8_t nargs, uint8_t args[num_args][length_args], uint16_t size, uint8_t *dst);
-static uint8_t application_function_help(uint8_t nargs, uint8_t args[num_args][length_args], uint16_t size, uint8_t *dst);
-static uint8_t application_function_quit(uint8_t nargs, uint8_t args[num_args][length_args], uint16_t size, uint8_t *dst);
-static uint8_t application_function_reset(uint8_t nargs, uint8_t args[num_args][length_args], uint16_t size, uint8_t *dst);
-static uint8_t application_function_stack(uint8_t nargs, uint8_t args[num_args][length_args], uint16_t size, uint8_t *dst);
-static uint8_t application_function_stats(uint8_t nargs, uint8_t args[num_args][length_args], uint16_t size, uint8_t *dst);
-static uint8_t application_function_temp_read(uint8_t nargs, uint8_t args[num_args][length_args], uint16_t size, uint8_t *dst);
-static uint8_t application_function_twiaddress(uint8_t nargs, uint8_t args[num_args][length_args], uint16_t size, uint8_t *dst);
-static uint8_t application_function_twiread(uint8_t nargs, uint8_t args[num_args][length_args], uint16_t size, uint8_t *dst);
-static uint8_t application_function_twireset(uint8_t nargs, uint8_t args[num_args][length_args], uint16_t size, uint8_t *dst);
-static uint8_t application_function_twiwrite(uint8_t nargs, uint8_t args[num_args][length_args], uint16_t size, uint8_t *dst);
+static uint8_t application_function_dump(uint8_t nargs, uint8_t args[application_num_args][application_length_args], uint16_t size, uint8_t *dst);
+static uint8_t application_function_help(uint8_t nargs, uint8_t args[application_num_args][application_length_args], uint16_t size, uint8_t *dst);
+static uint8_t application_function_quit(uint8_t nargs, uint8_t args[application_num_args][application_length_args], uint16_t size, uint8_t *dst);
+static uint8_t application_function_reset(uint8_t nargs, uint8_t args[application_num_args][application_length_args], uint16_t size, uint8_t *dst);
+static uint8_t application_function_stack(uint8_t nargs, uint8_t args[application_num_args][application_length_args], uint16_t size, uint8_t *dst);
+static uint8_t application_function_stats(uint8_t nargs, uint8_t args[application_num_args][application_length_args], uint16_t size, uint8_t *dst);
 
 static const __flash char description_dump[] = "";
 static const __flash char description_help[] = "help";
@@ -48,11 +36,6 @@ static const __flash char description_quit[] = "quit";
 static const __flash char description_reset[] = "reset system";
 static const __flash char description_stack[] = "free memory";
 static const __flash char description_stats[] = "statistics";
-static const __flash char description_temp_read[] = "read temp sensor";
-static const __flash char description_twiaddress[] = "set TWI slave";
-static const __flash char description_twiread[] = "read n bytes from TWI";
-static const __flash char description_twireset[] = "reset TWI";
-static const __flash char description_twiwrite[] = "write bytes to TWI";
 
 static const __flash application_function_table_t application_function_table[] =
 {
@@ -184,22 +167,22 @@ int16_t application_content(uint16_t src_length, const uint8_t *src, uint16_t si
 	static const __flash char error_fmt_unknown[] = "Command \"%s\" unknown\n";
 	static const __flash char error_fmt_args[] = "Insufficient arguments: %d (%d required)\n";
 
-	uint8_t args[num_args][length_args];
+	uint8_t args[application_num_args][application_length_args];
 	uint8_t args_count, arg_current;
 	uint8_t src_current = 0;
 	uint8_t ws_skipped;
-	uint8_t tmp[length_args + 10];
+	uint8_t tmp[application_length_args + 10];
 	const application_function_table_t __flash *tableptr;
 
 	if((src_length == 0) || (src[0] == 0x0ff)) // telnet options
 		return(0);
 
-	for(args_count = 0; (src_length > 0) && (args_count < num_args);)
+	for(args_count = 0; (src_length > 0) && (args_count < application_num_args);)
 	{
 		ws_skipped = 0;
 
 		for(arg_current = 0;
-				(src_length > 0) && (arg_current < (length_args - 1));
+				(src_length > 0) && (arg_current < (application_length_args - 1));
 				src_current++, src_length--)
 		{
 			if((src[src_current] <= ' ') || (src[src_current] > '~'))
@@ -255,7 +238,7 @@ int16_t application_content(uint16_t src_length, const uint8_t *src, uint16_t si
 	return(strlen((char *)dst));
 }
 
-static uint8_t application_function_dump(uint8_t nargs, uint8_t args[num_args][length_args], uint16_t size, uint8_t *dst)
+static uint8_t application_function_dump(uint8_t nargs, uint8_t args[application_num_args][application_length_args], uint16_t size, uint8_t *dst)
 {
 	static const __flash char format[] = "> arg %d: \"%s\"\n";
 
@@ -271,7 +254,7 @@ static uint8_t application_function_dump(uint8_t nargs, uint8_t args[num_args][l
 	return(1);
 }
 
-static uint8_t application_function_help(uint8_t nargs, uint8_t args[num_args][length_args], uint16_t size, uint8_t *dst)
+static uint8_t application_function_help(uint8_t nargs, uint8_t args[application_num_args][application_length_args], uint16_t size, uint8_t *dst)
 {
 	static const __flash char header[] = "> ";
 	static const __flash char footer[] = "\n";
@@ -311,211 +294,30 @@ static uint8_t application_function_help(uint8_t nargs, uint8_t args[num_args][l
 	return(1);
 }
 
-static uint8_t application_function_quit(uint8_t nargs, uint8_t args[num_args][length_args], uint16_t size, uint8_t *dst)
+static uint8_t application_function_quit(uint8_t nargs, uint8_t args[application_num_args][application_length_args], uint16_t size, uint8_t *dst)
 {
 	return(0);
 }
 
-static uint8_t application_function_reset(uint8_t nargs, uint8_t args[num_args][length_args], uint16_t size, uint8_t *dst)
+static uint8_t application_function_reset(uint8_t nargs, uint8_t args[application_num_args][application_length_args], uint16_t size, uint8_t *dst)
 {
 	reset();
 
 	return(0);
 }
 
-static uint8_t application_function_stats(uint8_t nargs, uint8_t args[num_args][length_args], uint16_t size, uint8_t *dst)
+static uint8_t application_function_stats(uint8_t nargs, uint8_t args[application_num_args][application_length_args], uint16_t size, uint8_t *dst)
 {
 	stats_generate(size, dst);
 
 	return(1);
 }
 
-static uint8_t application_function_stack(uint8_t nargs, uint8_t args[num_args][length_args], uint16_t size, uint8_t *dst)
+static uint8_t application_function_stack(uint8_t nargs, uint8_t args[application_num_args][application_length_args], uint16_t size, uint8_t *dst)
 {
 	static const __flash char stackfree_fmt[] = "Stackmonitor: %d bytes free\n";
 
 	snprintf_P((char *)dst, (size_t)size, stackfree_fmt, stackmonitor_free());
-
-	return(1);
-}
-
-static uint16_t get_adc(void)
-{
-	uint16_t rv;
-
-	ADCSRA |= _BV(ADSC);
-
-	while(ADCSRA & _BV(ADSC))
-		(void)0;
-
-	rv  = ADCL;
-	rv |= ADCH << 8;
-
-	return(rv);
-}
-
-static uint8_t application_function_temp_read(uint8_t nargs, uint8_t args[num_args][length_args], uint16_t size, uint8_t *dst)
-{
-	// ADC:		0 V = 0 pcm, 1.1 V = 1023 pcm
-	// 			mV = pcm / 1023 * 1100
-	// tmp36:	250 mV = -25.0 C, 500 mV = 0.0, 750 mV = 25.0 C
-	// 			C = (mV - 500) / 10
-
-	static const __flash char ok[] = "> temp sensor %d ok value %.1f\n";
-	static const __flash char error[] = "> invalid sensor\n";
-	uint8_t sensor;
-	uint8_t ix;
-	uint32_t total;
-	float calibrated;
-
-	sensor = (uint8_t)strtoul((const char *)args[1], 0, 0);
-
-	switch(sensor)
-	{
-		case(0):
-		{
-			PRR &= ~_BV(PRADC);
-			ADCSRB = 0x00;
-			break;
-		}
-	}
-
-	switch(sensor)
-	{
-		case(0):
-		{
-			ADMUX =		_BV(REFS1) | _BV(REFS0);	// ref = 1.1V, input = ADC0
-			ADCSRA =	_BV(ADEN)  | _BV(ADIF);
-						_BV(ADPS2) | _BV(ADPS1);	// 8 Mhz / 64 = 125 kHz > 50 < 200 kHz
-			ADCSRB =	0x00;
-
-			//calibrated = ((float)get_adc() * 1080.0) / 1024.0;
-			//calibrated = (calibrated - 500) / 10;
-
-			for(ix = 8; ix > 0; ix--)
-				get_adc();
-
-			total = 0;
-
-			for(ix = 255; ix > 0; ix--)
-				total += get_adc();
-
-			calibrated = total / 256;
-
-			snprintf_P((char *)dst, size, ok, sensor, calibrated);
-			break;
-		}
-
-		default:
-		{
-			strlcpy_P((char *)dst, error, (size_t)size);
-			break;
-		}
-	}
-
-	switch(sensor)
-	{
-		case(0):
-		{
-			ADMUX	 = 0x00;
-			ADCSRA	 = 0x00;
-			ADCSRB	 = 0x00;
-			PRR		|= _BV(PRADC);
-
-			break;
-		}
-	}
-
-	return(1);
-}
-
-static void twi_error(uint8_t *dst, uint16_t size, uint8_t error)
-{
-	static const __flash char format_string[] = "TWI error: %x, state %x\n";
-
-	snprintf_P((char *)dst, (size_t)size, format_string,
-			error & 0x0f, (error & 0xf0) >> 4);
-}
-
-static uint8_t application_function_twiaddress(uint8_t nargs, uint8_t args[num_args][length_args], uint16_t size, uint8_t *dst)
-{
-	static const __flash char fmt[] = "> TWI slave address set to 0x%02x\n";
-
-	twi_address = (uint8_t)strtoul((const char *)args[1], 0, 16);
-
-	snprintf_P((char *)dst, (size_t)size, fmt, twi_address);
-
-	return(1);
-}
-
-static uint8_t application_function_twiread(uint8_t nargs, uint8_t args[num_args][length_args], uint16_t size, uint8_t *dst)
-{
-	static const __flash char header[] = "> TWI read %d bytes from %02x:";
-	static const __flash char entry[] = " %02x";
-	static const __flash char footer[] = "\n";
-	static const __flash char error[] = "> TWI read error, read max %d bytes: %d\n";
-
-	uint8_t src_current, rv, offset, amount;
-	uint8_t bytes[8];
-
-	amount = (uint8_t)strtoul((const char *)args[1], 0, 0);
-
-	if(amount > sizeof(bytes))
-	{
-		snprintf_P((char *)dst, (size_t)size, error, sizeof(bytes), amount);
-		return(1);
-	}
-
-	if((rv = twi_master_receive(twi_address, sizeof(bytes), bytes)) != tme_ok)
-		twi_error(dst, size, rv);
-	else
-	{
-		offset = snprintf_P((char *)dst, (size_t)size, header, amount, twi_address);
-		dst += offset;
-		size -= offset;
-
-		for(src_current = 0; (src_current < amount) && (size > 0); src_current++)
-		{
-			offset = snprintf_P((char *)dst, (size_t)size, entry, bytes[src_current]);
-			dst += offset;
-			size -= offset;
-		}
-
-		strlcpy_P((char *)dst, footer, (size_t)size);
-	}
-
-	return(1);
-}
-
-static uint8_t application_function_twireset(uint8_t nargs, uint8_t args[num_args][length_args], uint16_t size, uint8_t *dst)
-{
-	static const __flash char ok[] = "> TWI reset ok\n";
-
-	twi_master_recover();
-
-	strlcpy_P((char *)dst, ok, size);
-
-	return(1);
-}
-
-static uint8_t application_function_twiwrite(uint8_t nargs, uint8_t args[num_args][length_args], uint16_t size, uint8_t *dst)
-{
-	static const __flash char fmt[] = "> TWI written %d bytes to %02x\n";
-
-	uint8_t src_current, dst_current, rv;
-	uint8_t bytes[8];
-
-	for(src_current = 1, dst_current = 0;
-			(src_current < nargs) && (dst_current < sizeof(bytes));
-			src_current++, dst_current++)
-	{
-		bytes[dst_current] = (uint8_t)strtoul((const char *)args[src_current], 0, 16);
-	}
-
-	if((rv = twi_master_send(twi_address, dst_current, bytes)) != tme_ok)
-		twi_error(dst, size, rv);
-	else
-		snprintf_P((char *)dst, (size_t)size, fmt, dst_current, twi_address);
 
 	return(1);
 }

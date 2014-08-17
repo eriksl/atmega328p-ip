@@ -26,7 +26,7 @@ CFLAGS		=		-I$(CURDIR) \
 					--std=gnu99 -Wall -Winline $(CCOPTFLAGS) -mmcu=$(MCU) -DF_CPU=$(MCUSPEED) \
 					-fpack-struct -fno-keep-static-consts -frename-registers -Wno-unused-variable \
 					-fdata-sections -ffunction-sections
-LDFLAGS		=		-Wall -mmcu=$(MCU) -Wl,-gc-sections
+LDFLAGS		=		-Wall -mmcu=$(MCU) -Wl,-gc-sections -Wl,-u,vfprintf -lprintf_flt -lm
 
 .PHONY:				all clean hex
 .SUFFIXES:

@@ -146,8 +146,6 @@ static const __flash application_function_table_t application_function_table[] =
 	},
 };
 
-static const __flash char synhexaddr[]	= "Syntax error (hex/addr)\n";
-
 uint8_t application_init(void)
 {
 	timer1_init_pwm1a1b(timer1_1);	// pwm timer 1 resolution: 16 bits, frequency = 122 Hz

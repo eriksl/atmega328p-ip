@@ -22,21 +22,8 @@ enum
 	max_frame_size = 384,
 };
 
-typedef struct
-{
-	uint16_t	multiplier;
-	uint16_t	offset;
-} temperature_calibration_t;
-
-typedef struct
-{
-	temperature_calibration_t	temp_cal_data[8];
-	mac_addr_t					my_mac_address;
-} eeprom_t;
-
-static const	eeprom_t	*eeprom = (eeprom_t *)0;
-static 			ipv4_addr_t	my_ipv4_address;
-static			mac_addr_t	my_mac_address;
+static ipv4_addr_t	my_ipv4_address;
+static mac_addr_t	my_mac_address;
 
 ISR(WDT_vect, ISR_NOBLOCK)
 {
@@ -89,12 +76,7 @@ int main(void)
 	DDRC	= _BV(1) | _BV(2) | _BV(3) | _BV(4) | _BV(5) | _BV(6);
 	DDRD	= _BV(0) | _BV(1) | _BV(3) | _BV(4) | _BV(5) | _BV(6);
 
-	my_mac_address.byte[0] = eeprom_read_uint8(&eeprom->my_mac_address.byte[0]);
-	my_mac_address.byte[1] = eeprom_read_uint8(&eeprom->my_mac_address.byte[1]);
-	my_mac_address.byte[2] = eeprom_read_uint8(&eeprom->my_mac_address.byte[2]);
-	my_mac_address.byte[3] = eeprom_read_uint8(&eeprom->my_mac_address.byte[3]);
-	my_mac_address.byte[4] = eeprom_read_uint8(&eeprom->my_mac_address.byte[4]);
-	my_mac_address.byte[5] = eeprom_read_uint8(&eeprom->my_mac_address.byte[5]);
+	eeprom_read_mac_address(&my_mac_address);
 
 	my_ipv4_address.byte[0] = 0;
 	my_ipv4_address.byte[1] = 0;

@@ -20,7 +20,7 @@ OBJFILES	=		$(PROGRAM).o watchdog.o timer0.o timer1.o timer2.o spi.o twi_master.
 HEADERS		=			watchdog.h timer0.h timer1.h timer2.h spi.h twi_master.h \
 						enc.h net.h ethernet.h ethernet_macaddr.h arp.h ipv4.h ipv4_addr.h icmp4.h udp4.h tcp4.h bootp.h \
 						application.h application-temperature.h application-twi.h \
-						stats.h util.h eeprom.h stackmonitor.h
+						stats.h util.h eeprom.h stackmonitor.h util.h
 HEXFILE		=		$(PROGRAM).hex
 ELFFILE		=		$(PROGRAM).elf
 PROGRAMMED	=		.programmed

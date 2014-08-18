@@ -5,7 +5,6 @@
 
 typedef uint16_t stats_t;
 
-extern stats_t eth_interrupts;
 extern stats_t eth_pkt_rx;
 extern stats_t eth_pkt_tx;
 extern stats_t eth_txerr;
@@ -27,6 +26,8 @@ extern stats_t ip_stray_pkt;
 extern stats_t ip_bad_checksum;
 
 extern stats_t wd_interrupts;
+extern stats_t eth_interrupts;
+extern stats_t adc_interrupts;
 
 void stats_generate(uint16_t size, uint8_t *dst);
 

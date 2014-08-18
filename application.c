@@ -101,9 +101,15 @@ static const __flash application_function_table_t application_function_table[] =
 	},
 	{
 		"tempr",
-		2,
+		1,
 		application_function_temp_read,
 		description_temp_read,
+	},
+	{
+		"tempw",
+		1,
+		application_function_temp_write,
+		description_temp_write,
 	},
 	{
 		"twia",
@@ -144,9 +150,7 @@ uint8_t application_init(void)
 	timer1_init_pwm1a1b(timer1_1);	// pwm timer 1 resolution: 16 bits, frequency = 122 Hz
 	timer1_start();
 
-	/* adc */
-
-	DIDR0 = _BV(ADC0D);
+	application_init_temp_read();
 
 	return(WATCHDOG_PRESCALER_8192);
 }

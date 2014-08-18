@@ -25,7 +25,7 @@ enum
 static ipv4_addr_t	my_ipv4_address;
 static mac_addr_t	my_mac_address;
 
-ISR(WDT_vect, ISR_NOBLOCK)
+ISR(WDT_vect)
 {
 	wd_interrupts++;
 }

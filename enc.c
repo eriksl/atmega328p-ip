@@ -348,7 +348,7 @@ uint16_t enc_receive_frame(uint8_t *frame, uint16_t buffer_length)
 
 		// wait for interrupt to be asserted (go low)
 
-		pause();
+		pause_idle();
 
 		PORTD &= ~_BV(0);
 		PORTD |=  _BV(1);

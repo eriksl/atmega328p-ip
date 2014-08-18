@@ -3,7 +3,6 @@
 
 #include <stdio.h>
 
-stats_t eth_interrupts = 0;
 stats_t eth_pkt_rx = 0;
 stats_t eth_pkt_tx = 0;
 stats_t eth_txerr = 0;
@@ -25,29 +24,33 @@ stats_t ip_stray_pkt = 0;
 stats_t ip_bad_checksum = 0;
 
 stats_t wd_interrupts = 0;
+stats_t eth_interrupts = 0;
+stats_t adc_interrupts = 0;
 
 static const __flash char format_string[] =
 {
-	"int wd: %d\n"
-	"int eth: %d\n"
-	"pkt rx: %d\n"
-	"pkt tx: %d\n"
-	"err rx: %d\n"
-	"err tx: %d\n"
-	"buf rx: %d\n"
-	"arp: %d/%d\n"
-	"ipv4: %d/%d\n"
-	"icmp4: %d/%d\n"
-	"udp4: %d/%d\n"
-	"tcp4: %d/%d\n"
-	"other: %d\n"
-	"stray: %d\n"
-	"c/s err: %d\n"
+	"int adc: %u\n"
+	"int wd: %u\n"
+	"int eth: %u\n"
+	"pkt rx: %u\n"
+	"pkt tx: %u\n"
+	"err rx: %u\n"
+	"err tx: %u\n"
+	"buf rx: %u\n"
+	"arp: %u/%u\n"
+	"ipv4: %u/%u\n"
+	"icmp4: %u/%u\n"
+	"udp4: %u/%u\n"
+	"tcp4: %u/%u\n"
+	"other: %u\n"
+	"stray: %u\n"
+	"c/s err: %u\n"
 };
 
 void stats_generate(uint16_t size, uint8_t *dst)
 {
 	snprintf_P((char *)dst, (size_t)size, (const char *)format_string,
+			adc_interrupts,
 			wd_interrupts,
 			eth_interrupts,
 			eth_pkt_rx,

@@ -18,7 +18,7 @@ enum
 };
 
 const __flash char description_temp_read[] = "read temp sensor";
-const __flash char description_temp_write[] = "write bg cal. adc";
+const __flash char description_temp_write[] = "write bg volt. cal";
 
 ISR(ADC_vect)
 {
@@ -50,16 +50,16 @@ static uint16_t get_adc(void)
 
 uint8_t application_function_temp_write(uint8_t nargs, uint8_t args[application_num_args][application_length_args], uint16_t size, uint8_t *dst)
 {
-	static const __flash char ok[] = "> bandgap calibration set to %d mV\n";
+	static const __flash char ok[] = "> bandgap calibration set to %.1f mV\n";
 
-	uint16_t new_bg_mv;
+	uint16_t new_bg;
 
-	new_bg_mv = (uint16_t)strtoul((const char *)args[1], 0, 0);
+	new_bg = (uint16_t)strtoul((const char *)args[1], 0, 0);
 
-	eeprom_write_bandgap_mv(new_bg_mv);
-	new_bg_mv = eeprom_read_bandgap_mv();
+	eeprom_write_bandgap(new_bg);
+	new_bg = eeprom_read_bandgap();
 
-	snprintf_P((char *)dst, (size_t)size, ok, new_bg_mv);
+	snprintf_P((char *)dst, (size_t)size, ok, (float)new_bg / 10);
 
 	return(1);
 }
@@ -71,18 +71,18 @@ uint8_t application_function_temp_read(uint8_t nargs, uint8_t args[application_n
 	// tmp36:	250 mV = -25.0 C, 500 mV = 0.0, 750 mV = 25.0 C
 	// 			C = (mV - 500) / 10
 
-	static const __flash char ok[] = "> temp sensor %d ok temp %.2f C, raw: %04lx, %.5f V\n";
+	static const __flash char ok[] = "> temp sensor %d ok temp [%.2f] C, %.5f V\n";
 	static const __flash char error[] = "> invalid sensor\n";
 
 	uint8_t sensor;
 	uint16_t ix;
 	uint8_t admux;
-	uint16_t bandgap_mv;
+	uint16_t bandgap;
 	uint32_t raw;
 	float raw_v;
 	float temp;
 
-	bandgap_mv = eeprom_read_bandgap_mv();
+	bandgap = eeprom_read_bandgap();
 
 	sensor = (uint8_t)strtoul((const char *)args[1], 0, 0);
 
@@ -103,10 +103,10 @@ uint8_t application_function_temp_read(uint8_t nargs, uint8_t args[application_n
 			for(ix = samples; ix > 0; ix--)
 				raw += get_adc();
 
-			raw_v	= ((float)raw / (float)samples) / 1000 * (float)bandgap_mv / 1000;
+			raw_v	= ((float)raw / (float)samples) / 1000 * (float)bandgap / 10000;
 			temp	= (raw_v - 0.5) * 100;
 
-			snprintf_P((char *)dst, size, ok, sensor, temp, raw / samples, raw_v);
+			snprintf_P((char *)dst, size, ok, sensor, temp, raw_v);
 
 			admux = ADMUX;
 			admux |= 0x0f; // 0x0f = GND

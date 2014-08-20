@@ -258,12 +258,15 @@ static uint8_t application_function_dump(uint8_t nargs, uint8_t args[application
 
 static uint8_t application_function_help(uint8_t nargs, uint8_t args[application_num_args][application_length_args], uint16_t size, uint8_t *dst)
 {
-	static const __flash char header[] = "> ";
-	static const __flash char footer[] = "\n";
-	const application_function_table_t __flash *tableptr;
-	uint8_t offset;
+	static const __flash char list_header[]		= "> %S: %d args\n";
+	static const __flash char detail_header[]	= "> %S[%d]: ";
+	static const __flash char detail_footer[]	= "\n";
+	static const __flash char detail_error[]	= "> no help for \"%s\"\n";
 
-	for(tableptr = application_function_table; tableptr->function; tableptr++)
+	const application_function_table_t __flash *tableptr;
+	uint8_t		offset;
+
+	if(nargs > 1)
 	{
 		for(tableptr = application_function_table; tableptr->function; tableptr++)
 			if(!strcmp_P((const char *)args[1], tableptr->command))

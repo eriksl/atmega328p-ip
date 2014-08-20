@@ -5,7 +5,7 @@
 
 enum
 {
-	application_num_args = 8,
+	application_num_args = 4,
 	application_length_args = 8,
 };
 

@@ -10,11 +10,6 @@
 
 static uint8_t twi_address = 0;
 
-const __flash char description_twiaddress[] = "set TWI slave";
-const __flash char description_twiread[] = "read n bytes from TWI";
-const __flash char description_twireset[] = "reset TWI";
-const __flash char description_twiwrite[] = "write bytes to TWI";
-
 static void twi_error(uint8_t *dst, uint16_t size, uint8_t error)
 {
 	static const __flash char format_string[] = "TWI error: %x, state %x\n";

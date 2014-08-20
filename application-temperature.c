@@ -17,9 +17,6 @@ enum
 	samples = 1024,
 };
 
-const __flash char description_temp_read[] = "read temp sensor";
-const __flash char description_temp_write[] = "write bg volt. cal";
-
 ISR(ADC_vect)
 {
 	adc_interrupts++;

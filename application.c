@@ -17,10 +17,10 @@ typedef uint8_t (*application_function_t)(uint8_t nargs, uint8_t args[applicatio
 
 typedef struct
 {
-	const char					*id;
+	const char					command[7];
 	uint8_t						required_args;
 	application_function_t		function;
-	const __flash char			*description;
+	const char					description[37];
 } application_function_table_t;
 
 static uint8_t application_function_dump(uint8_t nargs, uint8_t args[application_num_args][application_length_args], uint16_t size, uint8_t *dst);
@@ -30,116 +30,115 @@ static uint8_t application_function_reset(uint8_t nargs, uint8_t args[applicatio
 static uint8_t application_function_stack(uint8_t nargs, uint8_t args[application_num_args][application_length_args], uint16_t size, uint8_t *dst);
 static uint8_t application_function_stats(uint8_t nargs, uint8_t args[application_num_args][application_length_args], uint16_t size, uint8_t *dst);
 
-static const __flash char description_dump[] = "";
-static const __flash char description_help[] = "help";
-static const __flash char description_quit[] = "quit";
-static const __flash char description_reset[] = "reset system";
-static const __flash char description_stack[] = "free memory";
-static const __flash char description_stats[] = "statistics";
-
 static const __flash application_function_table_t application_function_table[] =
 {
+	{
+		"bgw",
+		1,
+		application_function_bg_write,
+		"write bandgap caliburation (V)",
+	},
 	{
 		"dump",
 		0,
 		application_function_dump,
-		description_dump,
+		"show parameters",
 	},
 	{
 		"help",
 		0,
 		application_function_help,
-		description_help,
+		"help (command)",
 	},
 	{
 		"?",
 		0,
 		application_function_help,
-		0,
+		"help (command)",
 	},
 	{
 		"q",
 		0,
 		application_function_quit,
-		description_quit,
+		"quit",
 	},
 	{
 		"quit",
 		0,
 		application_function_quit,
-		0,
+		"quit",
 	},
 	{
 		"reset",
 		0,
 		application_function_reset,
-		description_reset,
+		"reset using watchdog timeout",
 	},
 	{
 		"S",
 		0,
 		application_function_stack,
-		description_stack,
+		"free memory (stack usage)",
 	},
 	{
 		"stack",
 		0,
 		application_function_stack,
-		0,
+		"free memory (stack usage)",
 	},
 	{
 		"s",
 		0,
 		application_function_stats,
-		description_stats,
+		"statistics",
 	},
 	{
 		"stats",
 		0,
 		application_function_stats,
-		0,
+		"statistics",
 	},
 	{
 		"tempr",
 		1,
 		application_function_temp_read,
-		description_temp_read,
+		"read temperature sensor (0/1)",
 	},
 	{
 		"tempw",
-		1,
+		3,
 		application_function_temp_write,
-		description_temp_write,
+		"write temp cal. (0/1)/factor/offset",
 	},
 	{
 		"twia",
 		1,
 		application_function_twiaddress,
-		description_twiaddress,
+		"set twi slave address",
 	},
 	{
 		"twir",
 		1,
 		application_function_twiread,
-		description_twiread,
+		"read bytes from twi slave",
 	},
 	{
 		"twirst",
 		0,
 		application_function_twireset,
-		description_twireset,
+		"twi interface reset",
 	},
 	{
 		"twiw",
 		1,
 		application_function_twiwrite,
-		description_twiwrite,
+		"write bytes to twi slave",
 	},
 	{
 		"",
 		0,
 		(application_function_t)0,
-		0,
+		"",
 	},
 };
 
@@ -220,7 +219,7 @@ int16_t application_content(uint16_t src_length, const uint8_t *src, uint16_t si
 		return(0);
 
 	for(tableptr = application_function_table; tableptr->function; tableptr++)
-		if(!strcmp((const char *)args[0], tableptr->id))
+		if(!strcmp_P((const char *)args[0], tableptr->command))
 			break;
 
 	if(tableptr->function)
@@ -267,36 +266,31 @@ static uint8_t application_function_help(uint8_t nargs, uint8_t args[application
 
 	for(tableptr = application_function_table; tableptr->function; tableptr++)
 	{
-		offset = strlen_P(header);
-		strlcpy_P((char *)dst, header, size);
-		dst += offset;
-		size -= offset;
+		for(tableptr = application_function_table; tableptr->function; tableptr++)
+			if(!strcmp_P((const char *)args[1], tableptr->command))
+				break;
 
-		offset = strlen(tableptr->id);
-		strlcpy((char *)dst, (const char *)tableptr->id, size);
-		dst += offset;
-		size -= offset;
-
-		offset = snprintf((char *)dst, size, "(%d): ", tableptr->required_args);
-		dst += offset;
-		size -= offset;
-
-		if(tableptr->description)
+		if(tableptr->function)
 		{
-			offset = strlen_P(tableptr->description);
-			strlcpy_P((char *)dst, tableptr->description, size);
-			dst += offset;
-			size -= offset;
+			snprintf_P((char *)dst, size, detail_header, tableptr->command, tableptr->required_args);
+			strlcat_P((char *)dst, tableptr->description, size);
+			strlcat_P((char *)dst, detail_footer, size);
 		}
-
-		offset = strlen_P(footer);
-		strlcat_P((char *)dst, footer, size);
-		dst += offset;
-		size -= offset;
+		else
+			snprintf_P((char *)dst, size, detail_error, (const char *)args[1]);
+	}
+	else
+	{
+		for(tableptr = application_function_table; tableptr->function; tableptr++)
+		{
+			offset = snprintf_P((char *)dst, size, list_header, tableptr->command, tableptr->required_args);
+			dst		+= offset;
+			size	-= offset;
+		}
 	}
 
 	return(1);
-}
+	}
 
 static uint8_t application_function_quit(uint8_t nargs, uint8_t args[application_num_args][application_length_args], uint16_t size, uint8_t *dst)
 {

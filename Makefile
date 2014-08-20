@@ -5,8 +5,8 @@ HFUSE		= 0xd7
 # DebugWire
 HFUSE		= 0x97
 #CCOPTFLAGS	= -O0 -g
-#CCOPTFLAGS	= -Os
-CCOPTFLAGS	= -O3
+#CCOPTFLAGS	= -O3
+CCOPTFLAGS	= -Os
 
 MCU			=		atmega328p
 PROGRAMMER	=		dragon_isp

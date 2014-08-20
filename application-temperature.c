@@ -45,18 +45,18 @@ static uint16_t get_adc(void)
 	return(ADC);
 }
 
-uint8_t application_function_temp_write(uint8_t nargs, uint8_t args[application_num_args][application_length_args], uint16_t size, uint8_t *dst)
+uint8_t application_function_bg_write(uint8_t nargs, uint8_t args[application_num_args][application_length_args], uint16_t size, uint8_t *dst)
 {
-	static const __flash char ok[] = "> bandgap calibration set to %.1f mV\n";
+	static const __flash char ok[] = "> bandgap calibration set to %.4f V\n";
 
-	uint16_t new_bg;
+	float value;
 
-	new_bg = (uint16_t)strtoul((const char *)args[1], 0, 0);
+	value = atof((const char *)args[1]);
 
-	eeprom_write_bandgap(new_bg);
-	new_bg = eeprom_read_bandgap();
+	eeprom_write_bandgap(value);
+	value = eeprom_read_bandgap();
 
-	snprintf_P((char *)dst, (size_t)size, ok, (float)new_bg / 10);
+	snprintf_P((char *)dst, (size_t)size, ok, value);
 
 	return(1);
 }
@@ -71,15 +71,11 @@ uint8_t application_function_temp_read(uint8_t nargs, uint8_t args[application_n
 	static const __flash char ok[] = "> temp sensor %d ok temp [%.2f] C, %.5f V\n";
 	static const __flash char error[] = "> invalid sensor\n";
 
-	uint8_t sensor;
-	uint16_t ix;
-	uint8_t admux;
-	uint16_t bandgap;
-	uint32_t raw;
-	float raw_v;
-	float temp;
-
-	bandgap = eeprom_read_bandgap();
+	uint8_t		sensor;
+	uint16_t	ix;
+	uint8_t		admux;
+	uint32_t	raw;
+	float		raw_v, temp;
 
 	sensor = (uint8_t)strtoul((const char *)args[1], 0, 0);
 
@@ -100,8 +96,10 @@ uint8_t application_function_temp_read(uint8_t nargs, uint8_t args[application_n
 			for(ix = samples; ix > 0; ix--)
 				raw += get_adc();
 
-			raw_v	= ((float)raw / (float)samples) / 1000 * (float)bandgap / 10000;
+			raw_v	= ((float)raw / (float)samples) / 1000 * eeprom_read_bandgap();
 			temp	= (raw_v - 0.5) * 100;
+			temp	*= eeprom_read_temp_cal_factor(0);
+			temp	+= eeprom_read_temp_cal_offset(0);
 
 			snprintf_P((char *)dst, size, ok, sensor, temp, raw_v);
 
@@ -118,6 +116,28 @@ uint8_t application_function_temp_read(uint8_t nargs, uint8_t args[application_n
 			break;
 		}
 	}
+
+	return(1);
+}
+
+uint8_t application_function_temp_write(uint8_t nargs, uint8_t args[application_num_args][application_length_args], uint16_t size, uint8_t *dst)
+{
+	static const __flash char ok[] = "> temperature calibration set to *=%.4f +=%.4f\n";
+
+	uint8_t index;
+	float factor, offset;
+
+	index	= atoi((const char *)args[1]);
+	factor	= atof((const char *)args[2]);
+	offset	= atof((const char *)args[3]);
+
+	eeprom_write_temp_cal_factor(index, factor);
+	eeprom_write_temp_cal_offset(index, offset);
+
+	factor = eeprom_read_temp_cal_factor(index);
+	offset = eeprom_read_temp_cal_offset(index);
+
+	snprintf_P((char *)dst, (size_t)size, ok, factor, offset);
 
 	return(1);
 }

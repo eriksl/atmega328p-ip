@@ -174,7 +174,6 @@ int16_t application_content(uint16_t src_length, const uint8_t *src, uint16_t si
 	uint8_t args_count, arg_current;
 	uint8_t src_current = 0;
 	uint8_t ws_skipped;
-	uint8_t tmp[application_length_args + 10];
 	const application_function_table_t __flash *tableptr;
 
 	if((src_length == 0) || (src[0] == 0x0ff)) // telnet options

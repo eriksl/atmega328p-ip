@@ -5,14 +5,14 @@
 
 #include <stdint.h>
 
-void inline watchdog_stop(void)
+void watchdog_stop(void)
 {
 	wdt_reset();
 	MCUSR = 0;
 	wdt_disable();
 }
 
-void inline watchdog_start(uint8_t scaler)
+void watchdog_start(uint8_t scaler)
 {
 	watchdog_stop();
 	wdt_enable(scaler);

@@ -4,7 +4,7 @@
 #include "twi_master.h"
 #include "watchdog.h"
 
-static inline uint8_t status(void)
+static uint8_t status(void)
 {
 	uint8_t twsr;
 
@@ -12,7 +12,7 @@ static inline uint8_t status(void)
 	return(twsr >> 3);
 }
 
-static inline void wait(void)
+static void wait(void)
 {
 	while(!(TWCR & _BV(TWINT)))
 		(void)0;

@@ -26,7 +26,7 @@ void application_init_temp_read(void)
 {
 	PRR			&= ~_BV(PRADC);
 	DIDR0		= _BV(ADC0D) | _BV(ADC1D);
-	ADMUX		= _BV(REFS1) | _BV(REFS0) | 0x0f;	// ref = 1.1V, input = 0 V
+	ADMUX		= _BV(REFS1) | _BV(REFS0) | 0x0e;	// ref = 1.1V, input = 1.1V
 	ADCSRA		= _BV(ADEN)  | _BV(ADIF)  |
 				  _BV(ADPS2) | _BV(ADPS1) | _BV(ADPS0);	// 8 Mhz / 128 = 75 kHz > 50 < 200 kHz
 	ADCSRB		=	0x00;
@@ -63,11 +63,6 @@ uint8_t application_function_bg_write(uint8_t nargs, uint8_t args[application_nu
 
 uint8_t application_function_temp_read(uint8_t nargs, uint8_t args[application_num_args][application_length_args], uint16_t size, uint8_t *dst)
 {
-	// ADC:		0 V = 0 pcm, 1.1 V = 1023 pcm
-	// 			mV = pcm / 1023 * 1100
-	// tmp36:	250 mV = -25.0 C, 500 mV = 0.0, 750 mV = 25.0 C
-	// 			C = (mV - 500) / 10
-
 	static const __flash char ok[] = "> temp sensor %d ok temp [%.2f] C, %.5f V\n";
 	static const __flash char error[] = "> invalid sensor\n";
 
@@ -81,11 +76,11 @@ uint8_t application_function_temp_read(uint8_t nargs, uint8_t args[application_n
 
 	switch(sensor)
 	{
-		case(0):
+		case(0): // TMP36
 		{
 			admux = ADMUX;
 			admux &= 0xf0;
-			admux |= 0x00; // 0x00 = ADC0
+			admux |= 0x00; // 0x0 = ADC0
 			ADMUX = admux;
 
 			for(ix = 32; ix > 0; ix--)
@@ -104,7 +99,36 @@ uint8_t application_function_temp_read(uint8_t nargs, uint8_t args[application_n
 			snprintf_P((char *)dst, size, ok, sensor, temp, raw_v);
 
 			admux = ADMUX;
-			admux |= 0x0f; // 0x0f = GND
+			admux |= 0x0e; // 0xe = 1.1V
+			ADMUX = admux;
+
+			break;
+		}
+
+		case(1): // internal bandgap thermosensor
+		{
+			admux = ADMUX;
+			admux &= 0xf0;
+			admux |= 0x08; // 0x8 = ADC8 = bg
+			ADMUX = admux;
+
+			for(ix = 32; ix > 0; ix--)
+				get_adc();
+
+			raw = 0;
+
+			for(ix = samples; ix > 0; ix--)
+				raw += get_adc();
+
+			raw_v	= ((float)raw / (float)samples) / 1000 * eeprom_read_bandgap();
+			temp	= (raw_v - 0.2897) * 0.942 * 1000;
+			temp	*= eeprom_read_temp_cal_factor(1);
+			temp	+= eeprom_read_temp_cal_offset(1);
+
+			snprintf_P((char *)dst, size, ok, sensor, temp, raw_v);
+
+			admux = ADMUX;
+			admux |= 0x0e; // 0xe = 1.1V
 			ADMUX = admux;
 
 			break;

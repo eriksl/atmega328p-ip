@@ -6,6 +6,7 @@
 #include "util.h"
 #include "watchdog.h"
 #include "stackmonitor.h"
+#include "eeprom.h"
 
 #include <avr/pgmspace.h>
 #include <string.h>
@@ -42,7 +43,7 @@ static const __flash application_function_table_t application_function_table[] =
 		"dump",
 		0,
 		application_function_dump,
-		"show parameters",
+		"dump eeprom contents",
 	},
 	{
 		"help",
@@ -242,13 +243,19 @@ int16_t application_content(uint16_t src_length, const uint8_t *src, uint16_t si
 
 static uint8_t application_function_dump(uint8_t nargs, uint8_t args[application_num_args][application_length_args], uint16_t size, uint8_t *dst)
 {
-	static const __flash char format[] = "> arg %d: \"%s\"\n";
+	static const __flash char format1[] = "> bandgap: %.5f\n";
+	static const __flash char format2[] = "> temp cal[%d]: *=%.5f / +=%.5f\n";
 
-	uint8_t narg, offset;
+	uint8_t index, offset;
 
-	for(narg = 0; narg < nargs; narg++)
+	offset	= snprintf_P((char *)dst, size, format1, eeprom_read_bandgap());
+	dst		+= offset;
+	size	-= offset;
+
+	for(index = 0; index < temp_cal_size; index++)
 	{
-		offset = snprintf_P((char *)dst, size, format, narg, args[narg]);
+		offset = snprintf_P((char *)dst, size, format2,
+				index, eeprom_read_temp_cal_factor(index), eeprom_read_temp_cal_offset(index));
 		dst += offset;
 		size -= offset;
 	}

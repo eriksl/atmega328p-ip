@@ -1,8 +1,10 @@
+#include "twi_master.h"
+#include "watchdog.h"
+
 #include <avr/io.h>
 #include <util/delay.h>
 
-#include "twi_master.h"
-#include "watchdog.h"
+#include <stdio.h>
 
 static uint8_t status(void)
 {
@@ -219,4 +221,12 @@ uint8_t twi_master_receive(uint8_t address, uint8_t size, uint8_t *buffer)
 	send_stop();
 
 	return(tme_ok);
+}
+
+void twi_master_error(uint8_t *dst, uint16_t size, uint8_t error)
+{
+	static const __flash char format_string[] = "TWI error: %x, state %x\n";
+
+	snprintf_P((char *)dst, (size_t)size, format_string,
+			error & 0x0f, (error & 0xf0) >> 4);
 }

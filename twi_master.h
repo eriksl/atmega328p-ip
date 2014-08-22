@@ -1,5 +1,6 @@
-#ifndef _twi_master_h_
-#define _twi_master_h_
+#ifndef twi_master_h
+#define twi_master_h
+
 #include <stdint.h>
 
 typedef enum
@@ -32,5 +33,6 @@ void	twi_master_init(void);
 void	twi_master_recover(void);
 uint8_t	twi_master_send(uint8_t address, uint8_t length, const uint8_t *buffer);
 uint8_t twi_master_receive(uint8_t address, uint8_t size, uint8_t *buffer);
+void	twi_master_error(uint8_t *dst, uint16_t size, uint8_t error);
 
 #endif

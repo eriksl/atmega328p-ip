@@ -10,14 +10,6 @@
 
 static uint8_t twi_address = 0;
 
-static void twi_error(uint8_t *dst, uint16_t size, uint8_t error)
-{
-	static const __flash char format_string[] = "TWI error: %x, state %x\n";
-
-	snprintf_P((char *)dst, (size_t)size, format_string,
-			error & 0x0f, (error & 0xf0) >> 4);
-}
-
 uint8_t application_function_twiaddress(uint8_t nargs, uint8_t args[application_num_args][application_length_args], uint16_t size, uint8_t *dst)
 {
 	static const __flash char fmt[] = "> TWI slave address set to 0x%02x\n";
@@ -48,7 +40,7 @@ uint8_t application_function_twiread(uint8_t nargs, uint8_t args[application_num
 	}
 
 	if((rv = twi_master_receive(twi_address, sizeof(bytes), bytes)) != tme_ok)
-		twi_error(dst, size, rv);
+		twi_master_error(dst, size, rv);
 	else
 	{
 		offset = snprintf_P((char *)dst, (size_t)size, header, amount, twi_address);
@@ -94,7 +86,7 @@ uint8_t application_function_twiwrite(uint8_t nargs, uint8_t args[application_nu
 	}
 
 	if((rv = twi_master_send(twi_address, dst_current, bytes)) != tme_ok)
-		twi_error(dst, size, rv);
+		twi_master_error(dst, size, rv);
 	else
 		snprintf_P((char *)dst, (size_t)size, fmt, dst_current, twi_address);
 

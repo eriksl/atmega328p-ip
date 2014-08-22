@@ -71,7 +71,8 @@ uint8_t application_function_temp_read(uint8_t nargs, uint8_t args[application_n
 	uint16_t	ix;
 	uint8_t		admux;
 	uint32_t	raw;
-	float		raw_v, temp;
+	float		raw_v = 0;
+	float		temp = 0;
 
 	sensor = (uint8_t)strtoul((const char *)args[1], 0, 0);
 
@@ -94,8 +95,6 @@ uint8_t application_function_temp_read(uint8_t nargs, uint8_t args[application_n
 
 			raw_v	= ((float)raw / (float)samples) / 1000 * eeprom_read_bandgap();
 			temp	= (raw_v - 0.5) * 100;
-			temp	*= eeprom_read_temp_cal_factor(0);
-			temp	+= eeprom_read_temp_cal_offset(0);
 
 			snprintf_P((char *)dst, size, ok, sensor, temp, raw_v);
 
@@ -123,10 +122,6 @@ uint8_t application_function_temp_read(uint8_t nargs, uint8_t args[application_n
 
 			raw_v	= ((float)raw / (float)samples) / 1000 * eeprom_read_bandgap();
 			temp	= (raw_v - 0.2897) * 0.942 * 1000;
-			temp	*= eeprom_read_temp_cal_factor(1);
-			temp	+= eeprom_read_temp_cal_offset(1);
-
-			snprintf_P((char *)dst, size, ok, sensor, temp, raw_v);
 
 			admux = ADMUX;
 			admux |= 0x0e; // 0xe = 1.1V
@@ -170,11 +165,20 @@ uint8_t application_function_temp_read(uint8_t nargs, uint8_t args[application_n
 
 		default:
 		{
-			strlcpy_P((char *)dst, error, (size_t)size);
+			goto error;
 			break;
 		}
 	}
 
+	temp *= eeprom_read_temp_cal_factor(sensor);
+	temp += eeprom_read_temp_cal_offset(sensor);
+
+	snprintf_P((char *)dst, size, ok, sensor, temp, raw_v);
+
+	return(1);
+
+error:
+	strlcpy_P((char *)dst, error, (size_t)size);
 	return(1);
 }
 

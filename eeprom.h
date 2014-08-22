@@ -7,7 +7,7 @@
 
 enum
 {
-	temp_cal_size = 2,
+	temp_cal_size = 4,
 };
 
 void eeprom_read_mac_address(mac_addr_t *dst);

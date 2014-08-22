@@ -2,6 +2,7 @@
 #include "util.h"
 #include "eeprom.h"
 #include "stats.h"
+#include "twi_master.h"
 
 #include <avr/io.h>
 #include <avr/pgmspace.h>
@@ -130,6 +131,39 @@ uint8_t application_function_temp_read(uint8_t nargs, uint8_t args[application_n
 			admux = ADMUX;
 			admux |= 0x0e; // 0xe = 1.1V
 			ADMUX = admux;
+
+			break;
+		}
+
+		case(2): // ds7505 on twi 0x48
+		{
+			uint8_t twierror;
+			uint8_t twistring[2];
+
+			twistring[0] = 0x01;	// select config register
+			twistring[1] = 0x60;	// write r0=r1=1, other bits zero
+
+			if((twierror = twi_master_send(0x48, 2, twistring)) != tme_ok)
+			{
+				twi_master_error(dst, size, twierror);
+				break;
+			}
+
+			twistring[0] = 0x00;	// select temperature register
+
+			if((twierror = twi_master_send(0x48, 1, twistring)) != tme_ok)
+			{
+				twi_master_error(dst, size, twierror);
+				break;
+			}
+
+			if((twierror = twi_master_receive(0x48, 2, twistring)) != tme_ok)
+			{
+				twi_master_error(dst, size, twierror);
+				break;
+			}
+
+			temp = ((int16_t)(((twistring[0] << 8) | twistring[1]) >> 4)) * 0.0625;
 
 			break;
 		}

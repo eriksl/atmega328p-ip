@@ -26,12 +26,16 @@ stats_t ip_bad_checksum = 0;
 stats_t wd_interrupts = 0;
 stats_t eth_interrupts = 0;
 stats_t adc_interrupts = 0;
+stats_t t1_interrupts = 0;
+stats_t t1_unhandled = 0;
 
 static const __flash char format_string[] =
 {
 	"int adc: %u\n"
 	"int wd: %u\n"
 	"int eth: %u\n"
+	"int t1: %u\n"
+	"int t1u: %u\n"
 	"pkt rx: %u\n"
 	"pkt tx: %u\n"
 	"err rx: %u\n"
@@ -53,6 +57,8 @@ void stats_generate(uint16_t size, uint8_t *dst)
 			adc_interrupts,
 			wd_interrupts,
 			eth_interrupts,
+			t1_interrupts,
+			t1_unhandled,
 			eth_pkt_rx,
 			eth_pkt_tx,
 			eth_rxerr,

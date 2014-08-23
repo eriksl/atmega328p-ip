@@ -37,6 +37,7 @@ int main(void)
 
 	uint16_t		rx_frame_length;
 	uint16_t		tx_frame_length;
+	uint16_t		missed_ticks;
 
 	cli();
 	watchdog_stop();
@@ -84,14 +85,12 @@ int main(void)
 	my_ipv4_address.byte[3] = 0;
 
 	PORTD = 0;
-	sleep(500);
+	sleep(200);
 	PORTD = _BV(0);
-	sleep(500);
+	sleep(200);
 	PORTD = _BV(1);
-	sleep(500);
+	sleep(200);
 	PORTD = 0;
-
-	watchdog_start(WATCHDOG_PRESCALER_8192);
 
 	spi_init();
 	twi_master_init();
@@ -99,13 +98,16 @@ int main(void)
 	enc_set_led(PHLCON_LED_RCV, PHLCON_LED_XMIT);
 	application_init();
 
+	watchdog_start(WATCHDOG_PRESCALER_8192);
 	sei();
 
 	for(;;)
 	{
 		watchdog_rearm();
 
-		application_idle();
+		missed_ticks = t1_unhandled;
+		t1_unhandled = 0;
+		application_periodic(missed_ticks);
 
 		if(ipv4_address_match(&my_ipv4_address, &ipv4_addr_zero))
 		{

@@ -28,6 +28,8 @@ extern stats_t ip_bad_checksum;
 extern stats_t wd_interrupts;
 extern stats_t eth_interrupts;
 extern stats_t adc_interrupts;
+extern stats_t t1_interrupts;
+extern stats_t t1_unhandled;
 
 void stats_generate(uint16_t size, uint8_t *dst);
 

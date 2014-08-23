@@ -4,7 +4,6 @@
 #include "enc-private.h"
 #include "enc.h"
 #include "spi.h"
-#include "watchdog.h"
 #include "stats.h"
 #include "util.h"
 
@@ -286,10 +285,8 @@ void enc_send_frame(const uint8_t *frame, uint16_t length)
 		clearbits_register(EIR,   _BV(EIR_TXERIF));
 	}
 
-	PORTD |= _BV(5);
 	while(read_register(ECON1) & (_BV(ECON1_TXRTS) | _BV(ECON1_DMAST)))
 		(void)0;
-	PORTD &= ~_BV(5);
 
 	/* frame start */
 
@@ -306,18 +303,13 @@ void enc_send_frame(const uint8_t *frame, uint16_t length)
 	write_memory_8(0x00); // 0x00 = macon3
 
 	for(current = 0; current < length; current++)
-	{
-		watchdog_rearm();
 		write_memory_8(frame[current]);
-	}
 
 	clearbits_register(EIR, _BV(EIR_TXIF) | _BV(EIR_TXERIF));
 	setbits_register(ECON1,	_BV(ECON1_TXRTS));
 
-	PORTD |= _BV(6);
 	while(read_register(ECON1) & (_BV(ECON1_TXRTS) | _BV(ECON1_DMAST)))
 		(void)0;
-	PORTD &= ~_BV(6);
 
 	eth_pkt_tx++;
 }
@@ -340,9 +332,6 @@ uint16_t enc_receive_frame(uint8_t *frame, uint16_t buffer_length)
 
 		// deassert interrupt and wait for it to be deasserted (go high)
 
-		PORTD |= _BV(0);
-		PORTD |= _BV(1);
-
 		while(!(PIND & _BV(2)))
 			(void)0;
 
@@ -350,22 +339,13 @@ uint16_t enc_receive_frame(uint8_t *frame, uint16_t buffer_length)
 
 		pause_idle();
 
-		PORTD &= ~_BV(0);
-		PORTD |=  _BV(1);
-
 		// deassert interrupt and wait for it to be deasserted (go high)
 
 		clear_interrupt_flags();
 		write_register(EIE, 0x00);
 
-		PORTD |=  _BV(0);
-		PORTD &= ~_BV(1);
-
 		while(!(PIND & _BV(2)))
 			(void)0;
-
-		PORTD &= ~_BV(0);
-		PORTD &= ~_BV(1);
 	}
 
 	eth_pkt_rx++;
@@ -379,11 +359,8 @@ uint16_t enc_receive_frame(uint8_t *frame, uint16_t buffer_length)
 		return(0);
 	}
 
-	if(rx_pkts_buffered() == 0)
-	{
-		eth_rxerr++;
+	if(rx_pkts_buffered() == 0) // wait timed out (interrupt)
 		return(0);
-	}
 
 	write_register(ERDPTL, (next_frame_pointer >> 0) & 0xff);
 	write_register(ERDPTH, (next_frame_pointer >> 8) & 0xff);
@@ -397,13 +374,13 @@ uint16_t enc_receive_frame(uint8_t *frame, uint16_t buffer_length)
 		length = buffer_length - 1;
 
 	if(!(rxstat & 0x80)) // frame valid
+	{
+		eth_rxerr++;
 		length = 0;
+	}
 
 	for(current = 0; current < length; current++)
-	{
-		watchdog_rearm();
 		frame[current] = read_memory_8();
-	}
 
 	write_register(ERXRDPTL, (next_frame_pointer >> 0) & 0xff); // move rx pointer, free memory
 	write_register(ERXRDPTH, (next_frame_pointer >> 8) & 0xff);

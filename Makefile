@@ -13,13 +13,13 @@ PROGRAMMER	=		dragon_isp
 PRGFLAGS	=		-P usb -B 1 -y
 
 PROGRAM		=		main
-OBJFILES	=		$(PROGRAM).o watchdog.o timer0.o timer1.o timer2.o spi.o twi_master.o \
+OBJFILES	=		$(PROGRAM).o watchdog.o spi.o twi_master.o \
 						enc.o net.o ethernet.o arp.o ipv4.o icmp4.o udp4.o tcp4.o bootp.o \
-						application.o application-temperature.o application-twi.o \
+						application.o application-temperature.o application-twi.o application-pwm.o \
 						stats.o util.o eeprom.o stackmonitor.o
-HEADERS		=			watchdog.h timer0.h timer1.h timer2.h spi.h twi_master.h \
+HEADERS		=			watchdog.h spi.h twi_master.h \
 						enc.h net.h ethernet.h ethernet_macaddr.h arp.h ipv4.h ipv4_addr.h icmp4.h udp4.h tcp4.h bootp.h \
-						application.h application-temperature.h application-twi.h \
+						application.h application-temperature.h application-twi.h application-pwm.h \
 						stats.h util.h eeprom.h stackmonitor.h util.h
 HEXFILE		=		$(PROGRAM).hex
 ELFFILE		=		$(PROGRAM).elf
@@ -44,11 +44,9 @@ fuse:
 $(PROGRAM).o:		$(PROGRAM).c $(HEADERS)
 
 watchdog.o:			watchdog.h
-timer0.o:			timer0.h
-timer1.o:			timer1.h
-timer2.o:			timer2.h
 spi.o:				spi.h
 twi_master.o:		twi_master.h
+stats.o:			stats.h
 enc.o:				$(HEADERS) enc-private.h
 net.o:				$(HEADERS)
 ethernet.o:			$(HEADERS)
@@ -57,8 +55,7 @@ ipv4.o:				$(HEADERS)
 icmp4.o:			$(HEADERS)
 udp4.o:				$(HEADERS)
 tcp4.o:				$(HEADERS)
-application.o:		application.h
-stats.o:			stats.h
+application.o:		$(HEADERS)
 
 %.o:				%.c
 					@echo "CC $< -> $@"

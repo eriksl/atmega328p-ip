@@ -1,7 +1,7 @@
 #include "application.h"
 #include "application-temperature.h"
 #include "application-twi.h"
-#include "timer1.h"
+#include "application-pwm.h"
 #include "stats.h"
 #include "util.h"
 #include "stackmonitor.h"
@@ -22,6 +22,9 @@ typedef struct
 	application_function_t		function;
 	const char					description[37];
 } application_function_table_t;
+
+static uint8_t cmd_led_timeout = 0;
+static uint8_t heartbeat_led_timeout = 0;
 
 static uint8_t application_function_dump(uint8_t nargs, uint8_t args[application_num_args][application_length_args], uint16_t size, uint8_t *dst);
 static uint8_t application_function_help(uint8_t nargs, uint8_t args[application_num_args][application_length_args], uint16_t size, uint8_t *dst);
@@ -144,23 +147,29 @@ static const __flash application_function_table_t application_function_table[] =
 
 void application_init(void)
 {
-	/* timer1 for pwm */
-
-	timer1_init_pwm1a1b(timer1_1);	// pwm timer 1 resolution: 16 bits, frequency = 122 Hz
-	timer1_start();
-
 	application_init_temp_read();
+	application_init_pwm();
 }
 
-void application_idle(void)
+void application_periodic(uint16_t missed_ticks)
 {
-	static uint8_t phase = 0;
+	if(heartbeat_led_timeout > missed_ticks)
+		heartbeat_led_timeout -= missed_ticks;
+	else
+	{
+		heartbeat_led_timeout = 122;
+		PORTD ^= _BV(0);
+	}
 
-	timer1_set_oc1a(_BV(phase));
-	timer1_set_oc1b(_BV(15 - phase));
+	if(cmd_led_timeout > missed_ticks)
+		cmd_led_timeout -= missed_ticks;
+	else
+	{
+		cmd_led_timeout = 0;
+		PORTD &= ~_BV(1);
+	}
 
-	if(++phase > 15)
-		phase = 0;
+	application_periodic_pwm(missed_ticks);
 }
 
 int16_t application_content(uint16_t src_length, const uint8_t *src, uint16_t size, uint8_t *dst)
@@ -234,6 +243,9 @@ int16_t application_content(uint16_t src_length, const uint8_t *src, uint16_t si
 	}
 
 	snprintf_P((char *)dst, size, error_fmt_unknown, args[0]);
+
+	cmd_led_timeout = 20;
+	PORTD |= _BV(1);
 
 	return(strlen((char *)dst));
 }

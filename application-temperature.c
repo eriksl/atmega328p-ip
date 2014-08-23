@@ -79,37 +79,16 @@ uint8_t application_function_temp_read(uint8_t nargs, uint8_t args[application_n
 	switch(sensor)
 	{
 		case(0): // TMP36
-		{
-			admux = ADMUX;
-			admux &= 0xf0;
-			admux |= 0x00; // 0x0 = ADC0
-			ADMUX = admux;
-
-			for(ix = 32; ix > 0; ix--)
-				get_adc();
-
-			raw = 0;
-
-			for(ix = samples; ix > 0; ix--)
-				raw += get_adc();
-
-			raw_v	= ((float)raw / (float)samples) / 1000 * eeprom_read_bandgap();
-			temp	= (raw_v - 0.5) * 100;
-
-			snprintf_P((char *)dst, size, ok, sensor, temp, raw_v);
-
-			admux = ADMUX;
-			admux |= 0x0e; // 0xe = 1.1V
-			ADMUX = admux;
-
-			break;
-		}
-
 		case(1): // internal bandgap thermosensor
 		{
 			admux = ADMUX;
 			admux &= 0xf0;
-			admux |= 0x08; // 0x8 = ADC8 = bg
+
+			if(sensor == 0)
+				admux |= 0x00; // 0x0 = ADC0 = TMP36
+			else
+				admux |= 0x08; // 0x8 = ADC8 = bg
+
 			ADMUX = admux;
 
 			for(ix = 32; ix > 0; ix--)
@@ -120,8 +99,14 @@ uint8_t application_function_temp_read(uint8_t nargs, uint8_t args[application_n
 			for(ix = samples; ix > 0; ix--)
 				raw += get_adc();
 
-			raw_v	= ((float)raw / (float)samples) / 1000 * eeprom_read_bandgap();
-			temp	= (raw_v - 0.2897) * 0.942 * 1000;
+			raw_v = ((float)raw / (float)samples) / 1000 * eeprom_read_bandgap();
+
+			if(sensor == 0)
+				temp = (raw_v - 0.5) * 100;	// TMP36
+			else
+				temp = (raw_v - 0.2897) * 0.942 * 1000; // bg
+
+			snprintf_P((char *)dst, size, ok, sensor, temp, raw_v);
 
 			admux = ADMUX;
 			admux |= 0x0e; // 0xe = 1.1V

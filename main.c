@@ -112,6 +112,9 @@ int main(void)
 		t1_unhandled = 0;
 		application_periodic(missed_ticks);
 
+		if(missed_ticks > t1_unhandled_max)
+			t1_unhandled_max = missed_ticks;
+
 		if(ipv4_address_match(&my_ipv4_address, &ipv4_addr_zero))
 		{
 			tx_frame_length = bootp_create_request(tx_frame, &my_mac_address);

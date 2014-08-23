@@ -91,11 +91,13 @@ int main(void)
 	sleep(500);
 	PORTD = 0;
 
+	watchdog_start(WATCHDOG_PRESCALER_8192);
+
 	spi_init();
 	twi_master_init();
 	enc_init(max_frame_size, &my_mac_address);
 	enc_set_led(PHLCON_LED_RCV, PHLCON_LED_XMIT);
-	watchdog_start(application_init());
+	application_init();
 
 	sei();
 

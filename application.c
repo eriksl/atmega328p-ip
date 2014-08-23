@@ -4,7 +4,6 @@
 #include "timer1.h"
 #include "stats.h"
 #include "util.h"
-#include "watchdog.h"
 #include "stackmonitor.h"
 #include "eeprom.h"
 
@@ -143,7 +142,7 @@ static const __flash application_function_table_t application_function_table[] =
 	},
 };
 
-uint8_t application_init(void)
+void application_init(void)
 {
 	/* timer1 for pwm */
 
@@ -151,8 +150,6 @@ uint8_t application_init(void)
 	timer1_start();
 
 	application_init_temp_read();
-
-	return(WATCHDOG_PRESCALER_8192);
 }
 
 void application_idle(void)

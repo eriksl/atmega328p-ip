@@ -14,7 +14,6 @@ ISR (INT0_vect, ISR_NOBLOCK)
 	eth_interrupts++;
 }
 
-static uint8_t	shadow_packet_counter;
 static uint16_t	next_frame_pointer;
 
 static void sc(void)
@@ -181,26 +180,6 @@ static void write_register(uint16_t reg, uint16_t data)
 	}
 }
 
-static uint8_t rx_pkts_buffered(void)
-{
-	while(read_register(EPKTCNT) > 0)
-	{
-		if(shadow_packet_counter < 255)
-			shadow_packet_counter++;
-		setbits_register(ECON2, _BV(ECON2_PKTDEC));
-	}
-
-	return(shadow_packet_counter);
-}
-
-static void clear_interrupt_flags(void)
-{
-	write_register(EIR, 0x00);
-	sleep(1);
-	rx_pkts_buffered();
-	sleep(1);
-}
-
 void enc_init(uint16_t max_frame_size, const mac_addr_t *mac)
 {
 	sc();			// reset
@@ -211,10 +190,9 @@ void enc_init(uint16_t max_frame_size, const mac_addr_t *mac)
 	EIMSK |=  _BV(INT0);	// enable INT0
 
 	write_register(EIE, 0x00);
-	clear_interrupt_flags();
+	write_register(EIR, 0x00);
 
-	shadow_packet_counter	= 0;
-	next_frame_pointer		= RXBUFFER;
+	next_frame_pointer = RXBUFFER;
 
 	// read buffer
 
@@ -319,48 +297,19 @@ uint16_t enc_receive_frame(uint8_t *frame, uint16_t buffer_length)
 	uint16_t length, current;
 	uint8_t	 rxstat;
 
-	if(rx_pkts_buffered() == 0)
-	{
-		if(read_register(EIR) & _BV(EIR_RXERIF))
-		{
-			eth_rxerr++;
-			clearbits_register(EIR, _BV(EIR_RXERIF));
-		}
-
-		clear_interrupt_flags();
-		write_register(EIE, _BV(EIE_INTIE) | _BV(EIE_PKTIE) | _BV(EIE_RXERIE));
-
-		// deassert interrupt and wait for it to be deasserted (go high)
-
-		while(!(PIND & _BV(2)))
-			(void)0;
-
-		// wait for interrupt to be asserted (go low)
-
-		pause_idle();
-
-		// deassert interrupt and wait for it to be deasserted (go high)
-
-		clear_interrupt_flags();
-		write_register(EIE, 0x00);
-
-		while(!(PIND & _BV(2)))
-			(void)0;
-	}
-
-	eth_pkt_rx++;
-
-	// now there is a frame (or an error)
-
 	if(read_register(ECON1) & _BV(EIR_RXERIF))
 	{
 		eth_rxerr++;
 		clearbits_register(EIR, _BV(EIR_RXERIF));
+	}
+
+	if(read_register(EPKTCNT) == 0)
+	{
+		eth_nopkt_rx++;
 		return(0);
 	}
 
-	if(rx_pkts_buffered() == 0) // wait timed out (interrupt)
-		return(0);
+	eth_pkt_rx++;
 
 	write_register(ERDPTL, (next_frame_pointer >> 0) & 0xff);
 	write_register(ERDPTH, (next_frame_pointer >> 8) & 0xff);
@@ -385,8 +334,7 @@ uint16_t enc_receive_frame(uint8_t *frame, uint16_t buffer_length)
 	write_register(ERXRDPTL, (next_frame_pointer >> 0) & 0xff); // move rx pointer, free memory
 	write_register(ERXRDPTH, (next_frame_pointer >> 8) & 0xff);
 
-	if(shadow_packet_counter > 0)
-		shadow_packet_counter--;
+	setbits_register(ECON2, _BV(ECON2_PKTDEC));
 
 	return(length);
 }

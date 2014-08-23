@@ -106,6 +106,8 @@ int main(void)
 
 	for(;;)
 	{
+		pause_idle(); // gets woken by the 122 Hz timer1 interrupt or packet arrival or watchdog interrupt
+
 		WDTCSR |= _BV(WDIE); // enable wdt interrupt, reset
 
 		missed_ticks = t1_unhandled;

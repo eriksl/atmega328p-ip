@@ -3,6 +3,7 @@
 
 #include <stdio.h>
 
+stats_t eth_nopkt_rx = 0;
 stats_t eth_pkt_rx = 0;
 stats_t eth_pkt_tx = 0;
 stats_t eth_txerr = 0;
@@ -37,6 +38,7 @@ static const __flash char format_string[] =
 	"int eth: %u\n"
 	"int t1: %u\n"
 	"int t1um: %u\n"
+	"pkt no rx: %u\n"
 	"pkt rx: %u\n"
 	"pkt tx: %u\n"
 	"err rx: %u\n"
@@ -60,6 +62,7 @@ void stats_generate(uint16_t size, uint8_t *dst)
 			eth_interrupts,
 			t1_interrupts,
 			t1_unhandled_max,
+			eth_nopkt_rx,
 			eth_pkt_rx,
 			eth_pkt_tx,
 			eth_rxerr,

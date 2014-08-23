@@ -5,6 +5,7 @@
 
 typedef uint16_t stats_t;
 
+extern stats_t eth_nopkt_rx;
 extern stats_t eth_pkt_rx;
 extern stats_t eth_pkt_tx;
 extern stats_t eth_txerr;

@@ -31,12 +31,18 @@ void application_init_pwm(void)
 
 void application_periodic_pwm(uint16_t missed_ticks)
 {
-	static uint16_t oc1a = 0;
-	static uint16_t oc1b = 0;
+	static uint8_t delay = 0;
+	static uint8_t phase = 0;
 
-	oc1a += missed_ticks;
-	oc1b -= missed_ticks;
+	if(delay > 3)
+	{
+		phase = (phase + missed_ticks) & 0x0f;
 
-	OCR1A = oc1a;
-	OCR1B = oc1b;
+		OCR1A = _BV(phase);
+		OCR1B = _BV(15 - phase);
+
+		delay = 0;
+	}
+	else
+		delay++;
 }

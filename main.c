@@ -1,8 +1,3 @@
-#include <stdint.h>
-#include <avr/interrupt.h>
-#include <string.h>
-#include <avr/io.h>
-
 #include "spi.h"
 #include "twi_master.h"
 #include "net.h"
@@ -10,12 +5,18 @@
 #include "arp.h"
 #include "ipv4.h"
 #include "bootp.h"
-#include "watchdog.h"
 #include "stats.h"
 #include "eeprom.h"
 #include "enc.h"
 #include "application.h"
 #include "util.h"
+
+#include <avr/interrupt.h>
+#include <avr/io.h>
+#include <avr/wdt.h>
+
+#include <string.h>
+#include <stdint.h>
 
 enum
 {
@@ -40,7 +41,9 @@ int main(void)
 	uint16_t		missed_ticks;
 
 	cli();
-	watchdog_stop();
+    wdt_reset();
+    MCUSR = 0;
+    wdt_disable();
 
 	PRR = 0xff;
 
@@ -92,18 +95,18 @@ int main(void)
 	sleep(200);
 	PORTD = 0;
 
+	wdt_enable(WDTO_8S);
 	spi_init();
 	twi_master_init();
 	enc_init(max_frame_size, &my_mac_address);
 	enc_set_led(PHLCON_LED_RCV, PHLCON_LED_XMIT);
 	application_init();
 
-	watchdog_start(WATCHDOG_PRESCALER_8192);
 	sei();
 
 	for(;;)
 	{
-		watchdog_rearm();
+		WDTCSR |= _BV(WDIE); // enable wdt interrupt, reset
 
 		missed_ticks = t1_unhandled;
 		t1_unhandled = 0;

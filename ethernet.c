@@ -1,7 +1,6 @@
 #include "ethernet.h"
 #include "net.h"
 #include "stats.h"
-#include "watchdog.h"
 #include "arp.h"
 #include "ipv4.h"
 

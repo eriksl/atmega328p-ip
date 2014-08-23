@@ -1,5 +1,4 @@
 #include "util.h"
-#include "watchdog.h"
 
 #include <util/delay.h>
 #include <avr/interrupt.h>
@@ -16,10 +15,7 @@ void reset(void)
 void sleep(uint16_t ms)
 {
 	while(ms-- > 0)
-	{
 		_delay_ms(1);
-		watchdog_rearm();
-	}
 }
 
 void pause_idle(void)

@@ -1,5 +1,4 @@
 #include "twi_master.h"
-#include "watchdog.h"
 
 #include <avr/io.h>
 #include <util/delay.h>

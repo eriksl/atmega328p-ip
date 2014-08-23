@@ -95,7 +95,7 @@ int main(void)
 	sleep(200);
 	PORTD = 0;
 
-	wdt_enable(WDTO_8S);
+	wdt_enable(WDTO_2S);
 	spi_init();
 	twi_master_init();
 	enc_init(max_frame_size, &my_mac_address);

@@ -38,7 +38,6 @@ int main(void)
 
 	uint16_t		rx_frame_length;
 	uint16_t		tx_frame_length;
-	uint16_t		missed_ticks;
 
 	cli();
     wdt_reset();
@@ -106,16 +105,9 @@ int main(void)
 
 	for(;;)
 	{
-		pause_idle(); // gets woken by the 122 Hz timer1 interrupt or packet arrival or watchdog interrupt
-
-		WDTCSR |= _BV(WDIE); // enable wdt interrupt, reset
-
-		missed_ticks = t1_unhandled;
-		t1_unhandled = 0;
-		application_periodic(missed_ticks);
-
-		if(missed_ticks > t1_unhandled_max)
-			t1_unhandled_max = missed_ticks;
+		pause_idle();			// gets woken by the 122 Hz timer1 interrupt or packet arrival or watchdog interrupt
+		WDTCSR |= _BV(WDIE);	// enable wdt interrupt, reset
+		application_periodic();	// run periodic tasks
 
 		if(ipv4_address_match(&my_ipv4_address, &ipv4_addr_zero))
 		{

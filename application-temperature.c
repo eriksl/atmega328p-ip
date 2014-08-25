@@ -15,7 +15,7 @@
 
 enum
 {
-	samples = 1024,
+	samples = 256
 };
 
 ISR(ADC_vect)
@@ -97,7 +97,10 @@ uint8_t application_function_temp_read(uint8_t nargs, uint8_t args[application_n
 			raw = 0;
 
 			for(ix = samples; ix > 0; ix--)
+			{
 				raw += get_adc();
+				application_periodic();
+			}
 
 			raw_v = ((float)raw / (float)samples) / 1000 * eeprom_read_bandgap();
 

@@ -151,8 +151,18 @@ void application_init(void)
 	application_init_pwm();
 }
 
-void application_periodic(uint16_t missed_ticks)
+void application_periodic(void)
 {
+	uint16_t missed_ticks;
+
+	if((missed_ticks = t1_unhandled) == 0)
+		return;
+
+	t1_unhandled = 0;
+
+	if(missed_ticks > t1_unhandled_max)
+		t1_unhandled_max = missed_ticks;
+
 	if(heartbeat_led_timeout > missed_ticks)
 		heartbeat_led_timeout -= missed_ticks;
 	else
@@ -221,6 +231,9 @@ int16_t application_content(uint16_t src_length, const uint8_t *src, uint16_t si
 
 	*dst = '\0';
 
+	cmd_led_timeout = 10;
+	PORTD |= _BV(1);
+
 	if(args_count == 0)
 		return(0);
 
@@ -243,9 +256,6 @@ int16_t application_content(uint16_t src_length, const uint8_t *src, uint16_t si
 	}
 
 	snprintf_P((char *)dst, size, error_fmt_unknown, args[0]);
-
-	cmd_led_timeout = 20;
-	PORTD |= _BV(1);
 
 	return(strlen((char *)dst));
 }

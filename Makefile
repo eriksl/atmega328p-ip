@@ -19,8 +19,7 @@ OBJFILES	=		$(PROGRAM).o spi.o twi_master.o \
 						stats.o util.o eeprom.o stackmonitor.o
 HEADERS		=			spi.h twi_master.h \
 						enc.h net.h ethernet.h ethernet_macaddr.h arp.h ipv4.h ipv4_addr.h icmp4.h udp4.h tcp4.h bootp.h \
-						application.h application-temperature.h application-twi.h application-pwm.h \
-						stats.h util.h eeprom.h stackmonitor.h util.h
+						application.h stats.h util.h eeprom.h stackmonitor.h util.h
 HEXFILE		=		$(PROGRAM).hex
 ELFFILE		=		$(PROGRAM).elf
 PROGRAMMED	=		.programmed
@@ -54,7 +53,7 @@ ipv4.o:				$(HEADERS)
 icmp4.o:			$(HEADERS)
 udp4.o:				$(HEADERS)
 tcp4.o:				$(HEADERS)
-application.o:		$(HEADERS)
+application.o:		$(HEADERS) application-pwm.h application-light.h application-temperature.h application-twi.h
 
 %.o:				%.c
 					@echo "CC $< -> $@"

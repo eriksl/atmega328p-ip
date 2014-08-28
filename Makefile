@@ -54,6 +54,7 @@ icmp4.o:			$(HEADERS)
 udp4.o:				$(HEADERS)
 tcp4.o:				$(HEADERS)
 application.o:		$(HEADERS) application-pwm.h application-light.h application-temperature.h application-twi.h
+eeprom.o:			eeprom.h
 
 %.o:				%.c
 					@echo "CC $< -> $@"

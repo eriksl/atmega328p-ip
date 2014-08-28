@@ -160,7 +160,7 @@ static const __flash application_function_table_t application_function_table[] =
 
 void application_init(void)
 {
-	application_init_temp_read();
+	application_init_temp();
 	application_init_light();
 	application_init_pwm();
 }

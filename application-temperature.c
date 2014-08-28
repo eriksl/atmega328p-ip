@@ -23,7 +23,7 @@ ISR(ADC_vect)
 	adc_interrupts++;
 }
 
-void application_init_temp_read(void)
+void application_init_temp(void)
 {
 	PRR			&= ~_BV(PRADC);
 	DIDR0		= _BV(ADC0D) | _BV(ADC1D);

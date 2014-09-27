@@ -86,11 +86,11 @@ int main(void)
 	my_ipv4_address.byte[2] = 0;
 	my_ipv4_address.byte[3] = 0;
 
-	PORTD = 0;
+	PORTD = _BV(3);
 	sleep(200);
 	PORTD = _BV(0);
 	sleep(200);
-	PORTD = _BV(1);
+	PORTD = _BV(1) | _BV(3);
 	sleep(200);
 	PORTD = 0;
 

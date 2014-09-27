@@ -67,7 +67,7 @@ int main(void)
 	d0						d0		O	small transparent green		led heartbeat
 	d1						d1		O	small transparent red		led command
 	d2						int0	I								enc int
-	d3						d3		O	rectangular green			DEBUG 1
+	d3						d3		O	buzzer
 	d4		 						*								*
 	d5						d5		O	large green					DEBUG 2
 	d6						d6		O	large red					DEBUG 3

@@ -36,8 +36,8 @@ MODEL 3 (ATMEGA328), VERSION 1, REVISION 1
 	8	GND															GND
 	9	b6
 	10	b7						b7									button light down
-	11	d5						d5		large green					DEBUG 2
-	12	d6						d6		large red					DEBUG 3
+	11	d5
+	12	d6
 	13	d7						d7									button light up
 	14	b0		/cs				b0		square green				spi ss
 

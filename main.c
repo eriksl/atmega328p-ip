@@ -69,15 +69,15 @@ int main(void)
 	d2						int0	I								enc int
 	d3						d3		O	buzzer
 	d4		 						*								*
-	d5						d5		O	large green					DEBUG 2
-	d6						d6		O	large red					DEBUG 3
+	d5						d5		*								*
+	d6						d6		*								*
 	d7						d7		I								button light up
 #endif
 
 	MCUCR	|= _BV(PUD);		//	disable pullups
 	DDRB	= _BV(0) | _BV(1) | _BV(2) | _BV(3) | _BV(5);
 	DDRC	= _BV(1) | _BV(2) | _BV(3) | _BV(4) | _BV(5) | _BV(6);
-	DDRD	= _BV(0) | _BV(1) | _BV(3) |          _BV(5) | _BV(6);
+	DDRD	= _BV(0) | _BV(1) | _BV(3);
 
 	eeprom_read_mac_address(&my_mac_address);
 

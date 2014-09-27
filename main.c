@@ -57,9 +57,9 @@ int main(void)
 	b7						b7		I								button light down
 
 	c0						adc0	I								tmp36
-	c1						c1		O								*
-	c2						c2		O								*
-	c3						c3		O								*
+	c1						c1		*								*
+	c2						c2		*								*
+	c3						c3		*								*
 	c4				sda				O								i2c sda
 	c5				scl				O								i2c scl
 	c6						RESET	O
@@ -68,7 +68,7 @@ int main(void)
 	d1						d1		O	small transparent red		led command
 	d2						int0	I								enc int
 	d3						d3		O	rectangular green			DEBUG 1
-	d4		 				d4		O	small red					led i2c
+	d4		 						*								*
 	d5						d5		O	large green					DEBUG 2
 	d6						d6		O	large red					DEBUG 3
 	d7						d7		I								button light up
@@ -77,7 +77,7 @@ int main(void)
 	MCUCR	|= _BV(PUD);		//	disable pullups
 	DDRB	= _BV(0) | _BV(1) | _BV(2) | _BV(3) | _BV(5) | _BV(6);
 	DDRC	= _BV(1) | _BV(2) | _BV(3) | _BV(4) | _BV(5) | _BV(6);
-	DDRD	= _BV(0) | _BV(1) | _BV(3) | _BV(4) | _BV(5) | _BV(6);
+	DDRD	= _BV(0) | _BV(1) | _BV(3) |          _BV(5) | _BV(6);
 
 	eeprom_read_mac_address(&my_mac_address);
 

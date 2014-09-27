@@ -67,7 +67,7 @@ int main(void)
 	d0						RXD
 	d1						TXD
 	d2						int0	I								enc int
-	d3						d3		O	rectangular green			DEBUG 1
+	d3						d3		O	buzzer
 	d4		 						*								*
 	d5						d5		O	large green					DEBUG 2
 	d6						d6		O	large red					DEBUG 3

@@ -189,7 +189,7 @@ void enc_init(uint16_t max_frame_size, const mac_addr_t *mac)
 	EICRA |=  _BV(ISC01);	// falling edge
 	EIMSK |=  _BV(INT0);	// enable INT0
 
-	write_register(EIE, 0x00);
+	write_register(EIE, _BV(EIE_INTIE) | _BV(EIE_PKTIE));
 	write_register(EIR, 0x00);
 
 	next_frame_pointer = RXBUFFER;

@@ -1,2 +1,5 @@
-*.pdf
 /doc
+collect.pl
+sendudp
+test.sh
+testtwi

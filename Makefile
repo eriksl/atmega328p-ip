@@ -10,7 +10,7 @@ CCOPTFLAGS	= -Os
 
 MCU			=		atmega328p
 PROGRAMMER	=		dragon_isp
-PRGFLAGS	=		-P usb -B 1 -y
+PRGFLAGS	=		-P usb -B 5 -y -V
 
 PROGRAM		=		main
 OBJFILES	=		$(PROGRAM).o spi.o twi_master.o \
@@ -39,6 +39,9 @@ hex:				$(HEXFILE)
 
 fuse:
 					avrdude -v -c $(PROGRAMMER) -p $(MCU) $(PRGFLAGS) -U lfuse:w:$(LFUSE):m -U hfuse:w:$(HFUSE):m
+
+info:
+					avrdude -v -c $(PROGRAMMER) -p $(MCU) $(PRGFLAGS) -v
 
 $(PROGRAM).o:		$(PROGRAM).c $(HEADERS)
 

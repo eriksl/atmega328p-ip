@@ -118,15 +118,22 @@ uint8_t application_function_temp_read(uint8_t nargs, uint8_t args[application_n
 			break;
 		}
 
-		case(2): // ds7505 on twi 0x48
+		case(2): // ds7505 on twi 0x48 / 0x49
+		case(3): // tmp275 on twi 0x48 / 0x49
 		{
+			uint8_t address;
 			uint8_t twierror;
 			uint8_t twistring[2];
+
+			if(sensor == 2)
+				address = 0x48;
+			else
+				address = 0x49;
 
 			twistring[0] = 0x01;	// select config register
 			twistring[1] = 0x60;	// write r0=r1=1, other bits zero
 
-			if((twierror = twi_master_send(0x48, 2, twistring)) != tme_ok)
+			if((twierror = twi_master_send(address, 2, twistring)) != tme_ok)
 			{
 				twi_master_error(dst, size, twierror);
 				break;
@@ -134,13 +141,13 @@ uint8_t application_function_temp_read(uint8_t nargs, uint8_t args[application_n
 
 			twistring[0] = 0x00;	// select temperature register
 
-			if((twierror = twi_master_send(0x48, 1, twistring)) != tme_ok)
+			if((twierror = twi_master_send(address, 1, twistring)) != tme_ok)
 			{
 				twi_master_error(dst, size, twierror);
 				break;
 			}
 
-			if((twierror = twi_master_receive(0x48, 2, twistring)) != tme_ok)
+			if((twierror = twi_master_receive(address, 2, twistring)) != tme_ok)
 			{
 				twi_master_error(dst, size, twierror);
 				break;

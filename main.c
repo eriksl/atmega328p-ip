@@ -53,7 +53,7 @@ int main(void)
 	b3		mosi					O	square green				spi mosi
 	b4		miso					I	square red					spi miso
 	b5		sck						O	square red					spi sck
-	b6						b6		O	small orange				led spi
+	b6								*								*
 	b7						b7		I								button light down
 
 	c0						adc0	I								tmp36
@@ -75,7 +75,7 @@ int main(void)
 #endif
 
 	MCUCR	|= _BV(PUD);		//	disable pullups
-	DDRB	= _BV(0) | _BV(1) | _BV(2) | _BV(3) | _BV(5) | _BV(6);
+	DDRB	= _BV(0) | _BV(1) | _BV(2) | _BV(3) | _BV(5);
 	DDRC	= _BV(1) | _BV(2) | _BV(3) | _BV(4) | _BV(5) | _BV(6);
 	DDRD	= _BV(0) | _BV(1) | _BV(3) |          _BV(5) | _BV(6);
 

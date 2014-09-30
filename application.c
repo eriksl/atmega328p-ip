@@ -43,6 +43,12 @@ static const __flash application_function_table_t application_function_table[] =
 		"write bandgap caliburation (V)",
 	},
 	{
+		"beep",
+		0,
+		application_function_beep,
+		"beep duration period",
+	},
+	{
 		"dump",
 		0,
 		application_function_dump,
@@ -71,6 +77,12 @@ static const __flash application_function_table_t application_function_table[] =
 		0,
 		application_function_help,
 		"help (command)",
+	},
+	{
+		"pwmw",
+		1,
+		application_function_pwmw,
+		"pwmw index/value(/speed/min/max)",
 	},
 	{
 		"q",
@@ -307,7 +319,7 @@ static uint8_t application_function_dump(uint8_t nargs, uint8_t args[application
 
 static uint8_t application_function_help(uint8_t nargs, uint8_t args[application_num_args][application_length_args], uint16_t size, uint8_t *dst)
 {
-	static const __flash char list_header[]		= "> %S: %d args\n";
+	static const __flash char list_header[]		= "> %S[%d]\n";
 	static const __flash char detail_header[]	= "> %S[%d]: ";
 	static const __flash char detail_footer[]	= "\n";
 	static const __flash char detail_error[]	= "> no help for \"%s\"\n";

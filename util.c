@@ -23,9 +23,3 @@ void pause_idle(void)
 	set_sleep_mode(SLEEP_MODE_IDLE);
 	sleep_mode();
 }
-
-void pause_adc(void)
-{
-	set_sleep_mode(SLEEP_MODE_ADC);
-	sleep_mode();
-}

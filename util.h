@@ -6,6 +6,5 @@
 void reset(void);
 void sleep(uint16_t ms);
 void pause_idle(void);
-void pause_adc(void);
 
 #endif

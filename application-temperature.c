@@ -38,7 +38,7 @@ static uint16_t get_adc(void)
 	ADCSRA |= _BV(ADSC) | _BV(ADIF) | _BV(ADIE);
 
 	while(ADCSRA & _BV(ADSC))
-		pause_adc();
+		pause_idle();
 
 	ADCSRA &= ~_BV(ADIE);
 	ADCSRA |=  _BV(ADIF);

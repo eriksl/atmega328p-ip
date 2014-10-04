@@ -92,9 +92,9 @@ void application_periodic_pwm(uint16_t missed_ticks)
 				state_up = 1;
 				pwm[0].speed = 0;
 			}
-			else
-				state_up = 0;
 		}
+		else
+			state_up = 0;
 
 		called		= 0;
 		count_up	= 0;

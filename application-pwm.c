@@ -177,7 +177,7 @@ uint8_t application_function_beep(uint8_t nargs, uint8_t args[application_num_ar
 	return(1);
 }
 
-static const __flash char pwm_ok[] = "> pwm (min)value %u speed %f max %u\n";
+static const __flash char pwm_ok[] = "> pwm %u (min)value %u speed %f max %u\n";
 static const __flash char pwm_error[] = "> invalid pwm %u\n";
 
 uint8_t application_function_pwmw(uint8_t nargs, uint8_t args[application_num_args][application_length_args], uint16_t size, uint8_t *dst)

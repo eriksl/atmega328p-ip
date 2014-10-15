@@ -52,55 +52,6 @@ void application_init_pwm(void)
 
 void application_periodic_pwm(uint16_t missed_ticks)
 {
-	static uint8_t called		= 0;
-	static uint8_t count_up		= 0;
-	static uint8_t count_down	= 0;
-	static uint8_t state_up		= 0;
-	static uint8_t state_down	= 0;
-
-	if(!(PINB & _BV(7)))
-		count_down++;
-
-	if(!(PIND & _BV(7)))
-		count_up++;
-
-	if(++called > 5)
-	{
-		if(count_down > 3)
-		{
-			if(!state_down)
-				OCR1A >>= 1;
-
-			state_down = 1;
-			pwm[0].speed = 0;
-		}
-		else
-			state_down = 0;
-
-		if(count_up > 3)
-		{
-			if(!state_up)
-			{
-				if(!(OCR1A & (1 << 15)))
-				{
-					if(OCR1A)
-						OCR1A <<= 1;
-					else
-						OCR1A = 1;
-				}
-
-				state_up = 1;
-				pwm[0].speed = 0;
-			}
-		}
-		else
-			state_up = 0;
-
-		called		= 0;
-		count_up	= 0;
-		count_down	= 0;
-	}
-
 	if(beep_length > 0)
 	{
 

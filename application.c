@@ -27,7 +27,7 @@ typedef struct
 static uint8_t cmd_led_timeout = 0;
 static uint8_t heartbeat_led_timeout = 0;
 
-static uint8_t application_function_dump(uint8_t nargs, uint8_t args[application_num_args][application_length_args], uint16_t size, uint8_t *dst);
+static uint8_t application_function_edmp(uint8_t nargs, uint8_t args[application_num_args][application_length_args], uint16_t size, uint8_t *dst);
 static uint8_t application_function_help(uint8_t nargs, uint8_t args[application_num_args][application_length_args], uint16_t size, uint8_t *dst);
 static uint8_t application_function_quit(uint8_t nargs, uint8_t args[application_num_args][application_length_args], uint16_t size, uint8_t *dst);
 static uint8_t application_function_reset(uint8_t nargs, uint8_t args[application_num_args][application_length_args], uint16_t size, uint8_t *dst);
@@ -49,9 +49,9 @@ static const __flash application_function_table_t application_function_table[] =
 		"beep duration period",
 	},
 	{
-		"dump",
+		"edmp",
 		0,
-		application_function_dump,
+		application_function_edmp,
 		"dump eeprom contents",
 	},
 	{

@@ -1,5 +1,6 @@
 #include "application.h"
 #include "application-temperature.h"
+#include "application-hum.h"
 #include "application-twi.h"
 #include "application-pwm.h"
 #include "application-light.h"
@@ -59,6 +60,18 @@ static const __flash application_function_table_t application_function_table[] =
 		0,
 		application_function_help,
 		"help (command)",
+	},
+	{
+		"humr",
+		1,
+		application_function_hum_read,
+		"read humidity sensor (0)",
+	},
+	{
+		"humw",
+		3,
+		application_function_hum_write,
+		"write humidity cal. (0)/factor/offset",
 	},
 	{
 		"lightr",
@@ -286,11 +299,12 @@ int16_t application_content(uint16_t src_length, const uint8_t *src, uint16_t si
 	return(strlen((char *)dst));
 }
 
-static uint8_t application_function_dump(uint8_t nargs, uint8_t args[application_num_args][application_length_args], uint16_t size, uint8_t *dst)
+static uint8_t application_function_edmp(uint8_t nargs, uint8_t args[application_num_args][application_length_args], uint16_t size, uint8_t *dst)
 {
 	static const __flash char format1[] = "> bandgap: %.5f\n";
 	static const __flash char format2[] = "> temp cal[%d]: *=%.5f / +=%.5f\n";
 	static const __flash char format3[] = "> light cal[%d]: *=%.5f / +=%.5f\n";
+	static const __flash char format4[] = "> hum cal[%d]: *=%.5f / +=%.5f\n";
 
 	uint8_t index, offset;
 
@@ -310,6 +324,14 @@ static uint8_t application_function_dump(uint8_t nargs, uint8_t args[application
 	{
 		offset = snprintf_P((char *)dst, size, format3,
 				index, eeprom_read_light_cal_factor(index), eeprom_read_light_cal_offset(index));
+		dst += offset;
+		size -= offset;
+	}
+
+	for(index = 0; index < hum_cal_size; index++)
+	{
+		offset = snprintf_P((char *)dst, size, format4,
+				index, eeprom_read_hum_cal_factor(index), eeprom_read_hum_cal_offset(index));
 		dst += offset;
 		size -= offset;
 	}

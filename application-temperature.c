@@ -145,7 +145,7 @@ uint8_t application_function_temp_read(uint8_t nargs, uint8_t args[application_n
 			if((twierror = twi_master_send(address, 2, twistring)) != tme_ok)
 			{
 				twi_master_error(dst, size, twierror);
-				break;
+				return(1);
 			}
 
 			twistring[0] = 0x00;	// select temperature register
@@ -153,13 +153,13 @@ uint8_t application_function_temp_read(uint8_t nargs, uint8_t args[application_n
 			if((twierror = twi_master_send(address, 1, twistring)) != tme_ok)
 			{
 				twi_master_error(dst, size, twierror);
-				break;
+				return(1);
 			}
 
 			if((twierror = twi_master_receive(address, 2, twistring)) != tme_ok)
 			{
 				twi_master_error(dst, size, twierror);
-				break;
+				return(1);
 			}
 
 			temp = ((int16_t)(((twistring[0] << 8) | twistring[1]) >> 4)) * 0.0625;
@@ -170,7 +170,6 @@ uint8_t application_function_temp_read(uint8_t nargs, uint8_t args[application_n
 		default:
 		{
 			goto error;
-			break;
 		}
 	}
 

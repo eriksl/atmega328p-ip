@@ -79,15 +79,10 @@ uint8_t application_function_temp_read(uint8_t nargs, uint8_t args[application_n
 	switch(sensor)
 	{
 		case(0): // internal bandgap thermosensor
-		case(1): // TMP36
 		{
 			admux = ADMUX;
 			admux &= 0xf0;
-
-			if(sensor == 0)
-				admux |= 0x08; // 0x8 = ADC8 = bg
-			else
-				admux |= 0x00; // 0x0 = ADC0 = TMP36
+			admux |= 0x08; // 0x8 = ADC8 = bg
 
 			ADMUX = admux;
 
@@ -102,12 +97,8 @@ uint8_t application_function_temp_read(uint8_t nargs, uint8_t args[application_n
 				application_periodic();
 			}
 
-			raw_v = ((float)raw / (float)samples) / 1000 * eeprom_read_bandgap();
-
-			if(sensor == 0)
-				temp = (raw_v - 0.2897) * 0.942 * 1000; // bg
-			else
-				temp = (raw_v - 0.5) * 100;	// TMP36
+			raw_v	= ((float)raw / (float)samples) / 1000 * eeprom_read_bandgap();
+			temp	= (raw_v - 0.2897) * 0.942 * 1000; // bg
 
 			snprintf_P((char *)dst, size, ok, sensor, temp, raw_v);
 
@@ -118,8 +109,26 @@ uint8_t application_function_temp_read(uint8_t nargs, uint8_t args[application_n
 			break;
 		}
 
-		case(2): // ds7505 on twi 0x48 / 0x49
-		case(3): // tmp275 on twi 0x48 / 0x49
+		case(1): // digipicco on twi 0x78
+		{
+			uint8_t twistring[4];
+			uint8_t twierror;
+
+			if((twierror = twi_master_receive(0x78, sizeof(twistring), twistring)) != tme_ok)
+			{
+				twi_master_error(dst, size, twierror);
+				return(1);
+			}
+
+			temp = (float)((twistring[2] << 8) | twistring[3]);
+			temp = (temp * 165.0) / 32767;
+			temp -= 40.5;
+
+			break;
+		}
+
+		case(2): // tmp275 or compatible on twi 0x48
+		case(3): // tmp275 or compatible on twi 0x49
 		{
 			uint8_t address;
 			uint8_t twierror;

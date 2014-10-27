@@ -6,6 +6,11 @@
 
 #include <stdint.h>
 
+enum
+{
+	eeprom_cal_size = 7,
+};
+
 typedef struct
 {
 	float factor;
@@ -16,9 +21,7 @@ typedef struct
 {
 	mac_addr_t		my_mac_address;
 	float			bandgap;
-	calibration_t	temp_cal[temp_cal_size];
-	calibration_t	light_cal[light_cal_size];
-	calibration_t	hum_cal[hum_cal_size];
+	calibration_t	value[eeprom_cal_size];
 } eeprom_t;
 
 void eeprom_read_mac_address(mac_addr_t *dst)
@@ -40,122 +43,24 @@ void eeprom_write_bandgap(float value)
 	eeprom_update_block((const void *)&value, (void *)offsetof(eeprom_t, bandgap), sizeof(value));
 }
 
-float eeprom_read_temp_cal_factor(uint8_t index)
+uint8_t eeprom_read_cal(uint8_t index, float *factor, float *offset)
 {
-	float value;
-
-	if(index >= temp_cal_size)
+	if(index >= eeprom_cal_size)
 		return(0);
 
-	eeprom_read_block((void *)&value, (const void *)offsetof(eeprom_t, temp_cal[index].factor), sizeof(value));
+	eeprom_read_block((void *)factor, (const void *)offsetof(eeprom_t, value[index].factor), sizeof(*factor));
+	eeprom_read_block((void *)offset, (const void *)offsetof(eeprom_t, value[index].offset), sizeof(*offset));
 
-	return(value);
+	return(1);
 }
 
-void eeprom_write_temp_cal_factor(uint8_t index, float value)
+uint8_t eeprom_write_cal(uint8_t index, float factor, float offset)
 {
-	if(index >= temp_cal_size)
-		return;
-
-	eeprom_update_block((const void *)&value, (void *)offsetof(eeprom_t, temp_cal[index].factor), sizeof(value));
-}
-
-float eeprom_read_temp_cal_offset(uint8_t index)
-{
-	float value;
-
-	if(index >= temp_cal_size)
+	if(index >= eeprom_cal_size)
 		return(0);
 
-	eeprom_read_block((void *)&value, (const void *)offsetof(eeprom_t, temp_cal[index].offset), sizeof(value));
+	eeprom_update_block((const void *)&factor, (void *)offsetof(eeprom_t, value[index].factor), sizeof(factor));
+	eeprom_update_block((const void *)&offset, (void *)offsetof(eeprom_t, value[index].offset), sizeof(offset));
 
-	return(value);
-}
-
-void eeprom_write_temp_cal_offset(uint8_t index, float value)
-{
-	if(index >= temp_cal_size)
-		return;
-
-	eeprom_update_block((const void *)&value, (void *)offsetof(eeprom_t, temp_cal[index].offset), sizeof(value));
-}
-
-float eeprom_read_light_cal_factor(uint8_t index)
-{
-	float value;
-
-	if(index >= light_cal_size)
-		return(0);
-
-	eeprom_read_block((void *)&value, (const void *)offsetof(eeprom_t, light_cal[index].factor), sizeof(value));
-
-	return(value);
-}
-
-void eeprom_write_light_cal_factor(uint8_t index, float value)
-{
-	if(index >= light_cal_size)
-		return;
-
-	eeprom_update_block((const void *)&value, (void *)offsetof(eeprom_t, light_cal[index].factor), sizeof(value));
-}
-
-float eeprom_read_light_cal_offset(uint8_t index)
-{
-	float value;
-
-	if(index >= light_cal_size)
-		return(0);
-
-	eeprom_read_block((void *)&value, (const void *)offsetof(eeprom_t, light_cal[index].offset), sizeof(value));
-
-	return(value);
-}
-
-void eeprom_write_light_cal_offset(uint8_t index, float value)
-{
-	if(index >= light_cal_size)
-		return;
-
-	eeprom_update_block((const void *)&value, (void *)offsetof(eeprom_t, light_cal[index].offset), sizeof(value));
-}
-
-float eeprom_read_hum_cal_factor(uint8_t index)
-{
-	float value;
-
-	if(index >= hum_cal_size)
-		return(0);
-
-	eeprom_read_block((void *)&value, (const void *)offsetof(eeprom_t, hum_cal[index].factor), sizeof(value));
-
-	return(value);
-}
-
-void eeprom_write_hum_cal_factor(uint8_t index, float value)
-{
-	if(index >= hum_cal_size)
-		return;
-
-	eeprom_update_block((const void *)&value, (void *)offsetof(eeprom_t, hum_cal[index].factor), sizeof(value));
-}
-
-float eeprom_read_hum_cal_offset(uint8_t index)
-{
-	float value;
-
-	if(index >= hum_cal_size)
-		return(0);
-
-	eeprom_read_block((void *)&value, (const void *)offsetof(eeprom_t, hum_cal[index].offset), sizeof(value));
-
-	return(value);
-}
-
-void eeprom_write_hum_cal_offset(uint8_t index, float value)
-{
-	if(index >= hum_cal_size)
-		return;
-
-	eeprom_update_block((const void *)&value, (void *)offsetof(eeprom_t, hum_cal[index].offset), sizeof(value));
+	return(1);
 }

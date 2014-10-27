@@ -1,9 +1,7 @@
 #include "application.h"
-#include "application-temperature.h"
-#include "application-hum.h"
+#include "application-sensor.h"
 #include "application-twi.h"
 #include "application-pwm.h"
-#include "application-light.h"
 #include "stats.h"
 #include "util.h"
 #include "stackmonitor.h"
@@ -32,6 +30,7 @@ static uint8_t application_function_edmp(uint8_t nargs, uint8_t args[application
 static uint8_t application_function_help(uint8_t nargs, uint8_t args[application_num_args][application_length_args], uint16_t size, uint8_t *dst);
 static uint8_t application_function_quit(uint8_t nargs, uint8_t args[application_num_args][application_length_args], uint16_t size, uint8_t *dst);
 static uint8_t application_function_reset(uint8_t nargs, uint8_t args[application_num_args][application_length_args], uint16_t size, uint8_t *dst);
+static uint8_t application_function_sdmp(uint8_t nargs, uint8_t args[application_num_args][application_length_args], uint16_t size, uint8_t *dst);
 static uint8_t application_function_stack(uint8_t nargs, uint8_t args[application_num_args][application_length_args], uint16_t size, uint8_t *dst);
 static uint8_t application_function_stats(uint8_t nargs, uint8_t args[application_num_args][application_length_args], uint16_t size, uint8_t *dst);
 
@@ -60,30 +59,6 @@ static const __flash application_function_table_t application_function_table[] =
 		0,
 		application_function_help,
 		"help (command)",
-	},
-	{
-		"humr",
-		1,
-		application_function_hum_read,
-		"read humidity sensor (0)",
-	},
-	{
-		"humw",
-		3,
-		application_function_hum_write,
-		"write humidity cal. (0)/factor/offset",
-	},
-	{
-		"lightr",
-		1,
-		application_function_light_read,
-		"read light sensor (0)",
-	},
-	{
-		"lightw",
-		3,
-		application_function_light_write,
-		"write light cal. (0)/factor/offset",
 	},
 	{
 		"?",
@@ -140,16 +115,22 @@ static const __flash application_function_table_t application_function_table[] =
 		"statistics",
 	},
 	{
-		"tempr",
-		1,
-		application_function_temp_read,
-		"read temperature sensor (0/1)",
+		"sdmp",
+		0,
+		application_function_sdmp,
+		"dump sensors values",
 	},
 	{
-		"tempw",
+		"sensr",
+		1,
+		application_function_sensor_read,
+		"read sensor",
+	},
+	{
+		"sensw",
 		3,
-		application_function_temp_write,
-		"write temp cal. (0/1)/factor/offset",
+		application_function_sensor_write,
+		"write sensor calibr: factor/offset",
 	},
 	{
 		"twia",
@@ -185,8 +166,7 @@ static const __flash application_function_table_t application_function_table[] =
 
 void application_init(void)
 {
-	application_init_temp();
-	application_init_light();
+	application_init_sensor();
 	application_init_pwm();
 }
 
@@ -302,38 +282,41 @@ int16_t application_content(uint16_t src_length, const uint8_t *src, uint16_t si
 static uint8_t application_function_edmp(uint8_t nargs, uint8_t args[application_num_args][application_length_args], uint16_t size, uint8_t *dst)
 {
 	static const __flash char format1[] = "> bandgap: %.5f\n";
-	static const __flash char format2[] = "> temp cal[%d]: *=%.5f / +=%.5f\n";
-	static const __flash char format3[] = "> light cal[%d]: *=%.5f / +=%.5f\n";
-	static const __flash char format4[] = "> hum cal[%d]: *=%.5f / +=%.5f\n";
+	static const __flash char format2[] = "> sensor cal[%d]: *=%.5f / +=%.5f\n";
 
 	uint8_t index, offset;
+
+	float cfactor, coffset;
 
 	offset	= snprintf_P((char *)dst, size, format1, eeprom_read_bandgap());
 	dst		+= offset;
 	size	-= offset;
 
-	for(index = 0; index < temp_cal_size; index++)
+	index = 0;
+
+	while(eeprom_read_cal(index, &cfactor, &coffset))
 	{
-		offset = snprintf_P((char *)dst, size, format2,
-				index, eeprom_read_temp_cal_factor(index), eeprom_read_temp_cal_offset(index));
-		dst += offset;
-		size -= offset;
+		offset	= snprintf_P((char *)dst, size, format2, index, cfactor, coffset);
+		dst		+= offset;
+		size	-= offset;
+		index++;
 	}
 
-	for(index = 0; index < light_cal_size; index++)
-	{
-		offset = snprintf_P((char *)dst, size, format3,
-				index, eeprom_read_light_cal_factor(index), eeprom_read_light_cal_offset(index));
-		dst += offset;
-		size -= offset;
-	}
+	return(1);
+}
 
-	for(index = 0; index < hum_cal_size; index++)
+static uint8_t application_function_sdmp(uint8_t nargs, uint8_t args[application_num_args][application_length_args], uint16_t size, uint8_t *dst)
+{
+	uint8_t index, offset;
+
+	index = 0;
+
+	while(application_sensor_read(index, size, dst))
 	{
-		offset = snprintf_P((char *)dst, size, format4,
-				index, eeprom_read_hum_cal_factor(index), eeprom_read_hum_cal_offset(index));
-		dst += offset;
-		size -= offset;
+		offset	= strlen((const char *)dst);
+		dst		+= offset;
+		size	-= offset;
+		index++;
 	}
 
 	return(1);

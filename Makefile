@@ -15,7 +15,7 @@ PRGFLAGS	=		-P usb -B 5 -y -V
 PROGRAM		=		main
 OBJFILES	=		$(PROGRAM).o spi.o twi_master.o \
 						enc.o net.o ethernet.o arp.o ipv4.o icmp4.o udp4.o tcp4.o bootp.o \
-						application.o application-temperature.o application-twi.o application-pwm.o application-light.o application-hum.o \
+						application.o application-sensor.o application-twi.o application-pwm.o \
 						stats.o util.o eeprom.o stackmonitor.o
 HEADERS		=			spi.h twi_master.h \
 						enc.h net.h ethernet.h ethernet_macaddr.h arp.h ipv4.h ipv4_addr.h icmp4.h udp4.h tcp4.h bootp.h \
@@ -56,7 +56,7 @@ ipv4.o:				$(HEADERS)
 icmp4.o:			$(HEADERS)
 udp4.o:				$(HEADERS)
 tcp4.o:				$(HEADERS)
-application.o:		$(HEADERS) application-pwm.h application-light.h application-temperature.h application-twi.h
+application.o:		$(HEADERS) application-pwm.h application-sensor.h application-twi.h
 eeprom.o:			eeprom.h
 
 %.o:				%.c

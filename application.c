@@ -187,7 +187,7 @@ void application_periodic(void)
 	else
 	{
 		heartbeat_led_timeout = 122;
-		PORTD ^= _BV(0);
+		PORTD ^= _BV(6);
 	}
 
 	if(cmd_led_timeout > missed_ticks)
@@ -195,7 +195,7 @@ void application_periodic(void)
 	else
 	{
 		cmd_led_timeout = 0;
-		PORTD &= ~_BV(1);
+		PORTD &= ~_BV(7);
 	}
 
 	application_periodic_pwm(missed_ticks);
@@ -251,7 +251,7 @@ int16_t application_content(uint16_t src_length, const uint8_t *src, uint16_t si
 	*dst = '\0';
 
 	cmd_led_timeout = 10;
-	PORTD |= _BV(1);
+	PORTD |= _BV(7);
 
 	if(args_count == 0)
 		return(0);

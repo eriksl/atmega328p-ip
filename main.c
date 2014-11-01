@@ -75,9 +75,9 @@ int main(void)
 #endif
 
 	MCUCR	|= _BV(PUD);		//	disable pullups
-	DDRB	= _BV(0) | _BV(1) | _BV(2) | _BV(3) | _BV(5);
-	DDRC	= _BV(1) | _BV(2) | _BV(3) | _BV(4) | _BV(5) | _BV(6);
-	DDRD	= _BV(0) | _BV(1) | _BV(3);
+	DDRB	= 0;
+	DDRC	= 0;
+	DDRD	= _BV(3) | _BV(6) | _BV(7);
 
 	eeprom_read_mac_address(&my_mac_address);
 
@@ -86,11 +86,11 @@ int main(void)
 	my_ipv4_address.byte[2] = 0;
 	my_ipv4_address.byte[3] = 0;
 
-	PORTD = _BV(3);
+	PORTD = _BV(6) | _BV(3);
 	sleep(200);
-	PORTD = _BV(5);
+	PORTD = _BV(7);
 	sleep(200);
-	PORTD = _BV(1) | _BV(3);
+	PORTD = _BV(6) | _BV(7) | _BV(3);
 	sleep(200);
 	PORTD = 0;
 

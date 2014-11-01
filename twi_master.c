@@ -139,7 +139,7 @@ void twi_master_init(void)
 {
 	PRR		|= _BV(PRTWI);
 	TWCR	= 0x00;
-	DDRC	&= ~(_BV(5) | _BV(6));	// SCL, SDA HiZ
+	DDRC	&= ~(_BV(4) | _BV(5));	// SCL, SDA HiZ
 
 	PRR		&= ~_BV(PRTWI);
 	TWBR	= 32;

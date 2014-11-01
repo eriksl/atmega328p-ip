@@ -1,9 +1,10 @@
 MCUSPEED	= 8000000
-LFUSE		= 0xe2
+LFUSE		= 0xf7
 # no DebugWire
 HFUSE		= 0xd7
 # DebugWire
-HFUSE		= 0x97
+# HFUSE		= 0x97
+EFUSE		= 0xfd
 #CCOPTFLAGS	= -O0 -g
 #CCOPTFLAGS	= -O3
 CCOPTFLAGS	= -Os
@@ -38,7 +39,7 @@ all:				$(PROGRAMMED)
 hex:				$(HEXFILE)
 
 fuse:
-					avrdude -v -c $(PROGRAMMER) -p $(MCU) $(PRGFLAGS) -U lfuse:w:$(LFUSE):m -U hfuse:w:$(HFUSE):m
+					avrdude -v -c $(PROGRAMMER) -p $(MCU) $(PRGFLAGS) -U lfuse:w:$(LFUSE):m -U hfuse:w:$(HFUSE):m -U efuse:w:$(EFUSE)
 
 info:
 					avrdude -v -c $(PROGRAMMER) -p $(MCU) $(PRGFLAGS) -v

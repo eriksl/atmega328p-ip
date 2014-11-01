@@ -10,10 +10,9 @@
 
 typedef struct
 {
-	volatile uint16_t	*ocr;
-	float				speed;
-	uint16_t			min_value;
-	uint16_t			max_value;
+	float		speed;
+	uint16_t	min_value;
+	uint16_t	max_value;
 } pwm_t;
 
 static uint8_t beep_length		= 0;
@@ -27,27 +26,68 @@ ISR(TIMER1_OVF_vect)
 	t1_unhandled++;
 }
 
+static uint16_t getpwm(uint8_t entry)
+{
+	if(entry == 0)
+		return(OCR1A);
+	else
+		return(OCR1B);
+}
+
+static void setpwm(uint8_t entry, uint16_t value)
+{
+	uint8_t	ocflags;
+	uint8_t	output;
+
+	if(entry == 0)
+	{
+		ocflags	= _BV(COM1A1);
+		output	= _BV(1);
+		OCR1A	= value;
+	}
+	else
+	{
+		ocflags	= _BV(COM1B1);
+		output	= _BV(2);
+		OCR1B	= value;
+	}
+
+	if(value > 0)
+	{
+		TCCR1A	|= ocflags;
+	}
+	else
+	{
+		TCCR1A	&= ~ocflags;
+		PORTB	&= ~output;
+
+	}
+}
+
 void application_init_pwm(void)
 {
 	PRR &= ~_BV(PRTIM1);
 
 	DDRB |= _BV(1) | _BV(2); // b1=oc1a, b2=oc1b
 
-	TCCR1A	= _BV(COM1A1) | _BV(COM1B1) | _BV(WGM11);
+	TCCR1A	= _BV(WGM11);
 	TCCR1B	= _BV(WGM13)  | _BV(WGM12); // fast pwm, top = ICR1
 	TCCR1C	= 0x00;
 	ICR1	= 0xffff;
-	OCR1A	= 0x0000;
-	OCR1B	= 0x0000;
 	TIMSK1	= _BV(TOIE1);	// interrupt on overflow
 	TIFR1	= _BV(TOV1); 	// clear event bits
-	TCCR1B	|= _BV(CS10);	// start timer at prescaler 1, rate = 122 Hz
 
 	for(uint8_t ix = 0; ix < 2; ix++)
 	{
-		pwm[ix].ocr		= ix ? &OCR1B : &OCR1A;
-		pwm[ix].speed	= 0;
+		pwm[ix].speed		= 0;
+		pwm[ix].min_value	= 0;
+		pwm[ix].max_value	= 0;
 	}
+
+	setpwm(0, 0);
+	setpwm(1, 0);
+
+	TCCR1B |= _BV(CS10);	// start timer at prescaler 1, rate = 122 Hz
 }
 
 void application_periodic_pwm(uint16_t missed_ticks)
@@ -120,7 +160,7 @@ void application_periodic_pwm(uint16_t missed_ticks)
 		{
 			min_value	= pwm[ix].min_value;
 			max_value	= pwm[ix].max_value;
-			value		= (uint32_t)*pwm[ix].ocr;
+			value		= (uint32_t)getpwm(ix);
 
 			if(pwm[ix].speed > 0) // up
 			{
@@ -151,7 +191,7 @@ void application_periodic_pwm(uint16_t missed_ticks)
 				}
 			}
 
-			*pwm[ix].ocr = (uint16_t)value;
+			setpwm(ix, value);
 		}
 	}
 }
@@ -209,11 +249,11 @@ uint8_t application_function_pwmw(uint8_t nargs, uint8_t args[application_num_ar
 		return(1);
 	}
 
-	*pwm[entry].ocr			= minvalue;
+	setpwm(entry, minvalue);
 	pwm[entry].speed		= speed;
 	pwm[entry].min_value	= minvalue;
 	pwm[entry].max_value	= maxvalue;
-	minvalue				= *pwm[entry].ocr;
+	minvalue				= getpwm(entry);
 
     snprintf_P((char *)dst, size, pwm_ok, entry, minvalue, speed, maxvalue);
 	return(1);

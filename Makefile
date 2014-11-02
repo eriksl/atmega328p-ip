@@ -1,4 +1,4 @@
-MCUSPEED	= 8000000
+MCUSPEED	= 11059200
 LFUSE		= 0xe2
 # no DebugWire
 HFUSE		= 0xd7

@@ -1,4 +1,4 @@
-#include "application-pwm.h"
+#include "application-timer.h"
 #include "stats.h"
 
 #include <avr/io.h>
@@ -15,8 +15,8 @@ typedef struct
 	uint16_t	max_value;
 } pwm_t;
 
-static uint8_t beep_length		= 0;
-static uint8_t beep_period		= 0;
+static uint8_t beep_length = 0;
+static uint8_t beep_period = 0;
 
 static pwm_t pwm[2];
 
@@ -64,7 +64,7 @@ static void setpwm(uint8_t entry, uint16_t value)
 	}
 }
 
-void application_init_pwm(void)
+void application_init_timer(void)
 {
 	PRR &= ~_BV(PRTIM1);
 
@@ -90,7 +90,7 @@ void application_init_pwm(void)
 	TCCR1B |= _BV(CS10);	// start timer at prescaler 1, rate = 122 Hz
 }
 
-void application_periodic_pwm(uint16_t missed_ticks)
+void application_periodic_timer(uint16_t missed_ticks)
 {
 	if(beep_length > 0)
 	{

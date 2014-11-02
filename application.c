@@ -1,7 +1,7 @@
 #include "application.h"
 #include "application-sensor.h"
 #include "application-twi.h"
-#include "application-pwm.h"
+#include "application-timer.h"
 #include "stats.h"
 #include "util.h"
 #include "stackmonitor.h"
@@ -167,7 +167,7 @@ static const __flash application_function_table_t application_function_table[] =
 void application_init(void)
 {
 	application_init_sensor();
-	application_init_pwm();
+	application_init_timer();
 }
 
 void application_periodic(void)
@@ -198,7 +198,7 @@ void application_periodic(void)
 		PORTD &= ~_BV(7);
 	}
 
-	application_periodic_pwm(missed_ticks);
+	application_periodic_timer(missed_ticks);
 }
 
 int16_t application_content(uint16_t src_length, const uint8_t *src, uint16_t size, uint8_t *dst)

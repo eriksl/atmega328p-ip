@@ -72,6 +72,8 @@ uint8_t tsl2560_read_quad(uint8_t reg, uint8_t *values)
 
 void application_init_sensor(void)
 {
+	uint8_t twistring[1];
+
 	PRR			&= ~_BV(PRADC);
 	DIDR0		= _BV(ADC0D) | _BV(ADC1D);
 	ADMUX		= _BV(REFS1) | _BV(REFS0) | 0x0e;	// ref = 1.1V, input = 1.1V
@@ -82,6 +84,13 @@ void application_init_sensor(void)
 	tsl2560_write(0x00, 0x03);	// power up tsl2560
 	tsl2560_write(0x01, 0x01);	// set timing to 100 ms = 0b01
 	tsl2560_write(0x06, 0x00);	// disable interrupts
+
+	twistring[0] = 0x01;		// bh1750; power on
+	twi_master_send(0x23, 1, twistring);
+	twistring[0] = 0x07;		// reset
+	twi_master_send(0x23, 1, twistring);
+	twistring[0] = 0x11;		// start continuous sampling at 0.5 Lx
+	twi_master_send(0x23, 1, twistring);
 }
 
 static uint16_t get_adc(void)
@@ -289,6 +298,22 @@ uint8_t application_sensor_read(uint8_t sensor, uint16_t size, uint8_t *dst)
 
 				value /= 0.252; // integration time = 100 ms, scale = 0.252
 			}
+
+			format = format_light;
+
+			break;
+		}
+
+		case(7): // bh1750 on twi 0x23, high gain
+		{
+			if((twierror = twi_master_receive(0x23, 2, twistring)) != tme_ok)
+			{
+				snprintf_P((char *)dst, size, twi_error, sensor);
+				return(1);
+			}
+
+			value = (float)(uint16_t)((twistring[0] << 8) | twistring[1]);
+			value = value * 0.42;
 
 			format = format_light;
 

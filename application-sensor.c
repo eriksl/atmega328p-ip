@@ -81,7 +81,7 @@ void application_init_sensor(void)
 				  _BV(ADPS2) | _BV(ADPS1) | _BV(ADPS0);	// 11 Mhz / 128 = 85 kHz = > 50 < 200 kHz
 	ADCSRB		=	0x00;
 
-	tsl2560_write(0x00, 0x03);	// power up tsl2560
+	tsl2560_write(0x00, 0x03);	// tsl2560; power up
 	tsl2560_write(0x01, 0x01);	// set timing to 100 ms = 0b01
 	tsl2560_write(0x06, 0x00);	// disable interrupts
 
@@ -268,8 +268,8 @@ uint8_t application_sensor_read(uint8_t sensor, uint16_t size, uint8_t *dst)
 			}
 
 
-			ch0 = twistring[0] | (twistring[1] << 8);
-			ch1 = twistring[2] | (twistring[3] << 8);
+			ch0 = (float)(uint16_t)(twistring[0] | (twistring[1] << 8));
+			ch1 = (float)(uint16_t)(twistring[2] | (twistring[3] << 8));
 
 			if(ch0 != 0)
 				raw_value = ch1 / ch0;

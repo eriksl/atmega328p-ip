@@ -293,8 +293,8 @@ int16_t application_content(uint16_t src_length, const uint8_t *src, uint16_t si
 
 static uint8_t application_function_edmp(uint8_t nargs, uint8_t args[application_num_args][application_length_args], uint16_t size, uint8_t *dst)
 {
-	static const __flash char format1[] = "> bandgap: %.5f\n";
-	static const __flash char format2[] = "> sensor cal[%d]: *=%.5f / +=%.5f\n";
+	static const __flash char format1[] = "> bg: %.3f\n";
+	static const __flash char format2[] = "> sensor[%d]: *%.3f, +%.3f\n";
 
 	uint8_t index, offset;
 

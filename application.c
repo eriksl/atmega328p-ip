@@ -49,6 +49,18 @@ static const __flash application_function_table_t application_function_table[] =
 		"beep duration period",
 	},
 	{
+		"clockr",
+		0,
+		application_function_clockr,
+		"read clock",
+	},
+	{
+		"clockw",
+		3,
+		application_function_clockw,
+		"write clock",
+	},
+	{
 		"edmp",
 		0,
 		application_function_edmp,

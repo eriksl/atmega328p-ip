@@ -30,6 +30,7 @@ stats_t adc_interrupts = 0;
 stats_t t1_interrupts = 0;
 stats_t t1_unhandled = 0;
 stats_t t1_unhandled_max = 0;
+uint32_t t1_jiffies = 0;
 
 static const __flash char format_string[] =
 {

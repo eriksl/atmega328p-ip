@@ -8,6 +8,9 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+#define JIFFIES_PER_SECOND	((float)F_CPU / 65536)
+#define JIFFIES_PER_DAY		((uint32_t)(JIFFIES_PER_SECOND * 60 * 60 * 24))
+
 typedef struct
 {
 	float		speed;
@@ -24,6 +27,11 @@ ISR(TIMER1_OVF_vect)
 {
 	t1_interrupts++;
 	t1_unhandled++;
+
+	if(t1_jiffies < JIFFIES_PER_DAY)
+		t1_jiffies++;
+	else
+		t1_jiffies = 0;
 }
 
 static uint16_t getpwm(uint8_t entry)
@@ -87,7 +95,7 @@ void application_init_timer(void)
 	setpwm(0, 0);
 	setpwm(1, 0);
 
-	TCCR1B |= _BV(CS10);	// start timer at prescaler 1, rate = 122 Hz
+	TCCR1B |= _BV(CS10);	// start timer at prescaler 1, rate = 169 Hz
 }
 
 void application_periodic_timer(uint16_t missed_ticks)
@@ -208,4 +216,47 @@ uint8_t application_function_pwmw(uint8_t nargs, uint8_t args[application_num_ar
 
     snprintf_P((char *)dst, size, pwm_ok, entry, minvalue, speed, maxvalue);
 	return(1);
+}
+
+uint8_t application_function_clockr(uint8_t nargs, uint8_t args[application_num_args][application_length_args], uint16_t size, uint8_t *dst)
+{
+	static const __flash char ok[] = "> clock %02u:%02u.%02u\n";
+
+	uint32_t	seconds;
+	uint8_t		minutes;
+	uint8_t		hours;
+
+	cli();
+	seconds	= t1_jiffies;
+	sei();
+
+	seconds	= (uint32_t)((float)seconds / (float)JIFFIES_PER_SECOND);
+	hours	= seconds / (60UL * 60UL);
+	seconds	= seconds - (hours * 60UL * 60UL);
+	minutes	= seconds / 60UL;
+	seconds	= seconds - (minutes * 60UL);
+
+    snprintf_P((char *)dst, size, ok, (int)hours, (int)minutes, (int)seconds);
+	return(1);
+}
+
+uint8_t application_function_clockw(uint8_t nargs, uint8_t args[application_num_args][application_length_args], uint16_t size, uint8_t *dst)
+{
+	uint32_t	seconds;
+	uint8_t		minutes;
+	uint8_t		hours;
+
+	hours	= (uint32_t)atoi((const char *)args[1]);
+	minutes	= atoi((const char *)args[2]);
+	seconds	= atoi((const char *)args[3]);
+
+	seconds += minutes * 60UL;
+	seconds += hours * 60UL * 60UL;
+	seconds = (uint32_t)((float)seconds * (float)JIFFIES_PER_SECOND);
+
+	cli();
+	t1_jiffies = seconds;
+	sei();
+
+	return(application_function_clockr(nargs, args, size, dst));
 }

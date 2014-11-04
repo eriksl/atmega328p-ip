@@ -82,14 +82,14 @@ void application_init_sensor(void)
 	ADCSRB		=	0x00;
 
 	tsl2560_write(0x00, 0x03);	// tsl2560; power up
-	tsl2560_write(0x01, 0x01);	// set timing to 100 ms = 0b01
 	tsl2560_write(0x06, 0x00);	// disable interrupts
+	tsl2560_write(0x01, 0x11);	// start continuous sampling every 100 ms, high gain = 16x
 
 	twistring[0] = 0x01;		// bh1750; power on
 	twi_master_send(0x23, 1, twistring);
 	twistring[0] = 0x07;		// reset
 	twi_master_send(0x23, 1, twistring);
-	twistring[0] = 0x11;		// start continuous sampling at 0.5 Lx
+	twistring[0] = 0x11;		// start continuous sampling every 120 ms, high resolution = 0.42 Lx
 	twi_master_send(0x23, 1, twistring);
 }
 
@@ -245,21 +245,9 @@ uint8_t application_sensor_read(uint8_t sensor, uint16_t size, uint8_t *dst)
 			break;
 		}
 
-		case(5): // tsl2560 on twi 0x39, low gain
-		case(6): // tsl2560 on twi 0x39, high gain
+		case(5): // tsl2560 on twi 0x39, high gain, short exposure (100 ms)
 		{
 			float ch0, ch1;
-
-			if(sensor == 5)
-				twistring[0] = 0b00000001;	// low gain 1x, integration time = 100 ms, scale = 0.252
-			else
-				twistring[0] = 0b00010001;	// high gain 16, integration time = 100 ms, scale = 0.252 * 16
-
-			if((twierror = tsl2560_write(0x01, twistring[0])) != tme_ok)
-			{
-				snprintf_P((char *)dst, size, twi_error, sensor);
-				return(1);
-			}
 
 			if((twierror = tsl2560_read_quad(0x0c, twistring)) != tme_ok)
 			{
@@ -267,44 +255,40 @@ uint8_t application_sensor_read(uint8_t sensor, uint16_t size, uint8_t *dst)
 				return(1);
 			}
 
-
 			ch0 = (float)(uint16_t)(twistring[0] | (twistring[1] << 8));
 			ch1 = (float)(uint16_t)(twistring[2] | (twistring[3] << 8));
 
-			if(ch0 != 0)
-				raw_value = ch1 / ch0;
-			else
-				raw_value = 0;
-
-			if(raw_value <= 0.50)
-				value = (0.0304 * ch0) - (0.062 * ch0 * powf(raw_value, 1.4));
-			else if(raw_value <= 0.61)
-				value = (0.0224 * ch0) - (0.031 * ch1);
-			else if(raw_value <= 0.80)
-				value = (0.0128 * ch0) - (0.0153 * ch1);
-			else if(raw_value <= 1.30)
-				value = (0.00146 * ch0) - (0.00112 * ch1);
-			else
-				value = 0;
-
-			if(isnan(value))
+			if((ch0 < 37170) && (ch1 < 37170))
 			{
-				value = 10000;
+				if(ch0 != 0)
+				{
+					raw_value = ch1 / ch0;
+
+					if(raw_value <= 0.50)
+						value = (0.0304 * ch0) - (0.062 * ch0 * powf(raw_value, 1.4));
+					else if(raw_value <= 0.61)
+						value = (0.0224 * ch0) - (0.031 * ch1);
+					else if(raw_value <= 0.80)
+						value = (0.0128 * ch0) - (0.0153 * ch1);
+					else if(raw_value <= 1.30)
+						value = (0.00146 * ch0) - (0.00112 * ch1);
+					else
+						value = 0;
+
+					value /= 0.252; // integration time = 100 ms, scale = 0.252
+				}
+				else
+					value = 0;
 			}
 			else
-			{
-				if(sensor == 6)
-					value /= 16;
-
-				value /= 0.252; // integration time = 100 ms, scale = 0.252
-			}
+				value = -1;
 
 			format = format_light;
 
 			break;
 		}
 
-		case(7): // bh1750 on twi 0x23, high gain
+		case(6): // bh1750 on twi 0x23, long exposure, high resolution
 		{
 			if((twierror = twi_master_receive(0x23, 2, twistring)) != tme_ok)
 			{

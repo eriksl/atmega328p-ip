@@ -86,7 +86,7 @@ static uint8_t tsl2560_read(uint8_t reg, uint8_t *value)
 	return(0);
 }
 
-static uint8_t tsl2560_read_quad(uint8_t reg, uint8_t *values)
+static uint8_t tsl2560_read(uint8_t reg, uint8_t *values)
 {
 	uint8_t twierror;
 	uint8_t twistring[1];
@@ -348,7 +348,7 @@ uint8_t application_sensor_read(uint8_t sensor, uint16_t size, uint8_t *dst)
 
 			id = "tsl2560";
 
-			if((twierror = tsl2560_read_quad(0x0c, twistring)) != tme_ok)
+			if((twierror = tsl2560_read(0x0c, twistring)) != tme_ok)
 			{
 				snprintf_P((char *)dst, size, twi_error, sensor, id);
 				return(1);

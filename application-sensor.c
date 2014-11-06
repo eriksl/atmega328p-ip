@@ -24,6 +24,38 @@ ISR(ADC_vect)
 	adc_interrupts++;
 }
 
+static uint8_t bmp085_write(uint8_t reg, uint8_t value)
+{
+	uint8_t twierror;
+	uint8_t twistring[2];
+
+	twistring[0] = reg;
+	twistring[1] = value;
+
+	if((twierror = twi_master_send(0x77, 2, twistring)) != tme_ok)
+		return(twierror);
+
+	return(0);
+}
+
+static uint8_t bmp085_read(uint8_t reg, uint16_t *value)
+{
+	uint8_t twierror;
+	uint8_t twistring[2];
+
+	twistring[0] = reg;
+
+	if((twierror = twi_master_send(0x77, 1, twistring)) != tme_ok)
+		return(twierror);
+
+	if((twierror = twi_master_receive(0x77, 2, twistring)) != tme_ok)
+		return(twierror);
+
+	*value = (twistring[0] << 8) | twistring[1];
+
+	return(0);
+}
+
 static uint8_t tsl2560_write(uint8_t reg, uint8_t value)
 {
 	uint8_t twierror;
@@ -139,7 +171,6 @@ uint8_t application_sensor_read(uint8_t sensor, uint16_t size, uint8_t *dst)
 	float		factor, offset;
 	uint8_t		twistring[4];
 	uint8_t		twierror;
-	uint8_t		address;
 
 	switch(sensor)
 	{
@@ -192,17 +223,12 @@ uint8_t application_sensor_read(uint8_t sensor, uint16_t size, uint8_t *dst)
 		}
 
 		case(2): // tmp275 or compatible on twi 0x48
-		case(3): // tmp275 or compatible on twi 0x49
 		{
-			if(sensor == 2)
-				address = 0x48;
-			else
-				address = 0x49;
 
 			twistring[0] = 0x01;	// select config register
 			twistring[1] = 0x60;	// write r0=r1=1, other bits zero
 
-			if((twierror = twi_master_send(address, 2, twistring)) != tme_ok)
+			if((twierror = twi_master_send(0x48, 2, twistring)) != tme_ok)
 			{
 				snprintf_P((char *)dst, size, twi_error, sensor);
 				return(1);
@@ -210,13 +236,13 @@ uint8_t application_sensor_read(uint8_t sensor, uint16_t size, uint8_t *dst)
 
 			twistring[0] = 0x00; // select temperature register
 
-			if((twierror = twi_master_send(address, 1, twistring)) != tme_ok)
+			if((twierror = twi_master_send(0x48, 1, twistring)) != tme_ok)
 			{
 				snprintf_P((char *)dst, size, twi_error, sensor);
 				return(1);
 			}
 
-			if((twierror = twi_master_receive(address, 2, twistring)) != tme_ok)
+			if((twierror = twi_master_receive(0x48, 2, twistring)) != tme_ok)
 			{
 				snprintf_P((char *)dst, size, twi_error, sensor);
 				return(1);
@@ -224,7 +250,71 @@ uint8_t application_sensor_read(uint8_t sensor, uint16_t size, uint8_t *dst)
 
 			value = ((int16_t)(((twistring[0] << 8) | twistring[1]) >> 4)) * 0.0625;
 
-			format = format_temp;
+			break;
+		}
+
+		case(3): // bmp085 temperature
+		{
+			uint16_t	ac5, ac6;
+			int16_t		mc, md;
+			uint16_t	ut;
+
+			id = "bm085";
+
+			if((twierror = bmp085_read(0xb2, &ac5)) != tme_ok)
+			{
+				snprintf_P((char *)dst, size, twi_error, sensor, id);
+				return(1);
+			}
+
+			if((twierror = bmp085_read(0xb4, &ac6)) != tme_ok)
+			{
+				snprintf_P((char *)dst, size, twi_error, sensor, id);
+				return(1);
+			}
+
+			if((twierror = bmp085_read(0xbc, (uint16_t *)&mc)) != tme_ok)
+			{
+				snprintf_P((char *)dst, size, twi_error, sensor, id);
+				return(1);
+			}
+
+			if((twierror = bmp085_read(0xbe, (uint16_t *)&md)) != tme_ok)
+			{
+				snprintf_P((char *)dst, size, twi_error, sensor, id);
+				return(1);
+			}
+
+		//ac5 = 32757;
+		//ac6 = 23153;
+		//mc = -8711;
+		//md = 2868;
+
+			if((twierror = bmp085_write(0xf4, 0x2e)) != tme_ok)	// set cmd = 0x2e = start temperature measurement
+			{
+				snprintf_P((char *)dst, size, twi_error, sensor, id);
+				return(1);
+			}
+
+			sleep(10);
+
+			if((twierror = bmp085_read(0xf6, &ut)) != tme_ok) // select result 0xf6+0xf7
+			{
+				snprintf_P((char *)dst, size, twi_error, sensor, id);
+				return(1);
+			}
+
+		//ut = 27898;
+
+			int32_t x1, x2, b5;
+
+			x1 = (((uint32_t)ut - (uint32_t)ac6) * (uint32_t)ac5) >> 15;
+			x2 = ((int32_t)mc << 11) / (x1 + (int32_t)md);
+			b5 = x1 + x2;
+
+			raw_value	= ut;
+			value		= ((((float)b5 + 8) / 16) / 10);
+			format		= format_temp;
 
 			break;
 		}

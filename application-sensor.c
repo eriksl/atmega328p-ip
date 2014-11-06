@@ -24,7 +24,7 @@ ISR(ADC_vect)
 	adc_interrupts++;
 }
 
-uint8_t tsl2560_write(uint8_t reg, uint8_t value)
+static uint8_t tsl2560_write(uint8_t reg, uint8_t value)
 {
 	uint8_t twierror;
 	uint8_t twistring[2];
@@ -38,7 +38,7 @@ uint8_t tsl2560_write(uint8_t reg, uint8_t value)
 	return(0);
 }
 
-uint8_t tsl2560_read(uint8_t reg, uint8_t *value)
+static uint8_t tsl2560_read(uint8_t reg, uint8_t *value)
 {
 	uint8_t twierror;
 	uint8_t twistring[1];
@@ -54,7 +54,7 @@ uint8_t tsl2560_read(uint8_t reg, uint8_t *value)
 	return(0);
 }
 
-uint8_t tsl2560_read_quad(uint8_t reg, uint8_t *values)
+static uint8_t tsl2560_read_quad(uint8_t reg, uint8_t *values)
 {
 	uint8_t twierror;
 	uint8_t twistring[1];

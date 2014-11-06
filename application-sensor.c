@@ -213,10 +213,7 @@ uint8_t application_sensor_read(uint8_t sensor, uint16_t size, uint8_t *dst)
 			id = "digipicco";
 
 			if((twierror = twi_master_receive(0x78, 4, twistring)) != tme_ok)
-			{
-				snprintf_P((char *)dst, size, twi_error, sensor, id);
-				return(1);
-			}
+				goto twierror;
 
 			raw_value	= (uint16_t)((twistring[2] << 8) | twistring[3]);
 			value		= ((raw_value * 165.0) / 32767) - 40.5;
@@ -233,24 +230,15 @@ uint8_t application_sensor_read(uint8_t sensor, uint16_t size, uint8_t *dst)
 			twistring[1] = 0x60;	// write r0=r1=1, other bits zero
 
 			if((twierror = twi_master_send(0x48, 2, twistring)) != tme_ok)
-			{
-				snprintf_P((char *)dst, size, twi_error, sensor, id);
-				return(1);
-			}
+				goto twierror;
 
 			twistring[0] = 0x00; // select temperature register
 
 			if((twierror = twi_master_send(0x48, 1, twistring)) != tme_ok)
-			{
-				snprintf_P((char *)dst, size, twi_error, sensor, id);
-				return(1);
-			}
+				goto twierror;
 
 			if((twierror = twi_master_receive(0x48, 2, twistring)) != tme_ok)
-			{
-				snprintf_P((char *)dst, size, twi_error, sensor, id);
-				return(1);
-			}
+				goto twierror;
 
 			raw_value	= (uint16_t)(((twistring[0] << 8) | twistring[1]) >> 4);
 			value		= raw_value * 0.0625;
@@ -268,28 +256,16 @@ uint8_t application_sensor_read(uint8_t sensor, uint16_t size, uint8_t *dst)
 			id = "bm085";
 
 			if((twierror = bmp085_read(0xb2, &ac5)) != tme_ok)
-			{
-				snprintf_P((char *)dst, size, twi_error, sensor, id);
-				return(1);
-			}
+				goto twierror;
 
 			if((twierror = bmp085_read(0xb4, &ac6)) != tme_ok)
-			{
-				snprintf_P((char *)dst, size, twi_error, sensor, id);
-				return(1);
-			}
+				goto twierror;
 
 			if((twierror = bmp085_read(0xbc, (uint16_t *)&mc)) != tme_ok)
-			{
-				snprintf_P((char *)dst, size, twi_error, sensor, id);
-				return(1);
-			}
+				goto twierror;
 
 			if((twierror = bmp085_read(0xbe, (uint16_t *)&md)) != tme_ok)
-			{
-				snprintf_P((char *)dst, size, twi_error, sensor, id);
-				return(1);
-			}
+				goto twierror;
 
 		//ac5 = 32757;
 		//ac6 = 23153;
@@ -297,18 +273,12 @@ uint8_t application_sensor_read(uint8_t sensor, uint16_t size, uint8_t *dst)
 		//md = 2868;
 
 			if((twierror = bmp085_write(0xf4, 0x2e)) != tme_ok)	// set cmd = 0x2e = start temperature measurement
-			{
-				snprintf_P((char *)dst, size, twi_error, sensor, id);
-				return(1);
-			}
+				goto twierror;
 
 			sleep(10);
 
 			if((twierror = bmp085_read(0xf6, &ut)) != tme_ok) // select result 0xf6+0xf7
-			{
-				snprintf_P((char *)dst, size, twi_error, sensor, id);
-				return(1);
-			}
+				goto twierror;
 
 		//ut = 27898;
 
@@ -330,10 +300,7 @@ uint8_t application_sensor_read(uint8_t sensor, uint16_t size, uint8_t *dst)
 			id = "digipicco";
 
 			if((twierror = twi_master_receive(0x78, sizeof(twistring), twistring)) != tme_ok)
-			{
-				snprintf_P((char *)dst, size, twi_error, sensor, id);
-				return(1);
-			}
+				goto twierror;
 
 			raw_value	= (uint16_t)((twistring[0] << 8) | twistring[1]);
 			value		= (raw_value * 100.0) / 32768.0;
@@ -349,10 +316,7 @@ uint8_t application_sensor_read(uint8_t sensor, uint16_t size, uint8_t *dst)
 			id = "tsl2560";
 
 			if((twierror = tsl2560_read(0x0c, twistring)) != tme_ok)
-			{
-				snprintf_P((char *)dst, size, twi_error, sensor, id);
-				return(1);
-			}
+				goto twierror;
 
 			ch0 = (uint16_t)(twistring[0] | (twistring[1] << 8));
 			ch1 = (uint16_t)(twistring[2] | (twistring[3] << 8));
@@ -393,10 +357,7 @@ uint8_t application_sensor_read(uint8_t sensor, uint16_t size, uint8_t *dst)
 			id = "bh1750";
 
 			if((twierror = twi_master_receive(0x23, 2, twistring)) != tme_ok)
-			{
-				snprintf_P((char *)dst, size, twi_error, sensor, id);
-				return(1);
-			}
+				goto twierror;
 
 			raw_value	= (uint16_t)((twistring[0] << 8) | twistring[1]);
 			value		= raw_value * 0.42;
@@ -418,7 +379,10 @@ uint8_t application_sensor_read(uint8_t sensor, uint16_t size, uint8_t *dst)
 	}
 
 	snprintf_P((char *)dst, size, format, sensor, id, value, raw_value);
+	return(1);
 
+twierror:
+	snprintf_P((char *)dst, size, twi_error, sensor, id);
 	return(1);
 }
 

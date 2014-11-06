@@ -156,10 +156,10 @@ uint8_t application_function_bg_write(uint8_t nargs, uint8_t args[application_nu
 
 uint8_t application_sensor_read(uint8_t sensor, uint16_t size, uint8_t *dst)
 {
-	static const __flash char format_temp[]		= "> sensor %d ok temp [%.2f] C, %.5f V\n";
-	static const __flash char format_humidity[]	= "> sensor %d ok humidity [%.0f] %%\n";
-	static const __flash char format_light[]	= "> sensor %d ok light [%.3f] Lux\n";
-	static const __flash char twi_error[]		= "> sensor %d twi error\n";
+	static const __flash char format_temp[]		= "> %d/%s: ok temp [%.2f] C, (%.3f)\n";
+	static const __flash char format_humidity[]	= "> %d/%s: ok humidity [%.0f] %% (%.0f)\n";
+	static const __flash char format_light[]	= "> %d/%s: ok light [%.3f] Lux (%.0f)\n";
+	static const __flash char twi_error[]		= "> %d/%s: error: twi\n";
 
 	const __flash char *format;
 
@@ -171,11 +171,14 @@ uint8_t application_sensor_read(uint8_t sensor, uint16_t size, uint8_t *dst)
 	float		factor, offset;
 	uint8_t		twistring[4];
 	uint8_t		twierror;
+	const char	*id;
 
 	switch(sensor)
 	{
 		case(0): // internal bandgap thermosensor
 		{
+			id = "bg";
+
 			admux = ADMUX;
 			admux &= 0xf0;
 			admux |= 0x08; // 0x8 = ADC8 = bg
@@ -193,8 +196,8 @@ uint8_t application_sensor_read(uint8_t sensor, uint16_t size, uint8_t *dst)
 				application_periodic();
 			}
 
-			raw_value	= ((float)raw / (float)samples) / 1000 * eeprom_read_bandgap();
-			value		= (raw_value - 0.2897) * 0.942 * 1000; // bg
+			raw_value	= ((float)raw / (float)samples) / 1000.0 * eeprom_read_bandgap();
+			value		= (raw_value - 0.2897) * 0.942 * 1000.0; // bg
 
 			admux = ADMUX;
 			admux |= 0x0e; // 0xe = 1.1V
@@ -207,30 +210,31 @@ uint8_t application_sensor_read(uint8_t sensor, uint16_t size, uint8_t *dst)
 
 		case(1): // digipicco temperature on twi 0x78
 		{
+			id = "digipicco";
+
 			if((twierror = twi_master_receive(0x78, 4, twistring)) != tme_ok)
 			{
-				snprintf_P((char *)dst, size, twi_error, sensor);
+				snprintf_P((char *)dst, size, twi_error, sensor, id);
 				return(1);
 			}
 
-			value = (float)((twistring[2] << 8) | twistring[3]);
-			value = (value * 165.0) / 32767;
-			value -= 40.5;
-
-			format = format_temp;
+			raw_value	= (uint16_t)((twistring[2] << 8) | twistring[3]);
+			value		= ((raw_value * 165.0) / 32767) - 40.5;
+			format		= format_temp;
 
 			break;
 		}
 
 		case(2): // tmp275 or compatible on twi 0x48
 		{
+			id = "lm75ad";
 
 			twistring[0] = 0x01;	// select config register
 			twistring[1] = 0x60;	// write r0=r1=1, other bits zero
 
 			if((twierror = twi_master_send(0x48, 2, twistring)) != tme_ok)
 			{
-				snprintf_P((char *)dst, size, twi_error, sensor);
+				snprintf_P((char *)dst, size, twi_error, sensor, id);
 				return(1);
 			}
 
@@ -238,17 +242,19 @@ uint8_t application_sensor_read(uint8_t sensor, uint16_t size, uint8_t *dst)
 
 			if((twierror = twi_master_send(0x48, 1, twistring)) != tme_ok)
 			{
-				snprintf_P((char *)dst, size, twi_error, sensor);
+				snprintf_P((char *)dst, size, twi_error, sensor, id);
 				return(1);
 			}
 
 			if((twierror = twi_master_receive(0x48, 2, twistring)) != tme_ok)
 			{
-				snprintf_P((char *)dst, size, twi_error, sensor);
+				snprintf_P((char *)dst, size, twi_error, sensor, id);
 				return(1);
 			}
 
-			value = ((int16_t)(((twistring[0] << 8) | twistring[1]) >> 4)) * 0.0625;
+			raw_value	= (uint16_t)(((twistring[0] << 8) | twistring[1]) >> 4);
+			value		= raw_value * 0.0625;
+			format		= format_temp;
 
 			break;
 		}
@@ -321,16 +327,17 @@ uint8_t application_sensor_read(uint8_t sensor, uint16_t size, uint8_t *dst)
 
 		case(4): // digipicco humidity on twi 0x78
 		{
+			id = "digipicco";
+
 			if((twierror = twi_master_receive(0x78, sizeof(twistring), twistring)) != tme_ok)
 			{
-				snprintf_P((char *)dst, size, twi_error, sensor);
+				snprintf_P((char *)dst, size, twi_error, sensor, id);
 				return(1);
 			}
 
-			value = (float)((twistring[0] << 8) | twistring[1]);
-			value = (value * 100) / 32768;
-
-			format = format_humidity;
+			raw_value	= (uint16_t)((twistring[0] << 8) | twistring[1]);
+			value		= (raw_value * 100.0) / 32768.0;
+			format		= format_humidity;
 
 			break;
 		}
@@ -339,14 +346,16 @@ uint8_t application_sensor_read(uint8_t sensor, uint16_t size, uint8_t *dst)
 		{
 			float ch0, ch1;
 
+			id = "tsl2560";
+
 			if((twierror = tsl2560_read_quad(0x0c, twistring)) != tme_ok)
 			{
-				snprintf_P((char *)dst, size, twi_error, sensor);
+				snprintf_P((char *)dst, size, twi_error, sensor, id);
 				return(1);
 			}
 
-			ch0 = (float)(uint16_t)(twistring[0] | (twistring[1] << 8));
-			ch1 = (float)(uint16_t)(twistring[2] | (twistring[3] << 8));
+			ch0 = (uint16_t)(twistring[0] | (twistring[1] << 8));
+			ch1 = (uint16_t)(twistring[2] | (twistring[3] << 8));
 
 			if((ch0 < 37170) && (ch1 < 37170))
 			{
@@ -373,23 +382,25 @@ uint8_t application_sensor_read(uint8_t sensor, uint16_t size, uint8_t *dst)
 			else
 				value = -1;
 
-			format = format_light;
+			raw_value	= (10000 * ch0) + ch1;
+			format		= format_light;
 
 			break;
 		}
 
 		case(6): // bh1750 on twi 0x23, long exposure, high resolution
 		{
+			id = "bh1750";
+
 			if((twierror = twi_master_receive(0x23, 2, twistring)) != tme_ok)
 			{
-				snprintf_P((char *)dst, size, twi_error, sensor);
+				snprintf_P((char *)dst, size, twi_error, sensor, id);
 				return(1);
 			}
 
-			value = (float)(uint16_t)((twistring[0] << 8) | twistring[1]);
-			value = value * 0.42;
-
-			format = format_light;
+			raw_value	= (uint16_t)((twistring[0] << 8) | twistring[1]);
+			value		= raw_value * 0.42;
+			format		= format_light;
 
 			break;
 		}
@@ -406,7 +417,7 @@ uint8_t application_sensor_read(uint8_t sensor, uint16_t size, uint8_t *dst)
 		value += offset;
 	}
 
-	snprintf_P((char *)dst, size, format, sensor, value, raw_value);
+	snprintf_P((char *)dst, size, format, sensor, id, value, raw_value);
 
 	return(1);
 }

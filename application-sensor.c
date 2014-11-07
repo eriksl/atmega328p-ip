@@ -88,22 +88,6 @@ static uint8_t tsl2560_write(uint8_t reg, uint8_t value)
 	return(0);
 }
 
-static uint8_t tsl2560_read(uint8_t reg, uint8_t *value)
-{
-	uint8_t twierror;
-	uint8_t twistring[1];
-
-	twistring[0] = 0xc0 | reg; // read byte
-
-	if((twierror = twi_master_send(0x39, 1, twistring)) != tme_ok)
-		return(twierror);
-
-	if((twierror = twi_master_receive(0x39 , 1, value)) != tme_ok)
-		return(twierror);
-
-	return(0);
-}
-
 static uint8_t tsl2560_read(uint8_t reg, uint8_t *values)
 {
 	uint8_t twierror;

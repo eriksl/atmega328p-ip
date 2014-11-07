@@ -158,11 +158,11 @@ uint8_t application_function_bg_write(uint8_t nargs, uint8_t args[application_nu
 
 uint8_t application_sensor_read(uint8_t sensor, uint16_t size, uint8_t *dst)
 {
-	static const __flash char format_temp[]		= "> %d/%s: ok temp [%.2f] C, (%.3f)\n";
-	static const __flash char format_humidity[]	= "> %d/%s: ok humidity [%.0f] %% (%.0f)\n";
-	static const __flash char format_light[]	= "> %d/%s: ok light [%.3f] Lux (%.0f)\n";
-	static const __flash char format_pressure[]	= "> %d/%s: pressure [%.2f] hPa (%0.f)\n";
-	static const __flash char twi_error[]		= "> %d/%s: error: twi\n";
+	static const __flash char format_temp[]		= "%d/%s: temp [%.2f] C, (%ld)\n";
+	static const __flash char format_humidity[]	= "%d/%s: humidity [%.0f] %% (%ld)\n";
+	static const __flash char format_light[]	= "%d/%s: light [%.2f] Lux (%ld)\n";
+	static const __flash char format_pressure[]	= "%d/%s: pressure [%.2f] hPa (%ld)\n";
+	static const __flash char twi_error[]		= "%d/%s: error: twi\n";
 
 	const __flash char *format;
 
@@ -201,6 +201,7 @@ uint8_t application_sensor_read(uint8_t sensor, uint16_t size, uint8_t *dst)
 
 			raw_value	= ((float)raw / (float)samples) / 1000.0 * eeprom_read_bandgap();
 			value		= (raw_value - 0.2897) * 0.942 * 1000.0; // bg
+			raw_value	*= 1000;
 
 			admux = ADMUX;
 			admux |= 0x0e; // 0xe = 1.1V
@@ -458,7 +459,7 @@ uint8_t application_sensor_read(uint8_t sensor, uint16_t size, uint8_t *dst)
 		value += offset;
 	}
 
-	snprintf_P((char *)dst, size, format, sensor, id, value, raw_value);
+	snprintf_P((char *)dst, size, format, sensor, id, value, (int32_t)raw_value);
 	return(1);
 
 twierror:

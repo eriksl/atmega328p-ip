@@ -56,6 +56,24 @@ static uint8_t bmp085_read(uint8_t reg, uint16_t *value)
 	return(0);
 }
 
+static uint8_t bmp085_read_long(uint8_t reg, uint32_t *value)
+{
+	uint8_t twierror;
+	uint8_t twistring[4];
+
+	twistring[0] = reg;
+
+	if((twierror = twi_master_send(0x77, 1, twistring)) != tme_ok)
+		return(twierror);
+
+	if((twierror = twi_master_receive(0x77, 3, twistring)) != tme_ok)
+		return(twierror);
+
+	*value = ((uint32_t)twistring[0] << 16) | ((uint32_t)twistring[1] << 8) | (uint32_t)twistring[2];
+
+	return(0);
+}
+
 static uint8_t tsl2560_write(uint8_t reg, uint8_t value)
 {
 	uint8_t twierror;
@@ -159,6 +177,7 @@ uint8_t application_sensor_read(uint8_t sensor, uint16_t size, uint8_t *dst)
 	static const __flash char format_temp[]		= "> %d/%s: ok temp [%.2f] C, (%.3f)\n";
 	static const __flash char format_humidity[]	= "> %d/%s: ok humidity [%.0f] %% (%.0f)\n";
 	static const __flash char format_light[]	= "> %d/%s: ok light [%.3f] Lux (%.0f)\n";
+	static const __flash char format_pressure[]	= "> %d/%s: pressure [%.2f] hPa (%0.f)\n";
 	static const __flash char twi_error[]		= "> %d/%s: error: twi\n";
 
 	const __flash char *format;
@@ -248,17 +267,43 @@ uint8_t application_sensor_read(uint8_t sensor, uint16_t size, uint8_t *dst)
 		}
 
 		case(3): // bmp085 temperature
+		case(5): // bmp085 pressure
 		{
-			uint16_t	ac5, ac6;
+			int16_t		ac1, ac2, ac3;
+			uint16_t	ac4, ac5, ac6;
+			int16_t		b1, b2;
 			int16_t		mc, md;
 			uint16_t	ut;
+			uint32_t	up;
+			int32_t		b3, b4, b5, b6;
+			uint32_t	b7;
+			int32_t		x1, x2, x3, p;
+			uint8_t		oss = 3;
 
-			id = "bm085";
+			id = "bmp085";
+
+			if((twierror = bmp085_read(0xaa, (uint16_t *)&ac1)) != tme_ok)
+				goto twierror;
+
+			if((twierror = bmp085_read(0xac, (uint16_t *)&ac2)) != tme_ok)
+				goto twierror;
+
+			if((twierror = bmp085_read(0xae, (uint16_t *)&ac3)) != tme_ok)
+				goto twierror;
+
+			if((twierror = bmp085_read(0xb0, &ac4)) != tme_ok)
+				goto twierror;
 
 			if((twierror = bmp085_read(0xb2, &ac5)) != tme_ok)
 				goto twierror;
 
 			if((twierror = bmp085_read(0xb4, &ac6)) != tme_ok)
+				goto twierror;
+
+			if((twierror = bmp085_read(0xb6, (uint16_t *)&b1)) != tme_ok)
+				goto twierror;
+
+			if((twierror = bmp085_read(0xb8, (uint16_t *)&b2)) != tme_ok)
 				goto twierror;
 
 			if((twierror = bmp085_read(0xbc, (uint16_t *)&mc)) != tme_ok)
@@ -267,30 +312,81 @@ uint8_t application_sensor_read(uint8_t sensor, uint16_t size, uint8_t *dst)
 			if((twierror = bmp085_read(0xbe, (uint16_t *)&md)) != tme_ok)
 				goto twierror;
 
-		//ac5 = 32757;
-		//ac6 = 23153;
-		//mc = -8711;
-		//md = 2868;
-
-			if((twierror = bmp085_write(0xf4, 0x2e)) != tme_ok)	// set cmd = 0x2e = start temperature measurement
+			if((twierror = bmp085_write(0xf4, 0x2e)) != tme_ok) // set cmd = 0x2e = start temperature measurement
 				goto twierror;
 
-			sleep(10);
+			sleep(5);
 
 			if((twierror = bmp085_read(0xf6, &ut)) != tme_ok) // select result 0xf6+0xf7
 				goto twierror;
 
-		//ut = 27898;
+#if 0
+			ac1	= 408;
+			ac2	= -72;
+			ac3	= -14383;
+			ac4	= 32741;
+			ac5 = 32757;
+			ac6 = 23153;
+			b1	= 6190;
+			b2	= 4;
+			mc	= -8711;
+			md	= 2868;
 
-			int32_t x1, x2, b5;
+			ut = 27898;
+#endif
 
 			x1 = (((uint32_t)ut - (uint32_t)ac6) * (uint32_t)ac5) >> 15;
 			x2 = ((int32_t)mc << 11) / (x1 + (int32_t)md);
 			b5 = x1 + x2;
 
-			raw_value	= ut;
-			value		= ((((float)b5 + 8) / 16) / 10);
-			format		= format_temp;
+			if(sensor == 4) // temperature
+			{
+				format		= format_temp;
+				raw_value	= ut;
+				value		= ((((float)b5 + 8) / 16) / 10); // temperature
+			}
+			else // pressure
+			{
+				if((twierror = bmp085_write(0xf4, 0x34 | (oss << 6))) != tme_ok) // set cmd = 0x34 = start air pressure measurement
+					goto twierror;
+
+				sleep(20);
+
+				up = 0;
+
+				if((twierror = bmp085_read_long(0xf6, &up)) != tme_ok) // select result 0xf6+0xf7+f8
+					goto twierror;
+#if 0
+			up	= 23843;
+#endif
+
+				up = up >> (8 - oss);
+
+				b6	= b5 - 4000;
+				x1	= ((int32_t)b2 * ((b6 * b6) >> 12)) >> 11;
+				x2	= ((int32_t)ac2 * b6) >> 11;
+				x3	= x1 + x2;
+				b3	= ((((int32_t)ac1 * 4 + x3) << oss) + 2) / 4;
+				x1	= ((int32_t)ac3 * b6) >> 13;
+				x2	= ((int32_t)b1 * ((b6 * b6) >> 12)) >> 16;
+				x3	= (x1 + x2 + 2) >> 2;
+				b4	= ((uint32_t)ac4 * (uint32_t)(x3 + 32768)) >> 15;
+				b7	= (uint32_t)(((uint32_t)up - b3) * (50000 >> oss));
+
+				if(b7 & 0x80000000)
+					p = (b7 / b4) << 1;
+				else
+					p = (b7 << 1) / b4;
+
+				x1	= (p >> 8) * (p >> 8);
+				x1	= (x1 * 3038UL) >> 16;
+				x2	= (p * -7357) >> 16;
+				p	= p + ((x1 + x2 + 3791L) >> 4);
+
+				format		= format_pressure;
+				raw_value	= up;
+				value		= p / 100.0;
+			}
 
 			break;
 		}

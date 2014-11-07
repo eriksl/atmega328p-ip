@@ -51,7 +51,7 @@ static uint8_t bmp085_read(uint8_t reg, uint16_t *value)
 	if((twierror = twi_master_receive(0x77, 2, twistring)) != tme_ok)
 		return(twierror);
 
-	*value = (twistring[0] << 8) | twistring[1];
+	*value = ((uint16_t)twistring[0] << 8) | (uint16_t)twistring[1];
 
 	return(0);
 }
@@ -234,7 +234,7 @@ uint8_t application_sensor_read(uint8_t sensor, uint16_t size, uint8_t *dst)
 			if((twierror = twi_master_receive(0x78, 4, twistring)) != tme_ok)
 				goto twierror;
 
-			raw_value	= (uint16_t)((twistring[2] << 8) | twistring[3]);
+			raw_value	= ((uint16_t)twistring[2] << 8) | (uint16_t)twistring[3];
 			value		= ((raw_value * 165.0) / 32767) - 40.5;
 			format		= format_temp;
 
@@ -398,7 +398,7 @@ uint8_t application_sensor_read(uint8_t sensor, uint16_t size, uint8_t *dst)
 			if((twierror = twi_master_receive(0x78, sizeof(twistring), twistring)) != tme_ok)
 				goto twierror;
 
-			raw_value	= (uint16_t)((twistring[0] << 8) | twistring[1]);
+			raw_value	= ((uint16_t)twistring[0] << 8)) | (uint16_t)twistring[1];
 			value		= (raw_value * 100.0) / 32768.0;
 			format		= format_humidity;
 
@@ -455,7 +455,7 @@ uint8_t application_sensor_read(uint8_t sensor, uint16_t size, uint8_t *dst)
 			if((twierror = twi_master_receive(0x23, 2, twistring)) != tme_ok)
 				goto twierror;
 
-			raw_value	= (uint16_t)((twistring[0] << 8) | twistring[1]);
+			raw_value	= ((uint16_t)twistring[0] << 8) | (uint16_t)twistring[1];
 			value		= raw_value * 0.42;
 			format		= format_light;
 

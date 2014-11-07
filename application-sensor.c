@@ -213,20 +213,30 @@ uint8_t application_sensor_read(uint8_t sensor, uint16_t size, uint8_t *dst)
 		}
 
 		case(1): // digipicco temperature on twi 0x78
+		case(2): // digipicco humidity on twi 0x78
 		{
 			id = "digipicco";
 
 			if((twierror = twi_master_receive(0x78, 4, twistring)) != tme_ok)
 				goto twierror;
 
-			raw_value	= ((uint16_t)twistring[2] << 8) | (uint16_t)twistring[3];
-			value		= ((raw_value * 165.0) / 32767) - 40.5;
-			format		= format_temp;
+			if(sensor == 1) // temperature
+			{
+				raw_value	= ((uint16_t)twistring[2] << 8) | (uint16_t)twistring[3];
+				value		= ((raw_value * 165.0) / 32767) - 40.5;
+				format		= format_temp;
+			}
+			else
+			{
+				raw_value	= ((uint16_t)twistring[0] << 8) | (uint16_t)twistring[1];
+				value		= (raw_value * 100.0) / 32768.0;
+				format		= format_humidity;
+			}
 
 			break;
 		}
 
-		case(2): // tmp275 or compatible on twi 0x48
+		case(3): // tmp275 or compatible on twi 0x48
 		{
 			id = "lm75ad";
 
@@ -251,7 +261,7 @@ uint8_t application_sensor_read(uint8_t sensor, uint16_t size, uint8_t *dst)
 			break;
 		}
 
-		case(3): // bmp085 temperature
+		case(4): // bmp085 temperature
 		case(5): // bmp085 pressure
 		{
 			int16_t		ac1, ac2, ac3;
@@ -376,21 +386,7 @@ uint8_t application_sensor_read(uint8_t sensor, uint16_t size, uint8_t *dst)
 			break;
 		}
 
-		case(4): // digipicco humidity on twi 0x78
-		{
-			id = "digipicco";
-
-			if((twierror = twi_master_receive(0x78, sizeof(twistring), twistring)) != tme_ok)
-				goto twierror;
-
-			raw_value	= ((uint16_t)twistring[0] << 8)) | (uint16_t)twistring[1];
-			value		= (raw_value * 100.0) / 32768.0;
-			format		= format_humidity;
-
-			break;
-		}
-
-		case(5): // tsl2560 on twi 0x39, high gain, short exposure (100 ms)
+		case(6): // tsl2560 on twi 0x39, high gain, short exposure (100 ms)
 		{
 			float ch0, ch1;
 
@@ -433,7 +429,7 @@ uint8_t application_sensor_read(uint8_t sensor, uint16_t size, uint8_t *dst)
 			break;
 		}
 
-		case(6): // bh1750 on twi 0x23, long exposure, high resolution
+		case(7): // bh1750 on twi 0x23, long exposure, high resolution
 		{
 			id = "bh1750";
 

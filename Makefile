@@ -16,10 +16,10 @@ PROGRAM		=		main
 OBJFILES	=		$(PROGRAM).o spi.o twi_master.o \
 						enc.o net.o ethernet.o arp.o ipv4.o icmp4.o udp4.o tcp4.o bootp.o \
 						application.o application-sensor.o application-twi.o application-timer.o \
-						stats.o util.o eeprom.o stackmonitor.o
+						stats.o util.o eeprom.o stackmonitor.o display.o
 HEADERS		=			spi.h twi_master.h \
 						enc.h net.h ethernet.h ethernet_macaddr.h arp.h ipv4.h ipv4_addr.h icmp4.h udp4.h tcp4.h bootp.h \
-						application.h stats.h util.h eeprom.h stackmonitor.h util.h
+						application.h stats.h util.h eeprom.h stackmonitor.h util.h display.o
 HEXFILE		=		$(PROGRAM).hex
 ELFFILE		=		$(PROGRAM).elf
 PROGRAMMED	=		.programmed
@@ -48,6 +48,7 @@ $(PROGRAM).o:		$(PROGRAM).c $(HEADERS)
 spi.o:				spi.h
 twi_master.o:		twi_master.h
 stats.o:			stats.h
+display.o:			display.h
 enc.o:				$(HEADERS) enc-private.h
 net.o:				$(HEADERS)
 ethernet.o:			$(HEADERS)

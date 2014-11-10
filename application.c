@@ -6,6 +6,7 @@
 #include "util.h"
 #include "stackmonitor.h"
 #include "eeprom.h"
+#include "display.h"
 
 #include <avr/pgmspace.h>
 #include <string.h>
@@ -31,6 +32,7 @@ static uint8_t application_function_help(uint8_t nargs, uint8_t args[application
 static uint8_t application_function_quit(uint8_t nargs, uint8_t args[application_num_args][application_length_args], uint16_t size, uint8_t *dst);
 static uint8_t application_function_reset(uint8_t nargs, uint8_t args[application_num_args][application_length_args], uint16_t size, uint8_t *dst);
 static uint8_t application_function_sdmp(uint8_t nargs, uint8_t args[application_num_args][application_length_args], uint16_t size, uint8_t *dst);
+static uint8_t application_function_show(uint8_t nargs, uint8_t args[application_num_args][application_length_args], uint16_t size, uint8_t *dst);
 static uint8_t application_function_stack(uint8_t nargs, uint8_t args[application_num_args][application_length_args], uint16_t size, uint8_t *dst);
 static uint8_t application_function_stats(uint8_t nargs, uint8_t args[application_num_args][application_length_args], uint16_t size, uint8_t *dst);
 
@@ -119,6 +121,12 @@ static const __flash application_function_table_t application_function_table[] =
 		0,
 		application_function_stats,
 		"statistics",
+	},
+	{
+		"show",
+		1,
+		application_function_show,
+		"show text on display",
 	},
 	{
 		"stats",
@@ -316,6 +324,13 @@ static uint8_t application_function_edmp(uint8_t nargs, uint8_t args[application
 		size	-= offset;
 		index++;
 	}
+
+	return(1);
+}
+
+static uint8_t application_function_show(uint8_t nargs, uint8_t args[application_num_args][application_length_args], uint16_t size, uint8_t *dst)
+{
+	display_show(args[1]);
 
 	return(1);
 }

@@ -7,8 +7,10 @@
 #include "stackmonitor.h"
 #include "eeprom.h"
 #include "display.h"
+#include "twi_master.h"
 
 #include <avr/pgmspace.h>
+#include <avr/interrupt.h>
 #include <string.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -26,6 +28,7 @@ typedef struct
 
 static uint8_t cmd_led_timeout = 0;
 static uint8_t heartbeat_led_timeout = 0;
+static uint8_t display_string[application_num_args - 1][5];
 
 static uint8_t application_function_edmp(uint8_t nargs, uint8_t args[application_num_args][application_length_args], uint16_t size, uint8_t *dst);
 static uint8_t application_function_help(uint8_t nargs, uint8_t args[application_num_args][application_length_args], uint16_t size, uint8_t *dst);
@@ -124,7 +127,7 @@ static const __flash application_function_table_t application_function_table[] =
 	},
 	{
 		"show",
-		1,
+		0,
 		application_function_show,
 		"show text on display",
 	},
@@ -219,6 +222,100 @@ void application_periodic(void)
 	}
 
 	application_periodic_timer(missed_ticks);
+
+	static stats_t wd_previous = 0;
+	static uint8_t display_state = 0;
+
+	if(wd_interrupts != wd_previous)
+	{
+		uint8_t	display[5];
+
+		wd_previous = wd_interrupts;
+
+		switch(display_state)
+		{
+			case(0):
+			{
+				static const __flash char fmt[] = "%02u%02u";
+				uint32_t	seconds;
+				uint8_t		minutes;
+				uint8_t		hours;
+
+				cli();
+				seconds	= t1_jiffies;
+				sei();
+
+				seconds	= (uint32_t)((float)seconds / (float)JIFFIES_PER_SECOND);
+				hours	= seconds / (60UL * 60UL);
+				seconds	= seconds - (hours * 60UL * 60UL);
+				minutes	= seconds / 60UL;
+
+				snprintf_P((char *)display, sizeof(display), fmt,
+						(int)hours, (int)minutes);
+
+				display[1] |= 0x80; // add dot
+
+				break;
+			}
+
+			case(1):
+			case(2):
+			{
+				static	const __flash char format_temp[]		= "%3.0f'";
+				static	const __flash char format_humidity[]	= "%3.0f%%";
+						const __flash char *format;
+
+				uint8_t	twistring[4];
+				float	value, raw_value;
+				float	factor, offset;
+
+				if(twi_master_receive(0x78, 4, twistring) != tme_ok)
+					strcpy((char *)display, "err1");
+				else
+				{
+					if(display_state == 1) // temperature
+					{
+						raw_value	= ((uint16_t)twistring[2] << 8) | (uint16_t)twistring[3];
+						value		= ((raw_value * 165.0) / 32767) - 40.5;
+						format		= format_temp;
+					}
+					else // humdity
+					{
+						raw_value	= ((uint16_t)twistring[0] << 8) | (uint16_t)twistring[1];
+						value		= (raw_value * 100.0) / 32768.0;
+						format		= format_humidity;
+					}
+
+					if(eeprom_read_cal(display_state, &factor, &offset))
+					{
+						value *= factor;
+						value += offset;
+					}
+
+					snprintf_P((char *)display, sizeof(display), format, value);
+
+					break;
+				}
+
+				default:
+				{
+					strncpy((char *)display, (const char *)display_string[display_state - 3], 4);
+
+					break;
+				}
+			}
+		}
+
+		display_show(display);
+
+		display_state++;
+
+		if((display_state - 3) >= (application_num_args - 1))
+			display_state = 0;
+		else
+			if(((display_state - 3) >= 0) && !display_string[display_state - 3][0])
+				display_state = 0;
+	}
 }
 
 int16_t application_content(uint16_t src_length, const uint8_t *src, uint16_t size, uint8_t *dst)
@@ -330,7 +427,15 @@ static uint8_t application_function_edmp(uint8_t nargs, uint8_t args[application
 
 static uint8_t application_function_show(uint8_t nargs, uint8_t args[application_num_args][application_length_args], uint16_t size, uint8_t *dst)
 {
-	display_show(args[1]);
+	uint8_t ix;
+
+	for(ix = 0; (ix + 1) < application_num_args; ix++)
+	{
+		if((ix + 1) < nargs)
+			strncpy((char *)display_string[ix], (const char *)args[ix + 1], 4);
+		else
+			display_string[ix][0] = '\0';
+	}
 
 	return(1);
 }

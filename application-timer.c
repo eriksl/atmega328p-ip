@@ -8,9 +8,6 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#define JIFFIES_PER_SECOND	((float)F_CPU / 65536)
-#define JIFFIES_PER_DAY		((uint32_t)(JIFFIES_PER_SECOND * 60 * 60 * 24))
-
 typedef struct
 {
 	float		speed;

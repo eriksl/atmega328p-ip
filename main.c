@@ -10,6 +10,7 @@
 #include "enc.h"
 #include "application.h"
 #include "util.h"
+#include "display.h"
 
 #include <avr/interrupt.h>
 #include <avr/io.h>
@@ -17,6 +18,7 @@
 
 #include <string.h>
 #include <stdint.h>
+#include <stdio.h>
 
 enum
 {
@@ -38,6 +40,8 @@ int main(void)
 
 	uint16_t		rx_frame_length;
 	uint16_t		tx_frame_length;
+
+	uint8_t			bootp_timer;
 
 	cli();
     wdt_reset();
@@ -103,16 +107,36 @@ int main(void)
 
 	sei();
 
+	display_show((uint8_t *)"boot");
+
+	bootp_timer = 1;
+
 	for(;;)
 	{
 		pause_idle();			// gets woken by the 122 Hz timer1 interrupt or packet arrival or watchdog interrupt
 		WDTCSR |= _BV(WDIE);	// enable wdt interrupt, reset
 		application_periodic();	// run periodic tasks
 
-		if(ipv4_address_match(&my_ipv4_address, &ipv4_addr_zero))
+		if(bootp_timer)
 		{
-			tx_frame_length = bootp_create_request(tx_frame, &my_mac_address);
-			enc_send_frame(tx_frame, tx_frame_length);
+			if(bootp_timer > 250)
+			{
+				if(ipv4_address_match(&my_ipv4_address, &ipv4_addr_zero))
+				{
+					tx_frame_length = bootp_create_request(tx_frame, &my_mac_address);
+					enc_send_frame(tx_frame, tx_frame_length);
+					bootp_timer = 1;
+				}
+				else
+				{
+					snprintf((char *)tx_frame, sizeof(tx_frame), "%4u", my_ipv4_address.byte[3]);
+					display_show(tx_frame);
+					bootp_timer = 0;
+				}
+
+			}
+			else
+				bootp_timer++;
 		}
 
 		if((rx_frame_length = enc_receive_frame(rx_frame, sizeof(rx_frame))) == 0)

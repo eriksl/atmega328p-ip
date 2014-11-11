@@ -107,7 +107,9 @@ int main(void)
 
 	sei();
 
-	display_show((uint8_t *)"boot");
+	strncpy((char *)tx_frame, "boot", sizeof(tx_frame));
+	tx_frame[3] |= 0x80; // add dot to last digit
+	display_show(tx_frame);
 
 	bootp_timer = 1;
 

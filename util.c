@@ -12,7 +12,7 @@ void reset(void)
 		(void)0;
 }
 
-void sleep(uint16_t ms)
+void msleep(uint16_t ms)
 {
 	while(ms-- > 0)
 		_delay_ms(1);

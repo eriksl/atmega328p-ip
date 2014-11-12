@@ -91,11 +91,11 @@ int main(void)
 	my_ipv4_address.byte[3] = 0;
 
 	PORTD = _BV(6) | _BV(3);
-	sleep(200);
+	msleep(200);
 	PORTD = _BV(7);
-	sleep(200);
+	msleep(200);
 	PORTD = _BV(6) | _BV(7) | _BV(3);
-	sleep(200);
+	msleep(200);
 	PORTD = 0;
 
 	wdt_enable(WDTO_2S);

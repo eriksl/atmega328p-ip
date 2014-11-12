@@ -183,7 +183,7 @@ static void write_register(uint16_t reg, uint16_t data)
 void enc_init(uint16_t max_frame_size, const mac_addr_t *mac)
 {
 	sc();			// reset
-	sleep(100);		// see erratum
+	msleep(100);	// see erratum
 
 	EICRA &= ~_BV(ISC00);	// INT0
 	EICRA |=  _BV(ISC01);	// falling edge

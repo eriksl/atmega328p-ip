@@ -8,6 +8,7 @@
 #include "eeprom.h"
 #include "display.h"
 #include "twi_master.h"
+#include "clock.h"
 
 #include <avr/pgmspace.h>
 #include <avr/interrupt.h>
@@ -237,21 +238,13 @@ void application_periodic(void)
 			case(0):
 			{
 				static const __flash char fmt[] = "%02u%02u";
-				uint32_t	seconds;
-				uint8_t		minutes;
-				uint8_t		hours;
+				uint8_t	seconds;
+				uint8_t	minutes;
+				uint8_t	hours;
 
-				cli();
-				seconds	= t1_jiffies;
-				sei();
+				clock_get(&hours, &minutes, &seconds);
 
-				seconds	= (uint32_t)((float)seconds / (float)JIFFIES_PER_SECOND);
-				hours	= seconds / (60UL * 60UL);
-				seconds	= seconds - (hours * 60UL * 60UL);
-				minutes	= seconds / 60UL;
-
-				snprintf_P((char *)display, sizeof(display), fmt,
-						(int)hours, (int)minutes);
+				snprintf_P((char *)display, sizeof(display), fmt, (int)hours, (int)minutes);
 
 				display[1] |= 0x80; // add dot
 

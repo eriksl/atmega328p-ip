@@ -7,11 +7,10 @@
 #include "stackmonitor.h"
 #include "eeprom.h"
 #include "display.h"
-#include "twi_master.h"
 #include "clock.h"
+#include "sensor.h"
 
 #include <avr/pgmspace.h>
-#include <avr/interrupt.h>
 #include <string.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -237,14 +236,14 @@ void application_periodic(void)
 		{
 			case(0):
 			{
-				static const __flash char fmt[] = "%02u%02u";
+				static const __flash char format[] = "%02u%02u";
 				uint8_t	seconds;
 				uint8_t	minutes;
 				uint8_t	hours;
 
 				clock_get(&hours, &minutes, &seconds);
 
-				snprintf_P((char *)display, sizeof(display), fmt, (int)hours, (int)minutes);
+				snprintf_P((char *)display, sizeof(display), format, (int)hours, (int)minutes);
 
 				display[1] |= 0x80; // add dot
 
@@ -252,50 +251,53 @@ void application_periodic(void)
 			}
 
 			case(1):
+			{
+				static const __flash char format[] = "%3d'";
+				float temp_digipicco, temp_digipicco_raw;
+				float hum_digipicco, hum_digipicco_raw;
+				float temp, temp_raw;
+
+				sensor_read_digipicco(&temp_digipicco, &temp_digipicco_raw,
+						&hum_digipicco, &hum_digipicco_raw);
+
+				sensor_read_lm75(&temp, &temp_raw);
+
+				temp = (temp + temp_digipicco) / 2.0;
+
+				snprintf_P((char *)display, sizeof(display), format, (int)temp);
+
+				break;
+			}
+
 			case(2):
 			{
-				static	const __flash char format_temp[]		= "%3.0f'";
-				static	const __flash char format_humidity[]	= "%3.0f%%";
-						const __flash char *format;
+				static const __flash char format[] = "%3d%%";
+				float temp, temp_raw, hum, hum_raw;
 
-				uint8_t	twistring[4];
-				float	value, raw_value;
-				float	factor, offset;
+				sensor_read_digipicco(&temp, &temp_raw, &hum, &hum_raw);
 
-				if(twi_master_receive(0x78, 4, twistring) != tme_ok)
-					strcpy((char *)display, "err1");
-				else
-				{
-					if(display_state == 1) // temperature
-					{
-						raw_value	= ((uint16_t)twistring[2] << 8) | (uint16_t)twistring[3];
-						value		= ((raw_value * 165.0) / 32767) - 40.5;
-						format		= format_temp;
-					}
-					else // humdity
-					{
-						raw_value	= ((uint16_t)twistring[0] << 8) | (uint16_t)twistring[1];
-						value		= (raw_value * 100.0) / 32768.0;
-						format		= format_humidity;
-					}
+				snprintf_P((char *)display, sizeof(display), format, (int)hum);
 
-					if(eeprom_read_cal(display_state, &factor, &offset))
-					{
-						value *= factor;
-						value += offset;
-					}
+				break;
+			}
 
-					snprintf_P((char *)display, sizeof(display), format, value);
+			case(3):
+			{
+				static const __flash char format[] = "%4d";
+				float temp, temp_raw, pressure, pressure_raw;
 
-					break;
-				}
+				sensor_read_bmp085(&temp, &temp_raw, &pressure, &pressure_raw);
 
-				default:
-				{
-					strncpy((char *)display, (const char *)display_string[display_state - 3], 4);
+				snprintf_P((char *)display, sizeof(display), format, (int)pressure);
 
-					break;
-				}
+				break;
+			}
+
+			default:
+			{
+				strncpy((char *)display, (const char *)display_string[display_state - 4], 4);
+
+				break;
 			}
 		}
 
@@ -303,10 +305,10 @@ void application_periodic(void)
 
 		display_state++;
 
-		if((display_state - 3) >= (application_num_args - 1))
+		if((display_state - 4) >= (application_num_args - 1))
 			display_state = 0;
 		else
-			if(((display_state - 3) >= 0) && !display_string[display_state - 3][0])
+			if(((display_state - 4) >= 0) && !display_string[display_state - 4][0])
 				display_state = 0;
 	}
 }

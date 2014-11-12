@@ -5,3 +5,4 @@ test.sh
 testtwi
 *.o
 main.hex
+main.elf

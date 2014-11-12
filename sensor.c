@@ -266,7 +266,7 @@ uint8_t sensor_read_bmp085(float *temp, float *temp_raw, float *pressure, float 
 	if((twierror = bmp085_write(0xf4, 0x2e)) != tme_ok) // set cmd = 0x2e = start temperature measurement
 		return(twierror);
 
-	sleep(5);
+	msleep(5);
 
 	if((twierror = bmp085_read(0xf6, &ut)) != tme_ok) // select result 0xf6+0xf7
 		return(twierror);
@@ -296,7 +296,7 @@ uint8_t sensor_read_bmp085(float *temp, float *temp_raw, float *pressure, float 
 	if((twierror = bmp085_write(0xf4, 0x34 | (oss << 6))) != tme_ok) // set cmd = 0x34 = start air pressure measurement
 		return(twierror);
 
-	sleep(20);
+	msleep(20);
 
 	up = 0;
 

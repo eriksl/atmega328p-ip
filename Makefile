@@ -16,10 +16,10 @@ PROGRAM		=		main
 OBJFILES	=		$(PROGRAM).o spi.o twi_master.o \
 						enc.o net.o ethernet.o arp.o ipv4.o icmp4.o udp4.o tcp4.o bootp.o \
 						application.o application-sensor.o application-twi.o application-timer.o \
-						stats.o util.o eeprom.o stackmonitor.o display.o sensor.o
+						stats.o util.o eeprom.o stackmonitor.o display.o sensor.o clock.o
 HEADERS		=			spi.h twi_master.h \
 						enc.h net.h ethernet.h ethernet_macaddr.h arp.h ipv4.h ipv4_addr.h icmp4.h udp4.h tcp4.h bootp.h \
-						application.h stats.h util.h eeprom.h stackmonitor.h util.h display.o
+						application.h stats.h util.h eeprom.h stackmonitor.h util.h display.h clock.h
 HEXFILE		=		$(PROGRAM).hex
 ELFFILE		=		$(PROGRAM).elf
 PROGRAMMED	=		.programmed
@@ -60,6 +60,7 @@ tcp4.o:				$(HEADERS)
 application.o:		$(HEADERS) application-timer.h application-sensor.h application-twi.h
 sensor.o:			sensor.h
 eeprom.o:			eeprom.h
+clock.o:			clock.h
 
 %.o:				%.c
 					@echo "CC $< -> $@"

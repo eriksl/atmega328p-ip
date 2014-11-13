@@ -29,6 +29,7 @@ typedef struct
 static uint8_t cmd_led_timeout = 0;
 static uint8_t display_string[application_num_args - 1][5];
 
+static uint8_t application_function_bright(uint8_t nargs, uint8_t args[application_num_args][application_length_args], uint16_t size, uint8_t *dst);
 static uint8_t application_function_edmp(uint8_t nargs, uint8_t args[application_num_args][application_length_args], uint16_t size, uint8_t *dst);
 static uint8_t application_function_help(uint8_t nargs, uint8_t args[application_num_args][application_length_args], uint16_t size, uint8_t *dst);
 static uint8_t application_function_quit(uint8_t nargs, uint8_t args[application_num_args][application_length_args], uint16_t size, uint8_t *dst);
@@ -51,6 +52,12 @@ static const __flash application_function_table_t application_function_table[] =
 		0,
 		application_function_beep,
 		"beep duration period",
+	},
+	{
+		"bright",
+		1,
+		application_function_bright,
+		"set display brightness (0-7)",
 	},
 	{
 		"clockr",
@@ -383,6 +390,21 @@ int16_t application_content(uint16_t src_length, const uint8_t *src, uint16_t si
 	snprintf_P((char *)dst, size, error_fmt_unknown, args[0]);
 
 	return(strlen((char *)dst));
+}
+
+static uint8_t application_function_bright(uint8_t nargs, uint8_t args[application_num_args][application_length_args], uint16_t size, uint8_t *dst)
+{
+	static const __flash char format[] = "> brightness: %u\n";
+
+	uint8_t level;
+
+	level = (uint8_t)atoi((const char *)args[1]);
+
+	display_brightness(level);
+
+	snprintf_P((char *)dst, size, format, (unsigned int)level & 0x07);
+
+	return(1);
 }
 
 static uint8_t application_function_edmp(uint8_t nargs, uint8_t args[application_num_args][application_length_args], uint16_t size, uint8_t *dst)

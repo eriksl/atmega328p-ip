@@ -93,6 +93,8 @@ static const uint8_t charrom[] =
 	0x40,		/*	95	_	*/
 };
 
+static uint8_t brightness = 1;
+
 static uint8_t render_char(uint8_t character)
 {
 	uint8_t add_dot = 0;
@@ -127,15 +129,8 @@ uint8_t display_show(const uint8_t *text)
 
 	twistring[0] =	0x00;	// start at control register (0x00),
 							// followed by four digits segments registers (0x01-0x04)
-	twistring[1] =
-		(1 << 0)	|	// multiplex mode
-		(1 << 1)	|	// enable digit 1 and 3
-		(1 << 2)	| 	// enable digit 2 and 4
-		(0 << 3)	|	// disable test output
-		(1 << 4)	|	//       add  3 mA to output
-		(0 << 5)	|	// don't add  6 mA to output
-		(0 << 6)	|	// don't add 12 mA to output
-		(0 << 7);		// undefined, unused
+	twistring[1] = 0x07;	// multiplex mode, enable all digits, no test mode
+	twistring[1] |= brightness << 4;
 
 	for(ix = 0; ix < 4; ix++)
 		twistring[2 + ix] = 0x00;
@@ -147,4 +142,9 @@ uint8_t display_show(const uint8_t *text)
 		return(twierror);
 
 	return(0);
+}
+
+void display_brightness(uint8_t level)
+{
+	brightness = level & 0x07;
 }

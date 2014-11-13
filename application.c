@@ -27,7 +27,6 @@ typedef struct
 } application_function_table_t;
 
 static uint8_t cmd_led_timeout = 0;
-static uint8_t heartbeat_led_timeout = 0;
 static uint8_t display_string[application_num_args - 1][5];
 
 static uint8_t application_function_edmp(uint8_t nargs, uint8_t args[application_num_args][application_length_args], uint16_t size, uint8_t *dst);
@@ -204,14 +203,6 @@ void application_periodic(void)
 
 	if(missed_ticks > t1_unhandled_max)
 		t1_unhandled_max = missed_ticks;
-
-	if(heartbeat_led_timeout > missed_ticks)
-		heartbeat_led_timeout -= missed_ticks;
-	else
-	{
-		heartbeat_led_timeout = 122;
-		PORTD ^= _BV(6);
-	}
 
 	if(cmd_led_timeout > missed_ticks)
 		cmd_led_timeout -= missed_ticks;

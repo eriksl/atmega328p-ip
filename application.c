@@ -413,6 +413,8 @@ static uint8_t application_function_edmp(uint8_t nargs, uint8_t args[application
 
 static uint8_t application_function_show(uint8_t nargs, uint8_t args[application_num_args][application_length_args], uint16_t size, uint8_t *dst)
 {
+	static const __flash char format[] = "> show: %d\n";
+
 	uint8_t ix;
 
 	for(ix = 0; (ix + 1) < application_num_args; ix++)
@@ -422,6 +424,8 @@ static uint8_t application_function_show(uint8_t nargs, uint8_t args[application
 		else
 			display_string[ix][0] = '\0';
 	}
+
+	snprintf_P((char *)dst, size, format, nargs - 1);
 
 	return(1);
 }

@@ -48,13 +48,13 @@ int main(void)
 
 #if 0
 	b0		/cs				b0		O	square green				spi ss
-	b1						oc1a	O	small red					light
-	b2		(/ss)			oc1b	O	small green					ir
+	b1						oc1a	O	small red					DEBUG 4
+	b2		(/ss)			oc1b	O	small green					DEBUG 3
 	b3		mosi					O	square green				spi mosi
 	b4		miso					I	square red					spi miso
 	b5		sck						O	square red					spi sck
-	b6						b6		O	small orange				led spi
-	b7						b7		I								button light down
+	b6						XTAL1
+	b7						XTAL2
 
 	c0						adc0	I								tmp36
 	c1						c1		O								*
@@ -62,22 +62,22 @@ int main(void)
 	c3						c3		O								*
 	c4				sda				O								i2c sda
 	c5				scl				O								i2c scl
-	c6						RESET	O
+	c6						RESET
 
-	d0						d0		O	small transparent green		led heartbeat
-	d1						d1		O	small transparent red		led command
+	d0						RXD
+	d1						TXD
 	d2						int0	I								enc int
 	d3						d3		O	rectangular green			DEBUG 1
-	d4		 				d4		O	small red					led i2c
-	d5						d5		O	large green					DEBUG 2
-	d6						d6		O	large red					DEBUG 3
-	d7						d7		I								button light up
+	d4		 				d4		O	small red					DEBUG 2
+	d5						d5		O	large green					heartbeat
+	d6						d6		O	large red					cmd
+	d7						d7
 #endif
 
 	MCUCR	|= _BV(PUD);		//	disable pullups
-	DDRB	= _BV(0) | _BV(1) | _BV(2) | _BV(3) | _BV(5) | _BV(6);
-	DDRC	= _BV(1) | _BV(2) | _BV(3) | _BV(4) | _BV(5) | _BV(6);
-	DDRD	= _BV(0) | _BV(1) | _BV(3) | _BV(4) | _BV(5) | _BV(6);
+	DDRB	= _BV(0) | _BV(1) | _BV(2) | _BV(3) | _BV(5);
+	DDRC	= _BV(1) | _BV(2) | _BV(3) | _BV(4) | _BV(5);
+	DDRD	= _BV(3) | _BV(4) | _BV(5) | _BV(6);
 
 	eeprom_read_mac_address(&my_mac_address);
 
@@ -88,9 +88,9 @@ int main(void)
 
 	PORTD = 0;
 	sleep(200);
-	PORTD = _BV(0);
+	PORTD = _BV(5);
 	sleep(200);
-	PORTD = _BV(1);
+	PORTD = _BV(6);
 	sleep(200);
 	PORTD = 0;
 

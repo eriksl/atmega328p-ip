@@ -38,14 +38,12 @@ void spi_init(void)
 
 void spi_start(void)
 {
-	PORTB |= _BV(6);
 	PORTB &= ~_BV(0);	// /CS = 0
 }
 
 void spi_stop(void)
 {
 	PORTB |= _BV(0);	// /CS = 1
-	PORTB &= ~_BV(6);
 }
 
 uint8_t spi_io(uint8_t out)

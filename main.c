@@ -22,7 +22,7 @@
 
 enum
 {
-	max_frame_size = 512,
+	max_frame_size = 640,
 };
 
 static ipv4_addr_t	my_ipv4_address;

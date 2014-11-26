@@ -410,7 +410,7 @@ static uint8_t application_function_bright(uint8_t nargs, uint8_t args[applicati
 static uint8_t application_function_edmp(uint8_t nargs, uint8_t args[application_num_args][application_length_args], uint16_t size, uint8_t *dst)
 {
 	static const __flash char format1[] = "> bg: %.3f\n";
-	static const __flash char format2[] = "> sensor[%d]: *%.3f, +%.3f\n";
+	static const __flash char format2[] = "> sensor[%d]: factor %.3f, offset %.3f\n";
 
 	uint8_t index, offset;
 

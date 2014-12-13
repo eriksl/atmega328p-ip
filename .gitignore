@@ -3,3 +3,5 @@ collect.pl
 sendudp
 test.sh
 testtwi
+*.o
+main.hex

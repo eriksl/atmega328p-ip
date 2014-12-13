@@ -1,6 +1,7 @@
 #include "application.h"
 #include "application-temperature.h"
 #include "application-twi.h"
+#include "application-uart.h"
 #include "application-pwm.h"
 #include "application-light.h"
 #include "stats.h"
@@ -14,25 +15,23 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-typedef uint8_t (*application_function_t)(uint8_t nargs, uint8_t args[application_num_args][application_length_args], uint16_t size, uint8_t *dst);
-
 typedef struct
 {
-	const char					command[7];
-	uint8_t						required_args;
-	application_function_t		function;
-	const char					description[37];
+	const char	command[7];
+	uint8_t		required_args;
+	uint8_t		(*function)(application_parameters_t);
+	const char	description[37];
 } application_function_table_t;
 
 static uint8_t cmd_led_timeout = 0;
 static uint8_t heartbeat_led_timeout = 0;
 
-static uint8_t application_function_dump(uint8_t nargs, uint8_t args[application_num_args][application_length_args], uint16_t size, uint8_t *dst);
-static uint8_t application_function_help(uint8_t nargs, uint8_t args[application_num_args][application_length_args], uint16_t size, uint8_t *dst);
-static uint8_t application_function_quit(uint8_t nargs, uint8_t args[application_num_args][application_length_args], uint16_t size, uint8_t *dst);
-static uint8_t application_function_reset(uint8_t nargs, uint8_t args[application_num_args][application_length_args], uint16_t size, uint8_t *dst);
-static uint8_t application_function_stack(uint8_t nargs, uint8_t args[application_num_args][application_length_args], uint16_t size, uint8_t *dst);
-static uint8_t application_function_stats(uint8_t nargs, uint8_t args[application_num_args][application_length_args], uint16_t size, uint8_t *dst);
+static uint8_t application_function_dump(application_parameters_t);
+static uint8_t application_function_help(application_parameters_t);
+static uint8_t application_function_quit(application_parameters_t);
+static uint8_t application_function_reset(application_parameters_t);
+static uint8_t application_function_stack(application_parameters_t);
+static uint8_t application_function_stats(application_parameters_t);
 
 static const __flash application_function_table_t application_function_table[] =
 {
@@ -151,9 +150,27 @@ static const __flash application_function_table_t application_function_table[] =
 		"write bytes to twi slave",
 	},
 	{
+		"ub",
+		1,
+		application_function_uart_baud,
+		"set uart baudrate"
+	},
+	{
+		"ur",
+		0,
+		application_function_uart_receive,
+		"receive bytes from uart",
+	},
+	{
+		"ut",
+		1,
+		application_function_uart_transmit,
+		"transmit bytes to uart",
+	},
+	{
 		"",
 		0,
-		(application_function_t)0,
+		(void *)0,
 		"",
 	},
 };
@@ -201,9 +218,10 @@ int16_t application_content(uint16_t src_length, const uint8_t *src, uint16_t si
 	static const __flash char error_fmt_unknown[] = "Command \"%s\" unknown\n";
 	static const __flash char error_fmt_args[] = "Insufficient arguments: %d (%d required)\n";
 
-	uint8_t args[application_num_args][application_length_args];
+	args_t args;
 	uint8_t args_count, arg_current;
 	uint8_t src_current = 0;
+	uint16_t src_left;
 	uint8_t ws_skipped;
 	const application_function_table_t __flash *tableptr;
 
@@ -213,13 +231,15 @@ int16_t application_content(uint16_t src_length, const uint8_t *src, uint16_t si
 	if((src_length == 0) || (src[0] == 0xff)) // telnet options
 		return(0);
 
-	for(args_count = 0; (src_length > 0) && (args_count < application_num_args);)
+	src_left = src_length;
+
+	for(args_count = 0; (src_left > 0) && (args_count < application_num_args);)
 	{
 		ws_skipped = 0;
 
 		for(arg_current = 0;
-				(src_length > 0) && (arg_current < (application_length_args - 1));
-				src_current++, src_length--)
+				(src_left > 0) && (arg_current < (application_length_args - 1));
+				src_current++, src_left--)
 		{
 			if((src[src_current] <= ' ') || (src[src_current] > '~'))
 			{
@@ -239,9 +259,9 @@ int16_t application_content(uint16_t src_length, const uint8_t *src, uint16_t si
 		if(arg_current)
 			args_count++;
 
-		while((src_length > 0) && (src[src_current] > ' ') && (src[src_current] <= '~'))
+		while((src_left > 0) && (src[src_current] > ' ') && (src[src_current] <= '~'))
 		{
-			src_length--;
+			src_left--;
 			src_current++;
 		}
 	}
@@ -263,7 +283,16 @@ int16_t application_content(uint16_t src_length, const uint8_t *src, uint16_t si
 			return(strlen((char *)dst));
 		}
 
-		if(tableptr->function(args_count, args, size, dst))
+		application_parameters_t ap;
+
+		ap.cmdline			= src;
+		ap.cmdline_length	= src_length;
+		ap.nargs			= args_count;
+		ap.args				= &args;
+		ap.size				= size;
+		ap.dst				= dst;
+
+		if(tableptr->function(ap))
 			return(strlen((const char *)dst));
 		else
 			return(-1);
@@ -274,7 +303,7 @@ int16_t application_content(uint16_t src_length, const uint8_t *src, uint16_t si
 	return(strlen((char *)dst));
 }
 
-static uint8_t application_function_dump(uint8_t nargs, uint8_t args[application_num_args][application_length_args], uint16_t size, uint8_t *dst)
+static uint8_t application_function_dump(application_parameters_t ap)
 {
 	static const __flash char format1[] = "> bandgap: %.5f\n";
 	static const __flash char format2[] = "> temp cal[%d]: *=%.5f / +=%.5f\n";
@@ -282,30 +311,30 @@ static uint8_t application_function_dump(uint8_t nargs, uint8_t args[application
 
 	uint8_t index, offset;
 
-	offset	= snprintf_P((char *)dst, size, format1, eeprom_read_bandgap());
-	dst		+= offset;
-	size	-= offset;
+	offset		= snprintf_P((char *)ap.dst, ap.size, format1, eeprom_read_bandgap());
+	ap.dst		+= offset;
+	ap.size	-= offset;
 
 	for(index = 0; index < temp_cal_size; index++)
 	{
-		offset = snprintf_P((char *)dst, size, format2,
+		offset = snprintf_P((char *)ap.dst, ap.size, format2,
 				index, eeprom_read_temp_cal_factor(index), eeprom_read_temp_cal_offset(index));
-		dst += offset;
-		size -= offset;
+		ap.dst += offset;
+		ap.size -= offset;
 	}
 
 	for(index = 0; index < light_cal_size; index++)
 	{
-		offset = snprintf_P((char *)dst, size, format3,
+		offset = snprintf_P((char *)ap.dst, ap.size, format3,
 				index, eeprom_read_light_cal_factor(index), eeprom_read_light_cal_offset(index));
-		dst += offset;
-		size -= offset;
+		ap.dst += offset;
+		ap.size -= offset;
 	}
 
 	return(1);
 }
 
-static uint8_t application_function_help(uint8_t nargs, uint8_t args[application_num_args][application_length_args], uint16_t size, uint8_t *dst)
+static uint8_t application_function_help(application_parameters_t ap)
 {
 	static const __flash char list_header[]		= "> %S: %d args\n";
 	static const __flash char detail_header[]	= "> %S[%d]: ";
@@ -313,60 +342,60 @@ static uint8_t application_function_help(uint8_t nargs, uint8_t args[application
 	static const __flash char detail_error[]	= "> no help for \"%s\"\n";
 
 	const application_function_table_t __flash *tableptr;
-	uint8_t		offset;
+	uint8_t offset;
 
-	if(nargs > 1)
+	if(ap.nargs > 1)
 	{
 		for(tableptr = application_function_table; tableptr->function; tableptr++)
-			if(!strcmp_P((const char *)args[1], tableptr->command))
+			if(!strcmp_P((const char *)ap.args[1], tableptr->command))
 				break;
 
 		if(tableptr->function)
 		{
-			snprintf_P((char *)dst, size, detail_header, tableptr->command, tableptr->required_args);
-			strlcat_P((char *)dst, tableptr->description, size);
-			strlcat_P((char *)dst, detail_footer, size);
+			snprintf_P((char *)ap.dst, ap.size, detail_header, tableptr->command, tableptr->required_args);
+			strlcat_P((char *)ap.dst, tableptr->description, ap.size);
+			strlcat_P((char *)ap.dst, detail_footer, ap.size);
 		}
 		else
-			snprintf_P((char *)dst, size, detail_error, (const char *)args[1]);
+			snprintf_P((char *)ap.dst, ap.size, detail_error, (const char *)ap.args[1]);
 	}
 	else
 	{
 		for(tableptr = application_function_table; tableptr->function; tableptr++)
 		{
-			offset = snprintf_P((char *)dst, size, list_header, tableptr->command, tableptr->required_args);
-			dst		+= offset;
-			size	-= offset;
+			offset = snprintf_P((char *)ap.dst, ap.size, list_header, tableptr->command, tableptr->required_args);
+			ap.dst += offset;
+			ap.size -= offset;
 		}
 	}
 
 	return(1);
-	}
+}
 
-static uint8_t application_function_quit(uint8_t nargs, uint8_t args[application_num_args][application_length_args], uint16_t size, uint8_t *dst)
+static uint8_t application_function_quit(application_parameters_t ap)
 {
 	return(0);
 }
 
-static uint8_t application_function_reset(uint8_t nargs, uint8_t args[application_num_args][application_length_args], uint16_t size, uint8_t *dst)
+static uint8_t application_function_reset(application_parameters_t ap)
 {
 	reset();
 
 	return(0);
 }
 
-static uint8_t application_function_stats(uint8_t nargs, uint8_t args[application_num_args][application_length_args], uint16_t size, uint8_t *dst)
+static uint8_t application_function_stats(application_parameters_t ap)
 {
-	stats_generate(size, dst);
+	stats_generate(ap.size, ap.dst);
 
 	return(1);
 }
 
-static uint8_t application_function_stack(uint8_t nargs, uint8_t args[application_num_args][application_length_args], uint16_t size, uint8_t *dst)
+static uint8_t application_function_stack(application_parameters_t ap)
 {
 	static const __flash char stackfree_fmt[] = "Stackmonitor: %d bytes free\n";
 
-	snprintf_P((char *)dst, (size_t)size, stackfree_fmt, stackmonitor_free());
+	snprintf_P((char *)ap.dst, (size_t)ap.size, stackfree_fmt, stackmonitor_free());
 
 	return(1);
 }

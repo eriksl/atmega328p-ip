@@ -132,7 +132,7 @@ void application_init_light(void)
 	twi_write_read(&byte);
 }
 
-uint8_t application_function_light_read(uint8_t nargs, uint8_t args[application_num_args][application_length_args], uint16_t size, uint8_t *dst)
+uint8_t application_function_light_read(application_parameters_t ap)
 {
 	static const __flash char ok[]				= "> light sensor %d ok light [%.3f] Lux\n";
 	static const __flash char error_bounds[]	= "> invalid sensor\n";
@@ -142,7 +142,7 @@ uint8_t application_function_light_read(uint8_t nargs, uint8_t args[application_
 	uint8_t	sensor;
 	float	light = 0;
 
-	sensor = atoi((const char *)args[1]);
+	sensor = atoi((const char *)(*ap.args)[1]);
 
 	switch(sensor)
 	{
@@ -153,13 +153,13 @@ uint8_t application_function_light_read(uint8_t nargs, uint8_t args[application_
 			{
 				case(read_io_error):
 				{
-					strcpy_P((char *)dst, twi_error);
+					strcpy_P((char *)ap.dst, twi_error);
 					return(1);
 				}
 
 				case(read_overflow):
 				{
-					strcpy_P((char *)dst, overflow);
+					strcpy_P((char *)ap.dst, overflow);
 					return(1);
 				}
 			}
@@ -169,7 +169,7 @@ uint8_t application_function_light_read(uint8_t nargs, uint8_t args[application_
 
 		default:
 		{
-			strlcpy_P((char *)dst, error_bounds, (size_t)size);
+			strlcpy_P((char *)ap.dst, error_bounds, (size_t)ap.size);
 			return(1);
 		}
 	}
@@ -177,21 +177,21 @@ uint8_t application_function_light_read(uint8_t nargs, uint8_t args[application_
 	light *= eeprom_read_light_cal_factor(sensor);
 	light += eeprom_read_light_cal_offset(sensor);
 
-	snprintf_P((char *)dst, size, ok, sensor, light);
+	snprintf_P((char *)ap.dst, ap.size, ok, sensor, light);
 
 	return(1);
 }
 
-uint8_t application_function_light_write(uint8_t nargs, uint8_t args[application_num_args][application_length_args], uint16_t size, uint8_t *dst)
+uint8_t application_function_light_write(application_parameters_t ap)
 {
 	static const __flash char ok[] = "> light sensor calibration set to *=%.4f +=%.4f\n";
 
 	uint8_t index;
 	float factor, offset;
 
-	index	= atoi((const char *)args[1]);
-	factor	= atof((const char *)args[2]);
-	offset	= atof((const char *)args[3]);
+	index	= atoi((const char *)(*ap.args)[1]);
+	factor	= atof((const char *)(*ap.args)[2]);
+	offset	= atof((const char *)(*ap.args)[3]);
 
 	eeprom_write_light_cal_factor(index, factor);
 	eeprom_write_light_cal_offset(index, offset);
@@ -199,7 +199,7 @@ uint8_t application_function_light_write(uint8_t nargs, uint8_t args[application
 	factor = eeprom_read_light_cal_factor(index);
 	offset = eeprom_read_light_cal_offset(index);
 
-	snprintf_P((char *)dst, (size_t)size, ok, factor, offset);
+	snprintf_P((char *)ap.dst, (size_t)ap.size, ok, factor, offset);
 
 	return(1);
 }

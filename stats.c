@@ -31,6 +31,9 @@ stats_t t1_interrupts = 0;
 stats_t t1_unhandled = 0;
 stats_t t1_unhandled_max = 0;
 
+stats_t	usart_tx_interrupts = 0;
+stats_t	usart_rx_interrupts = 0;
+
 static const __flash char format_string[] =
 {
 	"int adc: %u\n"
@@ -52,6 +55,8 @@ static const __flash char format_string[] =
 	"other: %u\n"
 	"stray: %u\n"
 	"c/s err: %u\n"
+	"u rx: %u\n"
+	"u tx: %u\n"
 };
 
 void stats_generate(uint16_t size, uint8_t *dst)
@@ -75,5 +80,7 @@ void stats_generate(uint16_t size, uint8_t *dst)
 			ip_tcp4_pkt_in, ip_tcp4_pkt_out,
 			ip_other_pkt,
 			ip_stray_pkt,
-			ip_bad_checksum);
+			ip_bad_checksum,
+			usart_rx_interrupts,
+			usart_tx_interrupts);
 }

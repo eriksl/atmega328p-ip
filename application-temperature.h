@@ -6,13 +6,7 @@
 #include <stdint.h>
 
 extern void application_init_temp(void);
-extern uint8_t application_function_temp_read(uint8_t nargs,
-		uint8_t args[application_num_args][application_length_args],
-		uint16_t size, uint8_t *dst);
-extern uint8_t application_function_temp_write(uint8_t nargs,
-		uint8_t args[application_num_args][application_length_args],
-		uint16_t size, uint8_t *dst);
-extern uint8_t application_function_bg_write(uint8_t nargs,
-		uint8_t args[application_num_args][application_length_args],
-		uint16_t size, uint8_t *dst);
+extern uint8_t application_function_temp_read(application_parameters_t);
+extern uint8_t application_function_temp_write(application_parameters_t);
+extern uint8_t application_function_bg_write(application_parameters_t);
 #endif

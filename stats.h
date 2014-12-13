@@ -33,6 +33,9 @@ extern stats_t t1_interrupts;
 extern stats_t t1_unhandled;
 extern stats_t t1_unhandled_max;
 
+extern stats_t usart_tx_interrupts;
+extern stats_t usart_rx_interrupts;
+
 void stats_generate(uint16_t size, uint8_t *dst);
 
 #endif

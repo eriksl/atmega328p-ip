@@ -1,5 +1,6 @@
 #include "spi.h"
 #include "twi_master.h"
+#include "uart.h"
 #include "net.h"
 #include "ethernet.h"
 #include "arp.h"
@@ -71,13 +72,13 @@ int main(void)
 	d4		 				d4		O	small red					DEBUG 2
 	d5						d5		O	large green					heartbeat
 	d6						d6		O	large red					cmd
-	d7						d7
+	d7						d7		O								ESP8266 /RESET
 #endif
 
 	MCUCR	|= _BV(PUD);		//	disable pullups
 	DDRB	= _BV(0) | _BV(1) | _BV(2) | _BV(3) | _BV(5);
 	DDRC	= _BV(1) | _BV(2) | _BV(3) | _BV(4) | _BV(5);
-	DDRD	= _BV(3) | _BV(4) | _BV(5) | _BV(6);
+	DDRD	= _BV(3) | _BV(4) | _BV(5) | _BV(6) | _BV(7);
 
 	eeprom_read_mac_address(&my_mac_address);
 
@@ -97,8 +98,15 @@ int main(void)
 	wdt_enable(WDTO_2S);
 	spi_init();
 	twi_master_init();
+	uart_init();
+	uart_baud(75000);
 	enc_init(max_frame_size, &my_mac_address);
 	enc_set_led(PHLCON_LED_RCV, PHLCON_LED_XMIT);
+
+	PORTD &= ~_BV(7); // reset ESP8266
+	sleep(200);
+	PORTD |= _BV(7);
+
 	application_init();
 
 	sei();

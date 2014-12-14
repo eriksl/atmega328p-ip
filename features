@@ -5,7 +5,7 @@
 	1	c6						RESET	reset
 	2	d0						rxd		uart
 	3	d1						txd		uart
-	4	d2
+	4	d2						d2		esp8266 reset
 	5	d3						d3		led command
 	6	d4						d4		led i2c activity
 	7	Vcc								VCC
@@ -22,7 +22,7 @@
 	26	c3
 	25	c2
 	24	c1
-	23	c0								out 1	5V
+	23	c0								out 0	5V
 	22	GND								GND
 	21	AREF							AREF
 	20	AVcc							AVCC

@@ -1,5 +1,4 @@
 #include "application-timer.h"
-#include "clock.h"
 #include "stats.h"
 
 #include <avr/io.h>
@@ -16,16 +15,12 @@ typedef struct
 	uint16_t	max_value;
 } pwm_t;
 
-static uint8_t beep_length = 0;
-static uint8_t beep_period = 0;
-
 static pwm_t pwm[2];
 
 ISR(TIMER1_OVF_vect)
 {
 	t1_interrupts++;
 	t1_unhandled++;
-	clock_update();
 }
 
 static uint16_t getpwm(uint8_t entry)
@@ -94,17 +89,6 @@ void application_init_timer(void)
 
 void application_periodic_timer(uint16_t missed_ticks)
 {
-	if(beep_length > 0)
-	{
-
-		if((beep_length % beep_period) == 0)
-			PORTD ^= _BV(3);
-
-		beep_length--;
-	}
-	else
-		PORTD &= ~_BV(3);
-
 	uint32_t min_value, max_value, old_value, value;
 
 	for(uint8_t ix = 0; ix < 2; ix++)
@@ -149,27 +133,6 @@ void application_periodic_timer(uint16_t missed_ticks)
 	}
 }
 
-uint8_t application_function_beep(uint8_t nargs, uint8_t args[application_num_args][application_length_args], uint16_t size, uint8_t *dst)
-{
-	static const __flash char ok[] = "> beep %u %u\n";
-
-	beep_length = 60;
-	beep_period = 0;
-
-	if(nargs > 1)
-		beep_length = (uint8_t)atoi((const char *)args[1]);
-
-	if(nargs > 2)
-		beep_period = (uint8_t)atoi((const char *)args[2]);
-
-	if((beep_length > 0) && (beep_period == 0))
-		PORTD |= _BV(3);
-
-    snprintf_P((char *)dst, size, ok, beep_length, beep_period);
-
-	return(1);
-}
-
 static const __flash char pwm_ok[] = "> pwm %u (min)value %u speed %f max %u\n";
 static const __flash char pwm_error[] = "> invalid pwm %u\n";
 
@@ -210,33 +173,4 @@ uint8_t application_function_pwmw(uint8_t nargs, uint8_t args[application_num_ar
 
     snprintf_P((char *)dst, size, pwm_ok, entry, minvalue, speed, maxvalue);
 	return(1);
-}
-
-uint8_t application_function_clockr(uint8_t nargs, uint8_t args[application_num_args][application_length_args], uint16_t size, uint8_t *dst)
-{
-	static const __flash char ok[] = "> clock %02u:%02u.%02u\n";
-
-	uint8_t	hours;
-	uint8_t	minutes;
-	uint8_t	seconds;
-
-	clock_get(&hours, &minutes, &seconds);
-
-    snprintf_P((char *)dst, size, ok, (int)hours, (int)minutes, (int)seconds);
-	return(1);
-}
-
-uint8_t application_function_clockw(uint8_t nargs, uint8_t args[application_num_args][application_length_args], uint16_t size, uint8_t *dst)
-{
-	uint8_t	hours;
-	uint8_t	minutes;
-	uint8_t	seconds;
-
-	hours	= (uint8_t)atoi((const char *)args[1]);
-	minutes	= (uint8_t)atoi((const char *)args[2]);
-	seconds	= (uint8_t)atoi((const char *)args[3]);
-
-	clock_set(hours, minutes, seconds);
-
-	return(application_function_clockr(nargs, args, size, dst));
 }

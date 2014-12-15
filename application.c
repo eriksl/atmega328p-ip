@@ -6,8 +6,6 @@
 #include "util.h"
 #include "stackmonitor.h"
 #include "eeprom.h"
-#include "display.h"
-#include "clock.h"
 #include "sensor.h"
 
 #include <avr/pgmspace.h>
@@ -29,7 +27,6 @@ typedef struct
 static uint8_t cmd_led_timeout = 0;
 static uint8_t display_string[application_num_args - 1][5];
 
-static uint8_t application_function_bright(uint8_t nargs, uint8_t args[application_num_args][application_length_args], uint16_t size, uint8_t *dst);
 static uint8_t application_function_edmp(uint8_t nargs, uint8_t args[application_num_args][application_length_args], uint16_t size, uint8_t *dst);
 static uint8_t application_function_help(uint8_t nargs, uint8_t args[application_num_args][application_length_args], uint16_t size, uint8_t *dst);
 static uint8_t application_function_quit(uint8_t nargs, uint8_t args[application_num_args][application_length_args], uint16_t size, uint8_t *dst);
@@ -46,30 +43,6 @@ static const __flash application_function_table_t application_function_table[] =
 		1,
 		application_function_bg_write,
 		"write bandgap caliburation (V)",
-	},
-	{
-		"beep",
-		0,
-		application_function_beep,
-		"beep duration period",
-	},
-	{
-		"bright",
-		1,
-		application_function_bright,
-		"set display brightness (0-7)",
-	},
-	{
-		"clockr",
-		0,
-		application_function_clockr,
-		"read clock",
-	},
-	{
-		"clockw",
-		3,
-		application_function_clockw,
-		"write clock",
 	},
 	{
 		"edmp",
@@ -216,99 +189,10 @@ void application_periodic(void)
 	else
 	{
 		cmd_led_timeout = 0;
-		PORTD &= ~_BV(7);
+		PORTD &= ~_BV(3);
 	}
 
 	application_periodic_timer(missed_ticks);
-
-	static stats_t wd_previous = 0;
-	static uint8_t display_state = 0;
-
-	if(wd_interrupts != wd_previous)
-	{
-		uint8_t	display[5];
-
-		wd_previous = wd_interrupts;
-
-		switch(display_state)
-		{
-			case(0):
-			{
-				static const __flash char format[] = "%02u%02u";
-				uint8_t	seconds;
-				uint8_t	minutes;
-				uint8_t	hours;
-
-				clock_get(&hours, &minutes, &seconds);
-
-				snprintf_P((char *)display, sizeof(display), format, (int)hours, (int)minutes);
-
-				display[1] |= 0x80; // add dot
-
-				break;
-			}
-
-			case(1):
-			{
-				static const __flash char format[] = "%3d'";
-				float temp_digipicco, temp_digipicco_raw;
-				float hum_digipicco, hum_digipicco_raw;
-				float temp, temp_raw;
-
-				sensor_read_digipicco(&temp_digipicco, &temp_digipicco_raw,
-						&hum_digipicco, &hum_digipicco_raw);
-
-				sensor_read_lm75(&temp, &temp_raw);
-
-				temp = (temp + temp_digipicco) / 2.0;
-
-				snprintf_P((char *)display, sizeof(display), format, (int)temp);
-
-				break;
-			}
-
-			case(2):
-			{
-				static const __flash char format[] = "%3d%%";
-				float temp, temp_raw, hum, hum_raw;
-
-				sensor_read_digipicco(&temp, &temp_raw, &hum, &hum_raw);
-
-				snprintf_P((char *)display, sizeof(display), format, (int)hum);
-
-				break;
-			}
-
-			case(3):
-			{
-				static const __flash char format[] = "%4d";
-				float temp, temp_raw, pressure, pressure_raw;
-
-				sensor_read_bmp085(&temp, &temp_raw, &pressure, &pressure_raw);
-
-				snprintf_P((char *)display, sizeof(display), format, (int)pressure);
-
-				break;
-			}
-
-			default:
-			{
-				strncpy((char *)display, (const char *)display_string[display_state - 4], 4);
-
-				break;
-			}
-		}
-
-		display_show(display);
-
-		display_state++;
-
-		if((display_state - 4) >= (application_num_args - 1))
-			display_state = 0;
-		else
-			if(((display_state - 4) >= 0) && !display_string[display_state - 4][0])
-				display_state = 0;
-	}
 }
 
 int16_t application_content(uint16_t src_length, const uint8_t *src, uint16_t size, uint8_t *dst)
@@ -387,21 +271,6 @@ int16_t application_content(uint16_t src_length, const uint8_t *src, uint16_t si
 	snprintf_P((char *)dst, size, error_fmt_unknown, args[0]);
 
 	return(strlen((char *)dst));
-}
-
-static uint8_t application_function_bright(uint8_t nargs, uint8_t args[application_num_args][application_length_args], uint16_t size, uint8_t *dst)
-{
-	static const __flash char format[] = "> brightness: %u\n";
-
-	uint8_t level;
-
-	level = (uint8_t)atoi((const char *)args[1]);
-
-	display_brightness(level);
-
-	snprintf_P((char *)dst, size, format, (unsigned int)level & 0x07);
-
-	return(1);
 }
 
 static uint8_t application_function_edmp(uint8_t nargs, uint8_t args[application_num_args][application_length_args], uint16_t size, uint8_t *dst)

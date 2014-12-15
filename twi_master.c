@@ -25,15 +25,11 @@ static void send_stop(void)
 
 	while(TWCR & _BV(TWSTO))
 		(void)0;
-
-	PORTD &= ~_BV(6);
 }
 
 static uint8_t send_start(void)
 {
 	uint8_t stat;
-
-	PORTD |= _BV(6);
 
 	TWCR = _BV(TWINT) | _BV(TWEN) | _BV(TWSTA);
 

@@ -5,34 +5,13 @@
 
 typedef uint16_t stats_t;
 
-extern stats_t eth_nopkt_rx;
-extern stats_t eth_pkt_rx;
-extern stats_t eth_pkt_tx;
-extern stats_t eth_txerr;
-extern stats_t eth_rxerr;
-extern stats_t eth_pkts_buffered;
-
-extern stats_t ip_arp_pkt_in;
-extern stats_t ip_arp_pkt_out;
-extern stats_t ip_ipv4_pkt_in;
-extern stats_t ip_ipv4_pkt_out;
-extern stats_t ip_icmp4_pkt_in;
-extern stats_t ip_icmp4_pkt_out;
-extern stats_t ip_tcp4_pkt_in;
-extern stats_t ip_tcp4_pkt_out;
-extern stats_t ip_udp4_pkt_in;
-extern stats_t ip_udp4_pkt_out;
-extern stats_t ip_other_pkt;
-extern stats_t ip_stray_pkt;
-extern stats_t ip_bad_checksum;
-
+extern stats_t uart_rx_interrupts;
+extern stats_t uart_tx_interrupts;
 extern stats_t wd_interrupts;
-extern stats_t eth_interrupts;
 extern stats_t adc_interrupts;
 extern stats_t t1_interrupts;
 extern stats_t t1_unhandled;
 extern stats_t t1_unhandled_max;
-extern uint32_t t1_jiffies;
 
 void stats_generate(uint16_t size, uint8_t *dst);
 

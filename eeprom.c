@@ -2,8 +2,6 @@
 
 #include <avr/eeprom.h>
 
-#include "ethernet_macaddr.h"
-
 #include <stdint.h>
 
 enum
@@ -19,15 +17,9 @@ typedef struct
 
 typedef struct
 {
-	mac_addr_t		my_mac_address;
 	float			bandgap;
 	calibration_t	value[eeprom_cal_size];
 } eeprom_t;
-
-void eeprom_read_mac_address(mac_addr_t *dst)
-{
-	eeprom_read_block(dst, (const void *)offsetof(eeprom_t, my_mac_address), sizeof(mac_addr_t));
-}
 
 float eeprom_read_bandgap(void)
 {

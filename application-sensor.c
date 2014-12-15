@@ -14,18 +14,18 @@ void application_init_sensor(void)
 	sensor_init_bh1750();
 }
 
-uint8_t application_function_bg_write(uint8_t nargs, uint8_t args[application_num_args][application_length_args], uint16_t size, uint8_t *dst)
+uint8_t application_function_bg_write(application_parameters_t ap)
 {
 	static const __flash char ok[] = "> bandgap calibration set to %.4f V\n";
 
 	float value;
 
-	value = atof((const char *)args[1]);
+	value = atof((const char *)(*ap.args[1]));
 
 	eeprom_write_bandgap(value);
 	value = eeprom_read_bandgap();
 
-	snprintf_P((char *)dst, (size_t)size, ok, value);
+	snprintf_P((char *)ap.dst, (size_t)ap.size, ok, value);
 
 	return(1);
 }
@@ -155,21 +155,21 @@ twierror:
 	return(1);
 }
 
-uint8_t application_function_sensor_read(uint8_t nargs, uint8_t args[application_num_args][application_length_args], uint16_t size, uint8_t *dst)
+uint8_t application_function_sensor_read(application_parameters_t ap)
 {
 	static const __flash char error[] = "> invalid sensor: %s\n";
 
 	uint8_t sensor;
 
-	sensor = (uint8_t)strtoul((const char *)args[1], 0, 0);
+	sensor = (uint8_t)strtoul((const char *)(*ap.args[1]), 0, 0);
 
-	if(!application_sensor_read(sensor, size, dst))
-		snprintf_P((char *)dst, size, error, args[1]);
+	if(!application_sensor_read(sensor, ap.size, ap.dst))
+		snprintf_P((char *)ap.dst, ap.size, error, (*ap.args[1]));
 
 	return(1);
 }
 
-uint8_t application_function_sensor_write(uint8_t nargs, uint8_t args[application_num_args][application_length_args], uint16_t size, uint8_t *dst)
+uint8_t application_function_sensor_write(application_parameters_t ap)
 {
 	static const __flash char ok[]		= "> sensor %d calibration set to *=%.4f +=%.4f\n";
 	static const __flash char error[]	= "> no sensor %d\n";
@@ -177,23 +177,23 @@ uint8_t application_function_sensor_write(uint8_t nargs, uint8_t args[applicatio
 	uint8_t sensor;
 	float factor, offset;
 
-	sensor	= atoi((const char *)args[1]);
-	factor	= atof((const char *)args[2]);
-	offset	= atof((const char *)args[3]);
+	sensor	= atoi((const char *)(*ap.args[1]));
+	factor	= atof((const char *)(*ap.args[2]));
+	offset	= atof((const char *)(*ap.args[3]));
 
 	if(!eeprom_write_cal(sensor, factor, offset))
 	{
-		snprintf_P((char *)dst, (size_t)size, error, sensor);
+		snprintf_P((char *)ap.dst, (size_t)ap.size, error, sensor);
 		return(1);
 	}
 
 	if(!eeprom_read_cal(sensor, &factor, &offset))
 	{
-		snprintf_P((char *)dst, (size_t)size, error, sensor);
+		snprintf_P((char *)ap.dst, (size_t)ap.size, error, sensor);
 		return(1);
 	}
 
-	snprintf_P((char *)dst, (size_t)size, ok, sensor, factor, offset);
+	snprintf_P((char *)ap.dst, (size_t)ap.size, ok, sensor, factor, offset);
 
 	return(1);
 }

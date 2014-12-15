@@ -171,7 +171,7 @@ uint8_t application_function_beep(uint8_t nargs, uint8_t args[application_num_ar
 static const __flash char pwm_ok[] = "> pwm %u (min)value %u speed %f max %u\n";
 static const __flash char pwm_error[] = "> invalid pwm %u\n";
 
-uint8_t application_function_pwmw(uint8_t nargs, uint8_t args[application_num_args][application_length_args], uint16_t size, uint8_t *dst)
+uint8_t application_function_pwmw(application_parameters_t ap)
 {
 	uint8_t				entry;
 	float				speed;
@@ -182,21 +182,21 @@ uint8_t application_function_pwmw(uint8_t nargs, uint8_t args[application_num_ar
 	speed		= 0;
 	maxvalue	= 0xffff;
 
-	if(nargs > 1)
-		entry = (uint8_t)atoi((const char *)args[1]);
+	if(ap.nargs > 1)
+		entry = (uint8_t)atoi((const char *)ap.args[1]);
 
-	if(nargs > 2)
-		minvalue = (uint16_t)atoi((const char *)args[2]);
+	if(ap.nargs > 2)
+		minvalue = (uint16_t)atoi((const char *)ap.args[2]);
 
-	if(nargs > 3)
-		speed = atof((const char *)args[3]);
+	if(ap.nargs > 3)
+		speed = atof((const char *)ap.args[3]);
 
-	if(nargs > 4)
-		maxvalue = (uint16_t)atoi((const char *)args[4]);
+	if(ap.nargs > 4)
+		maxvalue = (uint16_t)atoi((const char *)ap.args[4]);
 
 	if(entry > 1)
 	{
-		snprintf_P((char *)dst, size, pwm_error, entry);
+		snprintf_P((char *)ap.dst, ap.size, pwm_error, entry);
 		return(1);
 	}
 
@@ -206,6 +206,6 @@ uint8_t application_function_pwmw(uint8_t nargs, uint8_t args[application_num_ar
 	pwm[entry].max_value	= maxvalue;
 	minvalue				= getpwm(entry);
 
-    snprintf_P((char *)dst, size, pwm_ok, entry, minvalue, speed, maxvalue);
+    snprintf_P((char *)ap.dst, ap.size, pwm_ok, entry, minvalue, speed, maxvalue);
 	return(1);
 }

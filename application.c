@@ -191,6 +191,9 @@ void application_periodic(void)
 	}
 
 	application_periodic_timer(missed_ticks);
+
+	if((t1_interrupts & 0b111111) == 0)
+		PORTD ^= _BV(4);
 }
 
 int16_t application_content(uint16_t src_length, const uint8_t *src, uint16_t size, uint8_t *dst)
@@ -246,7 +249,7 @@ int16_t application_content(uint16_t src_length, const uint8_t *src, uint16_t si
 	*dst = '\0';
 
 	cmd_led_timeout = 10;
-	PORTD |= _BV(7);
+	PORTD |= _BV(3);
 
 	if(args_count == 0)
 		return(0);

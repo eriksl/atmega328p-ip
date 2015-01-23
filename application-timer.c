@@ -65,7 +65,8 @@ void application_init_timer(void)
 {
 	PRR &= ~_BV(PRTIM1);
 
-	DDRB |= _BV(1) | _BV(2); // b1=oc1a, b2=oc1b
+	DDRB |= _BV(1) | _BV(2);	// b1=oc1a, b2=oc1b
+	DDRC |= _BV(0);				// c0=extra output
 
 	TCCR1A	= _BV(WGM11);
 	TCCR1B	= _BV(WGM13)  | _BV(WGM12); // fast pwm, top = ICR1
@@ -147,8 +148,7 @@ uint8_t application_function_pwmw(application_parameters_t ap)
 	speed		= 0;
 	maxvalue	= 0xffff;
 
-	if(ap.nargs > 1)
-		entry = (uint8_t)atoi((const char *)ap.args[1]);
+	entry = (uint8_t)atoi((const char *)ap.args[1]);
 
 	if(ap.nargs > 2)
 		minvalue = (uint16_t)atoi((const char *)ap.args[2]);
@@ -159,17 +159,37 @@ uint8_t application_function_pwmw(application_parameters_t ap)
 	if(ap.nargs > 4)
 		maxvalue = (uint16_t)atoi((const char *)ap.args[4]);
 
-	if(entry > 1)
+	if(entry == 2)
 	{
-		snprintf_P((char *)ap.dst, ap.size, pwm_error, entry);
-		return(1);
-	}
+		speed = 0;
+		maxvalue = 0;
 
-	setpwm(entry, minvalue);
-	pwm[entry].speed		= speed;
-	pwm[entry].min_value	= minvalue;
-	pwm[entry].max_value	= maxvalue;
-	minvalue				= getpwm(entry);
+		if(minvalue > 0)
+		{
+			minvalue = 1;
+			PORTC |= _BV(0);
+		}
+		else
+		{
+			minvalue = 0;
+			PORTC &= ~_BV(0);
+		}
+	}
+	else
+	{
+		if(entry > 1)
+		{
+			snprintf_P((char *)ap.dst, ap.size, pwm_error, entry);
+			return(1);
+		}
+
+		setpwm(entry, minvalue);
+		pwm[entry].speed		= speed;
+		pwm[entry].min_value	= minvalue;
+		pwm[entry].max_value	= maxvalue;
+		minvalue				= getpwm(entry);
+
+	}
 
     snprintf_P((char *)ap.dst, ap.size, pwm_ok, entry, minvalue, speed, maxvalue);
 	return(1);

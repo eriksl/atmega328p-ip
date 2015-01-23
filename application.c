@@ -61,6 +61,12 @@ static const __flash application_function_table_t application_function_table[] =
 		"help (command)",
 	},
 	{
+		"pwmr",
+		1,
+		application_function_pwmr,
+		"pwmr index",
+	},
+	{
 		"pwmw",
 		1,
 		application_function_pwmw,

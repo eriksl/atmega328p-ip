@@ -171,6 +171,37 @@ uint8_t application_function_beep(uint8_t nargs, uint8_t args[application_num_ar
 static const __flash char pwm_ok[] = "> pwm %u (min)value %u speed %f max %u\n";
 static const __flash char pwm_error[] = "> invalid pwm %u\n";
 
+uint8_t application_function_pwmr(application_parameters_t ap)
+{
+	uint8_t		entry;
+	float		speed;
+	uint16_t	minvalue, maxvalue;
+
+	entry = (uint8_t)atoi((const char *)ap.args[1]);
+
+	if(entry == 2)
+	{
+		speed = 0;
+		maxvalue = 0;
+		minvalue = !!(PORTC & _BV(0));
+	}
+	else
+	{
+		if(entry > 1)
+		{
+			snprintf_P((char *)ap.dst, ap.size, pwm_error, entry);
+			return(1);
+		}
+
+		speed = pwm[entry].speed;
+		minvalue = getpwm(entry);
+		maxvalue = pwm[entry].max_value;
+	}
+
+    snprintf_P((char *)ap.dst, ap.size, pwm_ok, entry, minvalue, speed, maxvalue);
+	return(1);
+}
+
 uint8_t application_function_pwmw(application_parameters_t ap)
 {
 	uint8_t				entry;

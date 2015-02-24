@@ -211,8 +211,9 @@ uint8_t sensor_read_lm75(float *value, float *raw_value)
 	if((twierror = twi_master_receive(0x48, 2, twistring)) != tme_ok)
 		return(twierror);
 
-	*raw_value	= ((int16_t)twistring[0] << 8) | (uint16_t)twistring[1];
+	*raw_value	= (int16_t)(((uint16_t)twistring[0] << 8) | (uint16_t)twistring[1]);
 	*value		= *raw_value / 256;
+	*raw_value	= (float)(uint16_t)*raw_value;
 
 	adjust(sensor_lm75, value);
 

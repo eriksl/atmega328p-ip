@@ -1,7 +1,7 @@
 MCUSPEED	= 11059200
-LFUSE		= 0xe2
+LFUSE		= 0xf7
 # no DebugWire
-HFUSE		= 0xd7
+#HFUSE		= 0xd7
 # DebugWire
 HFUSE		= 0x97
 #CCOPTFLAGS	= -O0 -g

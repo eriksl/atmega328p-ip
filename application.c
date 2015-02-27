@@ -24,14 +24,11 @@ typedef struct
 } application_function_table_t;
 
 static uint8_t cmd_led_timeout = 0;
-static uint8_t display_string[application_num_args - 1][5];
 
 static uint8_t application_function_edmp(application_parameters_t ap);
 static uint8_t application_function_help(application_parameters_t ap);
-static uint8_t application_function_quit(application_parameters_t ap);
 static uint8_t application_function_reset(application_parameters_t ap);
 static uint8_t application_function_sdmp(application_parameters_t ap);
-static uint8_t application_function_show(application_parameters_t ap);
 static uint8_t application_function_stack(application_parameters_t ap);
 static uint8_t application_function_stats(application_parameters_t ap);
 
@@ -74,18 +71,6 @@ static const __flash application_function_table_t application_function_table[] =
 		"pwmw index/value(/speed/min/max)",
 	},
 	{
-		"q",
-		0,
-		application_function_quit,
-		"quit",
-	},
-	{
-		"quit",
-		0,
-		application_function_quit,
-		"quit",
-	},
-	{
 		"reset",
 		0,
 		application_function_reset,
@@ -108,12 +93,6 @@ static const __flash application_function_table_t application_function_table[] =
 		0,
 		application_function_stats,
 		"statistics",
-	},
-	{
-		"show",
-		0,
-		application_function_show,
-		"show text on display",
 	},
 	{
 		"stats",
@@ -323,25 +302,6 @@ static uint8_t application_function_edmp(application_parameters_t ap)
 	return(1);
 }
 
-static uint8_t application_function_show(application_parameters_t ap)
-{
-	static const __flash char format[] = "> show: %d\n";
-
-	uint8_t ix;
-
-	for(ix = 0; (ix + 1) < application_num_args; ix++)
-	{
-		if((ix + 1) < ap.nargs)
-			strncpy((char *)display_string[ix], (const char *)(*ap.args)[ix + 1], 4);
-		else
-			display_string[ix][0] = '\0';
-	}
-
-	snprintf_P((char *)ap.dst, ap.size, format, ap.nargs - 1);
-
-	return(1);
-}
-
 static uint8_t application_function_sdmp(application_parameters_t ap)
 {
 	uint8_t index, offset;
@@ -395,11 +355,6 @@ static uint8_t application_function_help(application_parameters_t ap)
 	}
 
 	return(1);
-}
-
-static uint8_t application_function_quit(application_parameters_t ap)
-{
-	return(0);
 }
 
 static uint8_t application_function_reset(application_parameters_t ap)

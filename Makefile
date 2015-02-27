@@ -6,6 +6,7 @@ LFUSE		= 0xf7
 HFUSE		= 0x97
 #CCOPTFLAGS	= -O0 -g
 #CCOPTFLAGS	= -O3
+#CCOPTFLAGS	= -O3
 CCOPTFLAGS	= -Os
 
 MCU			=		atmega328p
@@ -13,7 +14,7 @@ PROGRAMMER	=		dragon_isp
 PRGFLAGS	=		-P usb -B 5 -y -V
 
 PROGRAM		=		main
-OBJFILES	=		$(PROGRAM).o twi_master.o \
+OBJFILES	=		$(PROGRAM).o twi_master.o esp.o uart.o \
 						application.o application-sensor.o application-twi.o application-timer.o \
 						stats.o util.o eeprom.o stackmonitor.o sensor.o
 HEADERS		=			application.h stats.h util.h eeprom.h stackmonitor.h util.h
@@ -43,6 +44,8 @@ info:
 $(PROGRAM).o:		$(PROGRAM).c $(HEADERS)
 
 twi_master.o:		twi_master.h
+esp.o:				esp.h
+uart.o:				uart.h
 stats.o:			stats.h
 application.o:		$(HEADERS) application-timer.h application-sensor.h application-twi.h
 sensor.o:			sensor.h

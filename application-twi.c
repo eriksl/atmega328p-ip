@@ -14,7 +14,7 @@ uint8_t application_function_twiaddress(application_parameters_t ap)
 {
 	static const __flash char fmt[] = "> TWI slave address set to 0x%02x\n";
 
-	twi_address = (uint8_t)strtoul((const char *)(*ap.args[1]), 0, 16);
+	twi_address = (uint8_t)strtoul((const char *)(*ap.args)[1], 0, 16);
 
 	snprintf_P((char *)ap.dst, (size_t)ap.size, fmt, twi_address);
 
@@ -31,7 +31,7 @@ uint8_t application_function_twiread(application_parameters_t ap)
 	uint8_t src_current, rv, offset, amount;
 	uint8_t bytes[8];
 
-	amount = (uint8_t)strtoul((const char *)(*ap.args[1]), 0, 0);
+	amount = (uint8_t)strtoul((const char *)(*ap.args)[1], 0, 0);
 
 	if(amount > sizeof(bytes))
 	{
@@ -82,7 +82,7 @@ uint8_t application_function_twiwrite(application_parameters_t ap)
 			(src_current < ap.nargs) && (dst_current < sizeof(bytes));
 			src_current++, dst_current++)
 	{
-		bytes[dst_current] = (uint8_t)strtoul((const char *)(*ap.args[src_current]), 0, 16);
+		bytes[dst_current] = (uint8_t)strtoul((const char *)(*ap.args)[src_current], 0, 16);
 	}
 
 	if((rv = twi_master_send(twi_address, dst_current, bytes)) != tme_ok)

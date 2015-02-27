@@ -442,7 +442,7 @@ static uint8_t application_function_show(application_parameters_t ap)
 	for(ix = 0; (ix + 1) < application_num_args; ix++)
 	{
 		if((ix + 1) < ap.nargs)
-			strncpy((char *)display_string[ix], (const char *)(*ap.args[ix + 1]), 4);
+			strncpy((char *)display_string[ix], (const char *)(*ap.args)[ix + 1], 4);
 		else
 			display_string[ix][0] = '\0';
 	}
@@ -492,7 +492,7 @@ static uint8_t application_function_help(application_parameters_t ap)
 			strlcat_P((char *)ap.dst, detail_footer, ap.size);
 		}
 		else
-			snprintf_P((char *)ap.dst, ap.size, detail_error, (const char *)(*ap.args[1]));
+			snprintf_P((char *)ap.dst, ap.size, detail_error, (*ap.args)[1]);
 	}
 	else
 	{
@@ -505,7 +505,7 @@ static uint8_t application_function_help(application_parameters_t ap)
 	}
 
 	return(1);
-	}
+}
 
 static uint8_t application_function_quit(application_parameters_t ap)
 {

@@ -7,6 +7,7 @@
 #include "stackmonitor.h"
 #include "eeprom.h"
 #include "sensor.h"
+#include "esp.h"
 
 #include <avr/pgmspace.h>
 #include <string.h>
@@ -197,6 +198,7 @@ void application_periodic(void)
 	}
 
 	application_periodic_timer(missed_ticks);
+	esp_periodic();
 
 	if((t1_interrupts & 0b111111) == 0)
 		PORTD ^= _BV(4);

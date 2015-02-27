@@ -20,7 +20,7 @@ uint8_t application_function_bg_write(application_parameters_t ap)
 
 	float value;
 
-	value = atof((const char *)(*ap.args[1]));
+	value = atof((const char *)(*ap.args)[1]);
 
 	eeprom_write_bandgap(value);
 	value = eeprom_read_bandgap();
@@ -161,7 +161,7 @@ uint8_t application_function_sensor_read(application_parameters_t ap)
 
 	uint8_t sensor;
 
-	sensor = (uint8_t)strtoul((const char *)(*ap.args[1]), 0, 0);
+	sensor = (uint8_t)strtoul((const char *)(*ap.args)[1], 0, 0);
 
 	if(!application_sensor_read(sensor, ap.size, ap.dst))
 		snprintf_P((char *)ap.dst, ap.size, error, (*ap.args[1]));
@@ -177,9 +177,9 @@ uint8_t application_function_sensor_write(application_parameters_t ap)
 	uint8_t sensor;
 	float factor, offset;
 
-	sensor	= atoi((const char *)(*ap.args[1]));
-	factor	= atof((const char *)(*ap.args[2]));
-	offset	= atof((const char *)(*ap.args[3]));
+	sensor	= atoi((const char *)(*ap.args)[1]);
+	factor	= atof((const char *)(*ap.args)[2]);
+	offset	= atof((const char *)(*ap.args)[3]);
 
 	if(!eeprom_write_cal(sensor, factor, offset))
 	{

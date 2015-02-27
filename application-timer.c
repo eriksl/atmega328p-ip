@@ -143,7 +143,7 @@ uint8_t application_function_pwmr(application_parameters_t ap)
 	float		speed;
 	uint16_t	minvalue, maxvalue;
 
-	entry = (uint8_t)atoi((const char *)ap.args[1]);
+	entry = (uint8_t)atoi((const char *)(*ap.args)[1]);
 
 	if(entry == 2)
 	{
@@ -179,16 +179,16 @@ uint8_t application_function_pwmw(application_parameters_t ap)
 	speed		= 0;
 	maxvalue	= 0xffff;
 
-	entry = (uint8_t)atoi((const char *)ap.args[1]);
+	entry = (uint8_t)atoi((const char *)(*ap.args)[1]);
 
 	if(ap.nargs > 2)
-		minvalue = (uint16_t)atoi((const char *)ap.args[2]);
+		minvalue = (uint16_t)atoi((const char *)(*ap.args)[2]);
 
 	if(ap.nargs > 3)
-		speed = atof((const char *)ap.args[3]);
+		speed = atof((const char *)(*ap.args)[3]);
 
 	if(ap.nargs > 4)
-		maxvalue = (uint16_t)atoi((const char *)ap.args[4]);
+		maxvalue = (uint16_t)atoi((const char *)(*ap.args)[4]);
 
 	if(entry == 2)
 	{

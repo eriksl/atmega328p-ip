@@ -471,7 +471,7 @@ static uint8_t application_function_help(application_parameters_t ap)
 	if(ap.nargs > 1)
 	{
 		for(tableptr = application_function_table; tableptr->function; tableptr++)
-			if(!strcmp_P((const char *)(*ap.args[1]), tableptr->command))
+			if(!strcmp_P((const char *)(*ap.args)[1], tableptr->command))
 				break;
 
 		if(tableptr->function)

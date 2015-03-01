@@ -13,12 +13,17 @@ typedef struct
 	float		speed;
 	uint16_t	min_value;
 	uint16_t	max_value;
-} pwm_t;
+} output_t;
 
 static uint8_t beep_length = 0;
 static uint8_t beep_period = 0;
 
-static pwm_t pwm[2];
+static output_t output[3] =
+{
+	{ 0, 0, 0 },	// PWM OCR1A
+	{ 0, 0, 0 },	// PWM OCR1B
+	{ 0, 0, 0 },	// OUTPUT C0
+};
 
 ISR(TIMER1_OVF_vect)
 {
@@ -26,41 +31,63 @@ ISR(TIMER1_OVF_vect)
 	t1_unhandled++;
 }
 
-static uint16_t getpwm(uint8_t entry)
+static uint16_t getoutput(uint8_t entry)
 {
-	if(entry == 0)
-		return(OCR1A);
-	else
-		return(OCR1B);
+	switch(entry)
+	{
+		case(0): return(OCR1A);
+		case(1): return(OCR1B);
+		case(2): return(!!(PORTC & _BV(0)));
+	}
+
+	return(0);
 }
 
-static void setpwm(uint8_t entry, uint16_t value)
+
+static void setoutput(uint8_t entry, uint16_t value)
 {
-	uint8_t	ocflags;
-	uint8_t	output;
+	switch(entry)
+	{
+		case(0):
+		{
+			if(value > 0)
+			{
+				OCR1A	= value;
+				TCCR1A	|= _BV(COM1A1);
+			}
+			else
+			{
+				TCCR1A	&= ~_BV(COM1A1);
+				PORTB	&= ~_BV(1);
+			}
 
-	if(entry == 0)
-	{
-		ocflags	= _BV(COM1A1);
-		output	= _BV(1);
-		OCR1A	= value;
-	}
-	else
-	{
-		ocflags	= _BV(COM1B1);
-		output	= _BV(2);
-		OCR1B	= value;
-	}
+			break;
+		}
+		case(1):
+		{
+			if(value > 0)
+			{
+				OCR1B	= value;
+				TCCR1A |= _BV(COM1B1);
+			}
+			else
+			{
+				TCCR1A	&= ~_BV(COM1B1);
+				PORTB	&= ~_BV(2);
+			}
 
-	if(value > 0)
-	{
-		TCCR1A	|= ocflags;
-	}
-	else
-	{
-		TCCR1A	&= ~ocflags;
-		PORTB	&= ~output;
+			break;
+		}
 
+		case(2):
+		{
+			if(value)
+				PORTC |= _BV(0);
+			else
+				PORTC &= ~_BV(0);
+
+			break;
+		}
 	}
 }
 
@@ -77,15 +104,9 @@ void application_init_timer(void)
 	TIMSK1	= _BV(TOIE1);	// interrupt on overflow
 	TIFR1	= _BV(TOV1); 	// clear event bits
 
-	for(uint8_t ix = 0; ix < 2; ix++)
-	{
-		pwm[ix].speed		= 0;
-		pwm[ix].min_value	= 0;
-		pwm[ix].max_value	= 0;
-	}
-
-	setpwm(0, 0);
-	setpwm(1, 0);
+	setoutput(0, 0);
+	setoutput(1, 0);
+	setoutput(2, 0);
 
 	TCCR1B |= _BV(CS10);	// start timer at prescaler 1, rate = 169 Hz
 }
@@ -107,16 +128,16 @@ void application_periodic_timer(uint16_t missed_ticks)
 
 	for(uint8_t ix = 0; ix < 2; ix++)
 	{
-		if(pwm[ix].speed)
+		if(output[ix].speed)
 		{
-			min_value	= pwm[ix].min_value;
-			max_value	= pwm[ix].max_value;
-			value		= (uint32_t)getpwm(ix);
+			min_value	= output[ix].min_value;
+			max_value	= output[ix].max_value;
+			value		= (uint32_t)getoutput(ix);
 
-			if(pwm[ix].speed > 0) // up
+			if(output[ix].speed > 0) // up
 			{
 				old_value	= value;
-				value		= (uint32_t)((float)value * pwm[ix].speed);
+				value		= (uint32_t)((float)value * output[ix].speed);
 
 				if(old_value == value)
 					value++;
@@ -124,13 +145,13 @@ void application_periodic_timer(uint16_t missed_ticks)
 				if(value >= max_value)
 				{
 					value = max_value;
-					pwm[ix].speed = 0 - pwm[ix].speed; // -> down
+					output[ix].speed = 0 - output[ix].speed; // -> down
 				}
 			}
 			else // down
 			{
 				old_value	= value;
-				value		= (uint32_t)((float)value / (0 - pwm[ix].speed));
+				value		= (uint32_t)((float)value / (0 - output[ix].speed));
 
 				if((old_value == value) && (value > 0))
 					value--;
@@ -138,11 +159,11 @@ void application_periodic_timer(uint16_t missed_ticks)
 				if(value <= min_value)
 				{
 					value = min_value;
-					pwm[ix].speed = 0 - pwm[ix].speed; // -> up
+					output[ix].speed = 0 - output[ix].speed; // -> up
 				}
 			}
 
-			setpwm(ix, value);
+			setoutput(ix, value);
 		}
 	}
 }
@@ -168,10 +189,10 @@ uint8_t application_function_beep(uint8_t nargs, uint8_t args[application_num_ar
 	return(1);
 }
 
-static const __flash char pwm_ok[] = "> pwm %u (min)value %u speed %f max %u\n";
-static const __flash char pwm_error[] = "> invalid pwm %u\n";
+static const __flash char output_ok[] = "> output(%s) %u (min)value %u speed %f max %u\n";
+static const __flash char output_error[] = "> invalid output %u\n";
 
-uint8_t application_function_pwmr(application_parameters_t ap)
+uint8_t application_function_output_read(application_parameters_t ap)
 {
 	uint8_t		entry;
 	float		speed;
@@ -179,34 +200,25 @@ uint8_t application_function_pwmr(application_parameters_t ap)
 
 	entry = (uint8_t)atoi((const char *)(*ap.args)[1]);
 
-	if(entry == 2)
+	if(entry > 2)
 	{
-		speed = 0;
-		maxvalue = 0;
-		minvalue = !!(PORTC & _BV(0));
-	}
-	else
-	{
-		if(entry > 1)
-		{
-			snprintf_P((char *)ap.dst, ap.size, pwm_error, entry);
-			return(1);
-		}
-
-		speed = pwm[entry].speed;
-		minvalue = getpwm(entry);
-		maxvalue = pwm[entry].max_value;
+		snprintf_P((char *)ap.dst, ap.size, output_error, entry);
+		return(1);
 	}
 
-    snprintf_P((char *)ap.dst, ap.size, pwm_ok, entry, minvalue, speed, maxvalue);
+	speed		= output[entry].speed;
+	minvalue	= getoutput(entry);
+	maxvalue	= output[entry].max_value;
+
+    snprintf_P((char *)ap.dst, ap.size, output_ok, (entry < 2) ? "pwm" : "static", entry, minvalue, speed, maxvalue);
 	return(1);
 }
 
-uint8_t application_function_pwmw(application_parameters_t ap)
+uint8_t application_function_output_set(application_parameters_t ap)
 {
-	uint8_t				entry;
-	float				speed;
-	uint16_t			minvalue, maxvalue;
+	uint8_t		entry;
+	float		speed;
+	uint16_t	minvalue, maxvalue;
 
 	entry		= 0;
 	minvalue	= 0;
@@ -226,16 +238,16 @@ uint8_t application_function_pwmw(application_parameters_t ap)
 
 	if(entry > 1)
 	{
-		snprintf_P((char *)ap.dst, ap.size, pwm_error, entry);
+		snprintf_P((char *)ap.dst, ap.size, output_error, entry);
 		return(1);
 	}
 
-	setpwm(entry, minvalue);
-	pwm[entry].speed		= speed;
-	pwm[entry].min_value	= minvalue;
-	pwm[entry].max_value	= maxvalue;
-	minvalue				= getpwm(entry);
+	setoutput(entry, minvalue);
+	output[entry].speed		= speed;
+	output[entry].min_value	= minvalue;
+	output[entry].max_value	= maxvalue;
+	minvalue				= getoutput(entry);
 
-    snprintf_P((char *)ap.dst, ap.size, pwm_ok, entry, minvalue, speed, maxvalue);
+    snprintf_P((char *)ap.dst, ap.size, output_ok, (entry < 2) ? "pwm" : "static", entry, minvalue, speed, maxvalue);
 	return(1);
 }

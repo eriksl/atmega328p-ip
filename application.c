@@ -75,16 +75,16 @@ static const __flash application_function_table_t application_function_table[] =
 		"help (command)",
 	},
 	{
-		"pwmr",
+		"sout",
 		1,
-		application_function_pwmr,
-		"pwmr index",
+		application_function_output_set,
+		"set output",
 	},
 	{
-		"pwmw",
+		"rout",
 		1,
-		application_function_pwmw,
-		"pwmw index/value(/speed/min/max)",
+		application_function_output_read,
+		"set output ix/val(/spd/min/max)",
 	},
 	{
 		"reset",

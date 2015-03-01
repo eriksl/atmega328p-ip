@@ -43,7 +43,6 @@ static uint16_t getoutput(uint8_t entry)
 	return(0);
 }
 
-
 static void setoutput(uint8_t entry, uint16_t value)
 {
 	switch(entry)

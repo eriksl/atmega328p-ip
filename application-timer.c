@@ -235,7 +235,7 @@ uint8_t application_function_output_set(application_parameters_t ap)
 	if(ap.nargs > 4)
 		maxvalue = (uint16_t)atoi((const char *)(*ap.args)[4]);
 
-	if(entry > 1)
+	if(entry > 2)
 	{
 		snprintf_P((char *)ap.dst, ap.size, output_error, entry);
 		return(1);

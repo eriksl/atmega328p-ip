@@ -309,7 +309,7 @@ void esp_init(uint16_t rsize, uint8_t *rbuffer, uint16_t ssize, uint8_t *sbuffer
 	esp_uart_flush();
 
 	uart_init();
-	uart_baud(115200);
+	uart_baud(38400);
 
 	PORTD &= ~_BV(2);
 	esp_setup_state = state_setup_init;

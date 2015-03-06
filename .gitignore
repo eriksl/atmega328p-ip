@@ -6,3 +6,8 @@ testtwi
 *.o
 main.hex
 main.elf
+Session.vim
+programmer
+t
+test.c
+test

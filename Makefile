@@ -1,9 +1,9 @@
-MCUSPEED	= 11059200
-LFUSE		= 0xf7
+MCUSPEED	= 8000000
+LFUSE		= 0xe2
 # no DebugWire
-#HFUSE		= 0xd7
+HFUSE		= 0xd7
 # DebugWire
-HFUSE		= 0x97
+#HFUSE		= 0x97
 #CCOPTFLAGS	= -O0 -g
 #CCOPTFLAGS	= -O3
 #CCOPTFLAGS	= -O3

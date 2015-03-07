@@ -2,6 +2,7 @@
 #include "application-sensor.h"
 #include "application-twi.h"
 #include "application-timer.h"
+#include "application-vfd.h"
 #include "stats.h"
 #include "util.h"
 #include "stackmonitor.h"
@@ -39,6 +40,24 @@ static const __flash application_function_table_t application_function_table[] =
 		1,
 		application_function_bg_write,
 		"write bandgap caliburation (V)",
+	},
+	{
+		"dbr",
+		1,
+		application_function_dbr,
+		"display brightness",
+	},
+	{
+		"dclr",
+		0,
+		application_function_dclr,
+		"clear display",
+	},
+	{
+		"dshow",
+		1,
+		application_function_dshow,
+		"show text on display",
 	},
 	{
 		"edmp",
@@ -154,6 +173,7 @@ void application_init(void)
 {
 	application_init_sensor();
 	application_init_timer();
+	application_init_vfd();
 }
 
 void application_periodic(void)

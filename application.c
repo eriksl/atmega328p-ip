@@ -59,16 +59,16 @@ static const __flash application_function_table_t application_function_table[] =
 		"help (command)",
 	},
 	{
-		"sout",
-		1,
-		application_function_output_set,
-		"set output ix val/min[ spd max]",
-	},
-	{
-		"rout",
+		"outr",
 		1,
 		application_function_output_read,
 		"read output ix",
+	},
+	{
+		"outs",
+		1,
+		application_function_output_set,
+		"set output ix val/min[ spd max]",
 	},
 	{
 		"reset",

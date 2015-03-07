@@ -372,7 +372,7 @@ static uint8_t application_function_stack(application_parameters_t ap)
 {
 	static const __flash char stackfree_fmt[] = "Stackmonitor: %d bytes free\n";
 
-	snprintf_P((char *)ap.dst, (size_t)ap.size, stackfree_fmt, stackmonitor_free());
+	snprintf_P((char *)ap.dst, ap.size, stackfree_fmt, stackmonitor_free());
 
 	return(1);
 }

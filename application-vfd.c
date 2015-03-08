@@ -25,11 +25,13 @@ void application_init_vfd(void)
 
 uint8_t application_function_dbr(application_parameters_t ap)
 {
+	static const __flash char ok[] = "> dbr %d\n";
+
 	static const uint8_t code_on[]		= { 0xfe, 'B', 0 };
 	static const uint8_t code_off[]		= { 0xfe, 'F' };
 	static const uint8_t code_bright[]	= { 0xfe, 'Y' };
 	static const uint8_t translate[]	= { 0x03, 0x03, 0x02, 0x01, 0x00 };
-	int8_t bright;
+	int16_t bright;
 
 	bright = atoi((const char *)(*ap.args)[1]);
 

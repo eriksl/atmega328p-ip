@@ -55,7 +55,7 @@ static const __flash application_function_table_t application_function_table[] =
 	},
 	{
 		"dshow",
-		1,
+		0,
 		application_function_dshow,
 		"show text on display",
 	},

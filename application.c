@@ -54,6 +54,12 @@ static const __flash application_function_table_t application_function_table[] =
 		"clear display",
 	},
 	{
+		"dhshw",
+		0,
+		application_function_dhshw,
+		"home and show text",
+	},
+	{
 		"dshow",
 		0,
 		application_function_dshow,

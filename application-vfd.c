@@ -80,3 +80,21 @@ uint8_t application_function_dshow(application_parameters_t ap)
 
 	return(1);
 }
+
+uint8_t application_function_dhshw(application_parameters_t ap)
+{
+	static const __flash char ok[] = "> dhshw \"%s\"\n";
+	static const uint8_t home[] = { 0xfe, 'H' };
+
+	if(ap.cmdline_length >= 6)
+	{
+		twi_master_send(0x28, sizeof(home), home);
+		twi_master_send(0x28, ap.cmdline_length - 6, &ap.cmdline[6]);
+
+		snprintf_P((char *)ap.dst, ap.size, ok, &ap.cmdline[6]);
+	}
+	else
+		snprintf_P((char *)ap.dst, ap.size, ok, "<error>");
+
+	return(1);
+}

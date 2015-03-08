@@ -49,6 +49,8 @@ uint8_t application_function_dbr(application_parameters_t ap)
 	twi_master_send(0x28, sizeof(code_bright), code_bright);
 	twi_master_send(0x28, 1, &translate[bright]);
 
+	snprintf_P((char *)ap.dst, ap.size, ok, bright);
+
 	return(1);
 }
 

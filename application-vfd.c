@@ -55,7 +55,7 @@ uint8_t application_function_dbr(application_parameters_t ap)
 uint8_t application_function_dclr(application_parameters_t ap)
 {
 	static const			uint8_t clr[]	= { 0xfe, 'X', 0 };
-	static const __flash	char ok[]		= "> clear\n";
+	static const __flash	char ok[]		= "> dclr\n";
 
 	twi_master_send(0x28, strlen((const char *)clr), clr);
 	snprintf_P((char *)ap.dst, ap.size, ok);
@@ -65,7 +65,7 @@ uint8_t application_function_dclr(application_parameters_t ap)
 
 uint8_t application_function_dshow(application_parameters_t ap)
 {
-	static const __flash char ok[] = "> show \"%s\"\n";
+	static const __flash char ok[] = "> dshow \"%s\"\n";
 
 	if(ap.cmdline_length >= 5)
 	{

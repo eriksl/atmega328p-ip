@@ -69,11 +69,11 @@ uint8_t application_function_dshow(application_parameters_t ap)
 {
 	static const __flash char ok[] = "> dshow \"%s\"\n";
 
-	if(ap.cmdline_length >= 5)
+	if(ap.cmdline_length >= 6)
 	{
-		twi_master_send(0x28, ap.cmdline_length - 5, &ap.cmdline[5]);
+		twi_master_send(0x28, ap.cmdline_length - 6, &ap.cmdline[6]);
 
-		snprintf_P((char *)ap.dst, ap.size, ok, &ap.cmdline[5]);
+		snprintf_P((char *)ap.dst, ap.size, ok, &ap.cmdline[6]);
 	}
 	else
 		snprintf_P((char *)ap.dst, ap.size, ok, "<error>");

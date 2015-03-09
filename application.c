@@ -29,7 +29,6 @@ static uint8_t cmd_led_timeout = 0;
 static uint8_t application_function_edmp(application_parameters_t ap);
 static uint8_t application_function_help(application_parameters_t ap);
 static uint8_t application_function_reset(application_parameters_t ap);
-static uint8_t application_function_sdmp(application_parameters_t ap);
 static uint8_t application_function_stack(application_parameters_t ap);
 static uint8_t application_function_stats(application_parameters_t ap);
 
@@ -317,23 +316,6 @@ static uint8_t application_function_edmp(application_parameters_t ap)
 	while(eeprom_read_cal(index, &cfactor, &coffset))
 	{
 		offset	= snprintf_P((char *)ap.dst, ap.size, format2, index, cfactor, coffset);
-		ap.dst	+= offset;
-		ap.size	-= offset;
-		index++;
-	}
-
-	return(1);
-}
-
-static uint8_t application_function_sdmp(application_parameters_t ap)
-{
-	uint8_t index, offset;
-
-	index = 0;
-
-	while(application_sensor_read(index, ap.size, ap.dst))
-	{
-		offset	= strlen((const char *)ap.dst);
 		ap.dst	+= offset;
 		ap.size	-= offset;
 		index++;

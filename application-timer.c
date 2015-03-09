@@ -10,9 +10,9 @@
 
 typedef struct
 {
-	float		speed;
 	uint16_t	min_value;
 	uint16_t	max_value;
+	float		speed;
 } output_t;
 
 static uint8_t beep_length = 0;

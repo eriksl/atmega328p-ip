@@ -197,3 +197,20 @@ uint8_t application_function_sensor_write(application_parameters_t ap)
 
 	return(1);
 }
+
+uint8_t application_function_sdmp(application_parameters_t ap)
+{
+	uint8_t index, offset;
+
+	index = 0;
+
+	while(application_sensor_read(index, ap.size, ap.dst))
+	{
+		offset	= strlen((const char *)ap.dst);
+		ap.dst	+= offset;
+		ap.size	-= offset;
+		index++;
+	}
+
+	return(1);
+}

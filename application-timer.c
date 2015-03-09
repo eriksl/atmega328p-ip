@@ -10,9 +10,9 @@
 
 typedef struct
 {
-	float		speed;
 	uint16_t	min_value;
 	uint16_t	max_value;
+	float		speed;
 } output_t;
 
 static output_t output[3] =
@@ -175,7 +175,7 @@ uint8_t application_function_output_read(application_parameters_t ap)
 	minvalue	= getoutput(entry);
 	maxvalue	= output[entry].max_value;
 
-    snprintf_P((char *)ap.dst, ap.size, output_ok, (entry < 2) ? "pwm" : "static", entry, minvalue, speed, maxvalue);
+	snprintf_P((char *)ap.dst, ap.size, output_ok, (entry < 2) ? "pwm" : "static", entry, minvalue, speed, maxvalue);
 	return(1);
 }
 

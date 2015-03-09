@@ -74,6 +74,12 @@ static const __flash application_function_table_t application_function_table[] =
 		"help (command)",
 	},
 	{
+		"outd",
+		0,
+		application_function_output_dump,
+		"dump all outputs"
+	},
+	{
 		"outr",
 		1,
 		application_function_output_read,

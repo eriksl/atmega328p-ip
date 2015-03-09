@@ -10,5 +10,6 @@ void	application_periodic_timer(uint16_t missed_ticks);
 uint8_t application_function_beep(application_parameters_t ap);
 uint8_t application_function_output_read(application_parameters_t ap);
 uint8_t application_function_output_set(application_parameters_t ap);
+uint8_t application_function_output_dump(application_parameters_t ap);
 
 #endif

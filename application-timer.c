@@ -10,9 +10,9 @@
 
 typedef struct
 {
-	float		speed;
 	uint16_t	min_value;
 	uint16_t	max_value;
+	float		speed;
 } output_t;
 
 static output_t output[3] =

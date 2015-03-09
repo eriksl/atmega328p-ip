@@ -31,7 +31,6 @@ static uint8_t application_function_bright(application_parameters_t ap);
 static uint8_t application_function_edmp(application_parameters_t ap);
 static uint8_t application_function_help(application_parameters_t ap);
 static uint8_t application_function_reset(application_parameters_t ap);
-static uint8_t application_function_sdmp(application_parameters_t ap);
 static uint8_t application_function_show(application_parameters_t ap);
 static uint8_t application_function_stack(application_parameters_t ap);
 static uint8_t application_function_stats(application_parameters_t ap);
@@ -437,23 +436,6 @@ static uint8_t application_function_show(application_parameters_t ap)
 	}
 
 	snprintf_P((char *)ap.dst, ap.size, format, ap.nargs - 1);
-
-	return(1);
-}
-
-static uint8_t application_function_sdmp(application_parameters_t ap)
-{
-	uint8_t index, offset;
-
-	index = 0;
-
-	while(application_sensor_read(index, ap.size, ap.dst))
-	{
-		offset	= strlen((const char *)ap.dst);
-		ap.dst	+= offset;
-		ap.size	-= offset;
-		index++;
-	}
 
 	return(1);
 }

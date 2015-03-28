@@ -383,7 +383,7 @@ uint8_t sensor_read_tsl2560(float *value, float *raw_value)
 	else
 		*value = -1;
 
-	*raw_value = (uint16_t)(10000.0 * ch0) + (uint16_t)ch1;
+	*raw_value = ch0 + (ch1 / 100000);
 
 	adjust(sensor_tsl2560, value);
 

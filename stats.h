@@ -12,6 +12,7 @@ extern stats_t adc_interrupts;
 extern stats_t t1_interrupts;
 extern stats_t t1_unhandled;
 extern stats_t t1_unhandled_max;
+extern stats_t esp_wd_timeout;
 
 void stats_generate(uint16_t size, uint8_t *dst);
 

@@ -10,6 +10,7 @@ stats_t adc_interrupts = 0;
 stats_t t1_interrupts = 0;
 stats_t t1_unhandled = 0;
 stats_t t1_unhandled_max = 0;
+stats_t esp_wd_timeout = 0;
 
 static const __flash char format_string[] =
 {
@@ -19,6 +20,7 @@ static const __flash char format_string[] =
 	"int adc: %u\n"
 	"int t1: %u\n"
 	"int t1um: %u\n"
+	"esp wd: %u\n"
 };
 
 void stats_generate(uint16_t size, uint8_t *dst)
@@ -29,5 +31,6 @@ void stats_generate(uint16_t size, uint8_t *dst)
 			wd_interrupts,
 			adc_interrupts,
 			t1_interrupts,
-			t1_unhandled_max);
+			t1_unhandled_max,
+			esp_wd_timeout);
 }

@@ -17,6 +17,11 @@
 ISR(WDT_vect)
 {
 	wd_interrupts++;
+
+	if(esp_wd_timeout > 0)
+		esp_wd_timeout--;
+	else
+		reset();
 }
 
 int main(void)
@@ -74,7 +79,8 @@ int main(void)
 	msleep(200);
 	PORTD = 0;
 
-	wdt_enable(WDTO_2S);
+	esp_wd_timeout = 0xffff;
+	wdt_enable(WDTO_1S);
 	twi_master_init();
 	application_init();
 	esp_init(sizeof(receive_buffer), receive_buffer, sizeof(send_buffer), send_buffer);

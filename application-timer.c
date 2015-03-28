@@ -15,11 +15,10 @@ typedef struct
 	float		speed;
 } output_t;
 
-static output_t output[3] =
+static output_t output[2] =
 {
 	{ 0, 0, 0 },	// PWM OCR1A
 	{ 0, 0, 0 },	// PWM OCR1B
-	{ 0, 0, 0 },	// OUTPUT C0
 };
 
 ISR(TIMER1_OVF_vect)
@@ -34,7 +33,6 @@ static uint16_t getoutput(uint8_t entry)
 	{
 		case(0): return(OCR1A);
 		case(1): return(OCR1B);
-		case(2): return(!!(PORTC & _BV(0)));
 	}
 
 	return(0);
@@ -74,16 +72,6 @@ static void setoutput(uint8_t entry, uint16_t value)
 
 			break;
 		}
-
-		case(2):
-		{
-			if(value)
-				PORTC |= _BV(0);
-			else
-				PORTC &= ~_BV(0);
-
-			break;
-		}
 	}
 }
 
@@ -92,7 +80,6 @@ void application_init_timer(void)
 	PRR &= ~_BV(PRTIM1);
 
 	DDRB |= _BV(1) | _BV(2);	// b1=oc1a, b2=oc1b
-	DDRC |= _BV(0);				// c0=extra output
 
 	TCCR1A	= _BV(WGM11);
 	TCCR1B	= _BV(WGM13)  | _BV(WGM12); // fast pwm, top = ICR1
@@ -103,7 +90,6 @@ void application_init_timer(void)
 
 	setoutput(0, 0);
 	setoutput(1, 0);
-	setoutput(2, 0);
 
 	TCCR1B |= _BV(CS10);	// start timer at prescaler 1, rate = 169 Hz
 }
@@ -165,7 +151,7 @@ uint8_t application_function_output_read(application_parameters_t ap)
 
 	entry = (uint8_t)atoi((const char *)(*ap.args)[1]);
 
-	if(entry > 2)
+	if(entry > 1)
 	{
 		snprintf_P((char *)ap.dst, ap.size, output_error, entry);
 		return(1);
@@ -175,7 +161,7 @@ uint8_t application_function_output_read(application_parameters_t ap)
 	minvalue	= getoutput(entry);
 	maxvalue	= output[entry].max_value;
 
-	snprintf_P((char *)ap.dst, ap.size, output_ok, (entry < 2) ? "pwm" : "static", entry, minvalue, speed, maxvalue);
+	snprintf_P((char *)ap.dst, ap.size, output_ok, "pwm", entry, minvalue, speed, maxvalue);
 	return(1);
 }
 
@@ -201,7 +187,7 @@ uint8_t application_function_output_set(application_parameters_t ap)
 	if(ap.nargs > 4)
 		maxvalue = (uint16_t)atoi((const char *)(*ap.args)[4]);
 
-	if(entry > 2)
+	if(entry > 1)
 	{
 		snprintf_P((char *)ap.dst, ap.size, output_error, entry);
 		return(1);
@@ -213,6 +199,6 @@ uint8_t application_function_output_set(application_parameters_t ap)
 	output[entry].max_value	= maxvalue;
 	minvalue				= getoutput(entry);
 
-    snprintf_P((char *)ap.dst, ap.size, output_ok, (entry < 2) ? "pwm" : "static", entry, minvalue, speed, maxvalue);
+    snprintf_P((char *)ap.dst, ap.size, output_ok, "pwm", entry, minvalue, speed, maxvalue);
 	return(1);
 }

@@ -34,7 +34,7 @@ int main(void)
 
 	MCUCR	|= _BV(PUD);		//	disable pullups
 	DDRB	= 0;
-	DDRD	= _BV(2) | _BV(3) | _BV(4);
+	DDRD	= _BV(3) | _BV(4) | _BV(7);
 
 	for(length = 8; length > 0; length--)
 	{

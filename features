@@ -5,7 +5,7 @@
 	1	c6						RESET	reset
 	2	d0						rxd		uart
 	3	d1						txd		uart
-	4	d2						d2		esp8266 reset
+	4	d2
 	5	d3						d3		led command
 	6	d4						d4		led heartbeat
 	7	Vcc								VCC
@@ -14,7 +14,7 @@
 	10	b7						xtal2	crystal
 	11	d5
 	12	d6
-	13	d7
+	13	d7								esp8266 reset
 	14	b0
 
 	28	c5				scl				i2c scl

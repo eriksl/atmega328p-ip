@@ -195,7 +195,7 @@ int16_t application_content(uint16_t src_length, const uint8_t *src, uint16_t si
 	const application_function_table_t __flash *tableptr;
 
 	cmd_led_timeout = 10;
-	PORTD |= _BV(6);
+	PORTD |= _BV(3);
 
 	if((src_length == 0) || (src[0] == 0xff)) // telnet options
 		return(0);
@@ -236,9 +236,6 @@ int16_t application_content(uint16_t src_length, const uint8_t *src, uint16_t si
 	}
 
 	*dst = '\0';
-
-	cmd_led_timeout = 10;
-	PORTD |= _BV(3);
 
 	if(args_count == 0)
 		return(0);

@@ -2,6 +2,7 @@
 
 #include "stats.h"
 #include "uart.h"
+#include "util.h"
 
 #include <avr/io.h>
 #include <avr/interrupt.h>
@@ -9,6 +10,11 @@
 #include <stdint.h>
 #include <string.h>
 #include <stdio.h>
+
+typedef enum
+{
+	wd_esp_init = 600, // 600 seconds esp watchdog timeout
+} const_t;
 
 typedef enum
 {
@@ -238,7 +244,10 @@ static void esp_uart_pull(void)
 					}
 				}
 				else
+				{
+					esp_wd_timeout = wd_esp_init;
 					data_in_state = state_pull_reset;
+				}
 
 				break;
 			}
@@ -313,6 +322,8 @@ void esp_init(uint16_t rsize, uint8_t *rbuffer, uint16_t ssize, uint8_t *sbuffer
 
 	PORTD &= ~_BV(2);
 	esp_setup_state = state_setup_init;
+
+	esp_wd_timeout = wd_esp_init;
 }
 
 void esp_periodic(void)

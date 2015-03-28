@@ -8,6 +8,10 @@
 
 void reset(void)
 {
+	cli();
+
+	PORTD |= _BV(3) | _BV(4);
+
 	for(;;)
 		(void)0;
 }

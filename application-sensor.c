@@ -141,6 +141,28 @@ uint8_t application_sensor_read(uint8_t sensor, uint16_t size, uint8_t *dst)
 			break;
 		}
 
+		case(sensor_htu21_temperature):
+		{
+			id = "htu21";
+			format = format_temperature;
+
+			if((twierror = sensor_read_htu21_temp(&value, &raw_value)))
+				goto twierror;
+
+			break;
+		}
+
+		case(sensor_htu21_humidity):
+		{
+			id = "htu21";
+			format = format_humidity;
+
+			if((twierror = sensor_read_htu21_hum(&value, &raw_value)))
+				goto twierror;
+
+			break;
+		}
+
 		default:
 		{
 			return(0);

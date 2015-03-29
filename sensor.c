@@ -417,3 +417,67 @@ uint8_t sensor_read_bh1750(float *value, float *raw_value)
 
 	return(tme_ok);
 }
+
+uint8_t sensor_read_htu21_temp(float *value, float *raw_value)
+{
+	uint8_t twierror;
+	uint8_t	twistring[4];
+	uint8_t	crc1, crc2;
+
+	twistring[0] = 0xe3; // temperature measurement "hold master"
+
+	if((twierror = twi_master_send(0x40, 1, twistring)) != tme_ok)
+		return(twierror);
+
+	if((twierror = twi_master_receive(0x40, 4, twistring)) != tme_ok)
+		return(twierror);
+
+	*raw_value = ((uint16_t)twistring[0] << 8) | (uint16_t)twistring[1];
+
+	crc1 = twistring[2];
+	crc2 = crc8(0x31, 2, &twistring[0]);
+
+	if(crc1 != crc2)
+	{
+		*value = -256;
+		return(tme_ok);
+	}
+
+	*value = ((*raw_value * 175.72) / 65536) - 46.85;
+
+	adjust(sensor_htu21_temperature, value);
+
+	return(tme_ok);
+}
+
+uint8_t sensor_read_htu21_hum(float *value, float *raw_value)
+{
+	uint8_t twierror;
+	uint8_t	twistring[4];
+	uint8_t	crc1, crc2;
+
+	twistring[0] = 0xe5; // humidity measurement "hold master"
+
+	if((twierror = twi_master_send(0x40, 1, twistring)) != tme_ok)
+		return(twierror);
+
+	if((twierror = twi_master_receive(0x40, 4, twistring)) != tme_ok)
+		return(twierror);
+
+	*raw_value = ((uint16_t)twistring[0] << 8) | (uint16_t)twistring[1];
+
+	crc1 = twistring[2];
+	crc2 = crc8(0x31, 2, &twistring[0]);
+
+	if(crc1 != crc2)
+	{
+		*value = -1;
+		return(tme_ok);
+	}
+
+	*value = ((*raw_value * 125) / 65536) - 6;
+
+	adjust(sensor_htu21_humidity, value);
+
+	return(tme_ok);
+}

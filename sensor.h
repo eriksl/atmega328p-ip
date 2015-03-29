@@ -13,6 +13,8 @@ typedef enum
 	sensor_bmp085_airpressure,
 	sensor_tsl2560,
 	sensor_bh1750,
+	sensor_htu21_temperature,
+	sensor_htu21_humidity,
 	sensor_end
 } sensors_t;
 
@@ -26,5 +28,7 @@ uint8_t	sensor_read_lm75(float *value, float *raw_value);
 uint8_t	sensor_read_bmp085(float *temp, float *temp_raw, float *pressure, float *pressure_raw);
 uint8_t	sensor_read_tsl2560(float *value, float *raw_value);
 uint8_t	sensor_read_bh1750(float *value, float *raw_value);
+uint8_t	sensor_read_htu21_temp(float *value, float *raw_value);
+uint8_t	sensor_read_htu21_hum(float *value, float *raw_value);
 
 #endif

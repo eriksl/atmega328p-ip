@@ -5,7 +5,7 @@
 
 #include <stdio.h>
 
-static uint8_t status(void)
+uint8_t twi_master_status(void)
 {
 	uint8_t twsr;
 
@@ -13,53 +13,58 @@ static uint8_t status(void)
 	return(twsr >> 3);
 }
 
-static void wait(void)
+void twi_master_wait(void)
 {
 	while(!(TWCR & _BV(TWINT)))
 		(void)0;
 }
 
-static void send_stop(void)
+void twi_master_send_stop_no_wait(void)
 {
 	TWCR = _BV(TWINT) | _BV(TWSTO) | _BV(TWEN);
+}
+
+void twi_master_send_stop(void)
+{
+	twi_master_send_stop_no_wait();
 
 	while(TWCR & _BV(TWSTO))
 		(void)0;
 }
 
-static uint8_t send_start(void)
+uint8_t twi_master_send_start(void)
 {
 	uint8_t stat;
 
 	TWCR = _BV(TWINT) | _BV(TWEN) | _BV(TWSTA);
 
-	wait();
-	stat = status();
+	twi_master_wait();
+	stat = twi_master_status();
 
 	if(stat != tms_start_sent)
 	{
-		send_stop();
+		twi_master_send_stop();
 		return(tme_send_start | (stat << 4));
 	}
 
 	return(tme_ok);
 }
 
-static uint8_t send_address(uint8_t address, uint8_t request_write)
+uint8_t twi_master_send_address(uint8_t address, uint8_t request_write)
 {
 	uint8_t stat;
 
 	TWDR = (address << 1) | (request_write ? 0 : 1);
 	TWCR = _BV(TWINT) | _BV(TWEN);
 
-	wait();
-	stat = status();
+	twi_master_wait();
+	stat = twi_master_status();
 
 	if(request_write)
 	{
 		if(stat != tms_addr_w_ack)
 		{
-			send_stop();
+			twi_master_send_stop();
 			return(tme_send_address_w | (stat << 4));
 		}
 	}
@@ -67,7 +72,7 @@ static uint8_t send_address(uint8_t address, uint8_t request_write)
 	{
 		if(stat != tms_addr_r_ack)
 		{
-			send_stop();
+			twi_master_send_stop();
 			return(tme_send_address_r | (stat << 4));
 		}
 	}
@@ -75,37 +80,37 @@ static uint8_t send_address(uint8_t address, uint8_t request_write)
 	return(tme_ok);
 }
 
-static uint8_t send_byte(uint8_t data)
+uint8_t twi_master_send_byte(uint8_t data)
 {
 	uint8_t stat;
 
 	TWDR = data;
 	TWCR = _BV(TWINT) | _BV(TWEN);
 
-	wait();
-	stat = status();
+	twi_master_wait();
+	stat = twi_master_status();
 
 	if(stat != tms_data_sent_ack)
 	{
-		send_stop();
+		twi_master_send_stop();
 		return(tme_send_byte | (stat << 4));
 	}
 
 	return(tme_ok);
 }
 
-static uint8_t receive_byte(uint8_t *data)
+uint8_t twi_master_receive_byte(uint8_t *data)
 {
 	uint8_t stat;
 
 	TWCR = _BV(TWINT) | _BV(TWEN) | _BV(TWEA);
 
-	wait();
-	stat = status();
+	twi_master_wait();
+	stat = twi_master_status();
 
 	if((stat != tms_data_recvd_ack) && (stat != tms_data_recvd_nack))
 	{
-		send_stop();
+		twi_master_send_stop();
 		return(tme_receive_byte | (stat << 4));
 	}
 
@@ -117,22 +122,71 @@ static uint8_t receive_byte(uint8_t *data)
 	return(tme_ok);
 }
 
-static uint8_t send_nack(void)
+uint8_t twi_master_send_nack(void)
 {
 	uint8_t stat;
 
 	TWCR = _BV(TWINT) | _BV(TWEN);
 
-	wait();
-	stat = status();
+	twi_master_wait();
+	stat = twi_master_status();
 
 	if((stat != tms_data_recvd_ack) && (stat != tms_data_recvd_nack))
 	{
-		send_stop();
+		twi_master_send_stop();
 		return(tme_send_nack | (stat << 4));
 	}
 
 	return(tme_ok);
+}
+
+uint8_t twi_master_send(uint8_t address, uint8_t length, const uint8_t *buffer)
+{
+	uint8_t rv;
+
+	if((rv = twi_master_send_start()) != tme_ok)
+		return(rv);
+
+	if((rv = twi_master_send_address(address, 1)) != tme_ok)
+		return(rv);
+
+	for(; length > 0; length--, buffer++)
+		if((rv = twi_master_send_byte(*buffer)) != tme_ok)
+			return(rv);
+
+	twi_master_send_stop();
+
+	return(tme_ok);
+}
+
+uint8_t twi_master_receive(uint8_t address, uint8_t size, uint8_t *buffer)
+{
+	uint8_t rv, ix;
+
+	if((rv = twi_master_send_start()) != tme_ok)
+		return(rv);
+
+	if((rv = twi_master_send_address(address, 0)) != tme_ok)
+		return(rv);
+
+	for(ix = 0; ix < size; ix++)
+		if((rv = twi_master_receive_byte(&buffer[ix])) != tme_ok)
+			return(rv);
+
+	if((rv = twi_master_send_nack()) != tme_ok)
+		return(rv);
+
+	twi_master_send_stop();
+
+	return(tme_ok);
+}
+
+void twi_master_error(uint8_t *dst, uint16_t size, uint8_t error)
+{
+	static const __flash char format_string[] = "TWI error: %x, state %x\n";
+
+	snprintf_P((char *)dst, (size_t)size, format_string,
+			error & 0x0f, (error & 0xf0) >> 4);
 }
 
 void twi_master_init(void)
@@ -177,51 +231,3 @@ void twi_master_recover(void)
 	return(twi_master_init());
 }
 
-uint8_t twi_master_send(uint8_t address, uint8_t length, const uint8_t *buffer)
-{
-	uint8_t rv;
-
-	if((rv = send_start()) != tme_ok)
-		return(rv);
-
-	if((rv = send_address(address, 1)) != tme_ok)
-		return(rv);
-
-	for(; length > 0; length--, buffer++)
-		if((rv = send_byte(*buffer)) != tme_ok)
-			return(rv);
-
-	send_stop();
-
-	return(tme_ok);
-}
-
-uint8_t twi_master_receive(uint8_t address, uint8_t size, uint8_t *buffer)
-{
-	uint8_t rv, ix;
-
-	if((rv = send_start()) != tme_ok)
-		return(rv);
-
-	if((rv = send_address(address, 0)) != tme_ok)
-		return(rv);
-
-	for(ix = 0; ix < size; ix++)
-		if((rv = receive_byte(&buffer[ix])) != tme_ok)
-			return(rv);
-
-	if((rv = send_nack()) != tme_ok)
-		return(rv);
-
-	send_stop();
-
-	return(tme_ok);
-}
-
-void twi_master_error(uint8_t *dst, uint16_t size, uint8_t error)
-{
-	static const __flash char format_string[] = "TWI error: %x, state %x\n";
-
-	snprintf_P((char *)dst, (size_t)size, format_string,
-			error & 0x0f, (error & 0xf0) >> 4);
-}

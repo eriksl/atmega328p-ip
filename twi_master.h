@@ -29,10 +29,18 @@ typedef enum
 	tme_send_nack		= 0x06,
 } twi_master_error_t;
 
+uint8_t	twi_master_status(void);
+void	twi_master_wait(void);
+void	twi_master_send_stop(void);
+void	twi_master_send_stop_no_wait(void);
+uint8_t twi_master_send_start(void);
+uint8_t	twi_master_send_address(uint8_t address, uint8_t request_write);
+uint8_t	twi_master_send_byte(uint8_t data);
+uint8_t	twi_master_receive_byte(uint8_t *data);
+uint8_t twi_master_send_nack(void);
 void	twi_master_init(void);
 void	twi_master_recover(void);
 uint8_t	twi_master_send(uint8_t address, uint8_t length, const uint8_t *buffer);
 uint8_t twi_master_receive(uint8_t address, uint8_t size, uint8_t *buffer);
 void	twi_master_error(uint8_t *dst, uint16_t size, uint8_t error);
-
 #endif

@@ -140,6 +140,29 @@ static uint8_t htu21_crc(uint8_t length, const uint8_t *data)
 	return(crc);
 }
 
+uint16_t am2321_crc(uint8_t length, const uint8_t *data)
+{
+	uint8_t		outer, inner, testbit;
+	uint16_t	crc;
+
+	crc = 0xffff;
+
+	for(outer = 0; outer < length; outer++)
+	{
+		crc ^= data[outer];
+
+		for(inner = 0; inner < 8; inner++)
+		{
+			testbit = !!(crc & 0x01);
+			crc >>= 1;
+			if(testbit)
+				crc ^= 0xa001;
+		}
+	}
+
+	return(crc);
+}
+
 static void adjust(uint8_t sensor, float *value)
 {
 	float factor, offset;
@@ -500,6 +523,106 @@ uint8_t sensor_read_htu21_hum(float *value, float *raw_value)
 	*value = ((*raw_value * 125) / 65536) - 6;
 
 	adjust(sensor_htu21_humidity, value);
+
+	return(tme_ok);
+}
+
+uint8_t sensor_read_am2321_temp(float *value, float *raw_value)
+{
+	uint8_t		twierror;
+	uint8_t		twistring[8];
+	uint16_t	crc1, crc2;
+
+	if((twierror = twi_master_send_start()) != tme_ok)
+		return(twierror);
+
+	twi_master_send_address(0x5c, 1);	// wakeup the device
+	twi_master_send_stop_no_wait();		// by issueing an empty write
+
+	msleep(1);
+
+	twistring[0] = 0x03;	// read registers
+	twistring[1] = 0x02;	// start address
+	twistring[2] = 0x02;	// length;
+
+	if((twierror = twi_master_send(0x5c, 3, twistring)) != tme_ok)
+		return(twierror);
+
+	msleep(1);
+
+	if((twierror = twi_master_receive(0x5c, 6, twistring)) != tme_ok)
+		return(twierror);
+
+	*raw_value = (int16_t)(((uint16_t)twistring[2] << 8) | (uint16_t)twistring[3]);
+
+	if((twistring[0] != 0x03) || (twistring[1] != 0x02))
+	{
+		*value = -257;
+		return(tme_ok);
+	}
+
+	crc1 = ((uint16_t)twistring[5] << 8) | (uint16_t)twistring[4];
+	crc2 = am2321_crc(4, &twistring[0]);
+
+	if(crc1 != crc2)
+	{
+		*value = -256;
+		return(tme_ok);
+	}
+
+	*value = *raw_value / 10.0;
+
+	adjust(sensor_am2321_temperature, value);
+
+	return(tme_ok);
+}
+
+uint8_t sensor_read_am2321_hum(float *value, float *raw_value)
+{
+	uint8_t		twierror;
+	uint8_t		twistring[8];
+	uint16_t	crc1, crc2;
+
+	if((twierror = twi_master_send_start()) != tme_ok)
+		return(twierror);
+
+	twi_master_send_address(0x5c, 1);	// wakeup the device
+	twi_master_send_stop_no_wait();		// by issueing an empty write
+
+	msleep(1);
+
+	twistring[0] = 0x03;	// read registers
+	twistring[1] = 0x00;	// start address
+	twistring[2] = 0x02;	// length;
+
+	if((twierror = twi_master_send(0x5c, 3, twistring)) != tme_ok)
+		return(twierror);
+
+	msleep(1);
+
+	if((twierror = twi_master_receive(0x5c, 6, twistring)) != tme_ok)
+		return(twierror);
+
+	*raw_value = (int16_t)(((uint16_t)twistring[2] << 8) | (uint16_t)twistring[3]);
+
+	if((twistring[0] != 0x03) || (twistring[1] != 0x02))
+	{
+		*value = -257;
+		return(tme_ok);
+	}
+
+	crc1 = ((uint16_t)twistring[5] << 8) | (uint16_t)twistring[4];
+	crc2 = am2321_crc(4, &twistring[0]);
+
+	if(crc1 != crc2)
+	{
+		*value = -256;
+		return(tme_ok);
+	}
+
+	*value = *raw_value / 10.0;
+
+	adjust(sensor_am2321_humidity, value);
 
 	return(tme_ok);
 }

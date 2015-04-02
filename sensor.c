@@ -118,6 +118,28 @@ static uint8_t tsl2560_read(uint8_t reg, uint8_t *values)
 	return(0);
 }
 
+static uint8_t htu21_crc(uint8_t length, const uint8_t *data)
+{
+	uint8_t outer, inner, testbit, crc;
+
+	crc = 0;
+
+	for(outer = 0; outer < length; outer++)
+	{
+		crc ^= data[outer];
+
+		for(inner = 0; inner < 8; inner++)
+		{
+			testbit = !!(crc & 0x80);
+			crc <<= 1;
+			if(testbit)
+				crc ^= 0x31;
+		}
+	}
+
+	return(crc);
+}
+
 static void adjust(uint8_t sensor, float *value)
 {
 	float factor, offset;
@@ -435,7 +457,7 @@ uint8_t sensor_read_htu21_temp(float *value, float *raw_value)
 	*raw_value = ((uint16_t)twistring[0] << 8) | (uint16_t)twistring[1];
 
 	crc1 = twistring[2];
-	crc2 = crc8(0x31, 2, &twistring[0]);
+	crc2 = htu21_crc(2, &twistring[0]);
 
 	if(crc1 != crc2)
 	{
@@ -467,7 +489,7 @@ uint8_t sensor_read_htu21_hum(float *value, float *raw_value)
 	*raw_value = ((uint16_t)twistring[0] << 8) | (uint16_t)twistring[1];
 
 	crc1 = twistring[2];
-	crc2 = crc8(0x31, 2, &twistring[0]);
+	crc2 = htu21_crc(2, &twistring[0]);
 
 	if(crc1 != crc2)
 	{

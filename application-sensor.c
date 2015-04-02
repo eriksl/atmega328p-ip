@@ -179,14 +179,14 @@ twierror:
 
 uint8_t application_function_sensor_read(application_parameters_t ap)
 {
-	static const __flash char error[] = "> invalid sensor: %s\n";
+	static const __flash char error[] = "> invalid sensor: %d\n";
 
 	uint8_t sensor;
 
 	sensor = (uint8_t)strtoul((const char *)(*ap.args)[1], 0, 0);
 
 	if(!application_sensor_read(sensor, ap.size, ap.dst))
-		snprintf_P((char *)ap.dst, ap.size, error, (*ap.args[1]));
+		snprintf_P((char *)ap.dst, ap.size, error, sensor);
 
 	return(1);
 }

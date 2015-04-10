@@ -30,7 +30,6 @@ static uint8_t display_string[application_num_args - 1][5];
 static uint8_t application_function_bright(application_parameters_t ap);
 static uint8_t application_function_edmp(application_parameters_t ap);
 static uint8_t application_function_help(application_parameters_t ap);
-static uint8_t application_function_quit(application_parameters_t ap);
 static uint8_t application_function_reset(application_parameters_t ap);
 static uint8_t application_function_sdmp(application_parameters_t ap);
 static uint8_t application_function_show(application_parameters_t ap);
@@ -86,18 +85,6 @@ static const __flash application_function_table_t application_function_table[] =
 		1,
 		application_function_pwmw,
 		"pwmw index/value(/speed/min/max)",
-	},
-	{
-		"q",
-		0,
-		application_function_quit,
-		"quit",
-	},
-	{
-		"quit",
-		0,
-		application_function_quit,
-		"quit",
 	},
 	{
 		"reset",
@@ -507,11 +494,6 @@ static uint8_t application_function_help(application_parameters_t ap)
 	}
 
 	return(1);
-}
-
-static uint8_t application_function_quit(application_parameters_t ap)
-{
-	return(0);
 }
 
 static uint8_t application_function_reset(application_parameters_t ap)

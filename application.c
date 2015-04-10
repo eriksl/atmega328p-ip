@@ -7,7 +7,6 @@
 #include "stackmonitor.h"
 #include "eeprom.h"
 #include "display.h"
-#include "clock.h"
 #include "sensor.h"
 
 #include <avr/pgmspace.h>
@@ -58,18 +57,6 @@ static const __flash application_function_table_t application_function_table[] =
 		1,
 		application_function_bright,
 		"set display brightness (0-7)",
-	},
-	{
-		"clockr",
-		0,
-		application_function_clockr,
-		"read clock",
-	},
-	{
-		"clockw",
-		3,
-		application_function_clockw,
-		"write clock",
 	},
 	{
 		"edmp",

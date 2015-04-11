@@ -18,11 +18,10 @@ typedef struct
 static uint8_t beep_length = 0;
 static uint8_t beep_period = 0;
 
-static output_t output[3] =
+static output_t output[2] =
 {
 	{ 0, 0, 0 },	// PWM OCR1A
 	{ 0, 0, 0 },	// PWM OCR1B
-	{ 0, 0, 0 },	// OUTPUT C0
 };
 
 #define sizeof_output (sizeof(output) / sizeof(output[0]))
@@ -39,7 +38,6 @@ static uint16_t getoutput(uint8_t entry)
 	{
 		case(0): return(OCR1A);
 		case(1): return(OCR1B);
-		case(2): return(!!(PORTC & _BV(0)));
 	}
 
 	return(0);
@@ -81,16 +79,6 @@ static void setoutput(uint8_t entry, uint16_t value)
 
 			break;
 		}
-
-		case(2):
-		{
-			if(value)
-				PORTC |= _BV(0);
-			else
-				PORTC &= ~_BV(0);
-
-			break;
-		}
 	}
 }
 
@@ -109,7 +97,6 @@ void application_init_timer(void)
 
 	setoutput(0, 0);
 	setoutput(1, 0);
-	setoutput(2, 0);
 
 	TCCR1B |= _BV(CS10);	// start timer at prescaler 1, rate = 169 Hz
 }
@@ -245,7 +232,7 @@ uint8_t application_function_output_set(application_parameters_t ap)
 
 	entry = (uint8_t)atoi((const char *)(*ap.args)[1]);
 
-	if(entry > 2)
+	if(entry >= sizeof_output)
 	{
 		snprintf_P((char *)ap.dst, ap.size, output_error, entry);
 		return(1);

@@ -1,5 +1,5 @@
-#ifndef display_h
-#define display_h
+#ifndef led_display_h
+#define led_display_h
 
 #include <stdint.h>
 

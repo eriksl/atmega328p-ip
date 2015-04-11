@@ -4,7 +4,7 @@
 #include "eeprom.h"
 #include "application.h"
 #include "util.h"
-#include "display.h"
+#include "led-display.h"
 
 #include <avr/interrupt.h>
 #include <avr/io.h>

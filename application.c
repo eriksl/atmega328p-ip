@@ -6,7 +6,7 @@
 #include "util.h"
 #include "stackmonitor.h"
 #include "eeprom.h"
-#include "display.h"
+#include "led-display.h"
 #include "sensor.h"
 #include "esp.h"
 

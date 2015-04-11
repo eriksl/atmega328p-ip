@@ -171,23 +171,23 @@ void application_periodic_timer(uint16_t missed_ticks)
 	}
 }
 
-uint8_t application_function_beep(uint8_t nargs, uint8_t args[application_num_args][application_length_args], uint16_t size, uint8_t *dst)
+uint8_t application_function_beep(application_parameters_t ap)
 {
 	static const __flash char ok[] = "> beep %u %u\n";
 
 	beep_length = 60;
 	beep_period = 0;
 
-	if(nargs > 1)
-		beep_length = (uint8_t)atoi((const char *)args[1]);
+	if(ap.nargs > 1)
+		beep_length = (uint8_t)atoi((const char *)(*ap.args)[1]);
 
-	if(nargs > 2)
-		beep_period = (uint8_t)atoi((const char *)args[2]);
+	if(ap.nargs > 2)
+		beep_period = (uint8_t)atoi((const char *)(*ap.args)[2]);
 
 	if((beep_length > 0) && (beep_period == 0))
 		PORTD |= _BV(3);
 
-    snprintf_P((char *)dst, size, ok, beep_length, beep_period);
+    snprintf_P((char *)ap.dst, ap.size, ok, beep_length, beep_period);
 
 	return(1);
 }

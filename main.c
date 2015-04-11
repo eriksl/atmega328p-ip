@@ -87,9 +87,11 @@ int main(void)
 
 	sei();
 
-	strncpy((char *)tx_frame, "boot", sizeof(tx_frame));
-	tx_frame[3] |= 0x80; // add dot to last digit
-	display_show(tx_frame);
+	{
+		char boot[16];
+		strncpy(boot, "boot", sizeof(boot));
+		display_show(boot);
+	}
 
 	for(;;)
 	{

@@ -220,11 +220,10 @@ void application_periodic(void)
 			case(0):
 			{
 				static const __flash char format[] = "%02u%02u";
-				uint8_t	seconds;
 				uint8_t	minutes;
 				uint8_t	hours;
 
-				clock_get(&hours, &minutes, &seconds);
+				minutes = hours = 0; // fixme
 
 				snprintf_P((char *)display, sizeof(display), format, (int)hours, (int)minutes);
 
@@ -392,11 +391,11 @@ static uint8_t application_function_bright(application_parameters_t ap)
 
 	uint8_t level;
 
-	level = (uint8_t)atoi((const char *)args[1]);
+	level = (uint8_t)atoi((const char *)(*ap.args)[1]);
 
 	display_brightness(level);
 
-	snprintf_P((char *)dst, size, format, (unsigned int)level & 0x07);
+	snprintf_P((char *)ap.dst, ap.size, format, (unsigned int)level & 0x07);
 
 	return(1);
 }

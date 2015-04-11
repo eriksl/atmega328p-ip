@@ -1,5 +1,4 @@
 #include "led-display.h"
-
 #include "twi_master.h"
 
 /*
@@ -93,6 +92,7 @@ static const uint8_t charrom[] =
 	0x40,		/*	95	_	*/
 };
 
+uint8_t display_string[application_num_args - 1][5];
 static uint8_t brightness = 1;
 
 static uint8_t render_char(uint8_t character)

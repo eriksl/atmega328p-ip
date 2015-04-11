@@ -16,6 +16,7 @@ PRGFLAGS	=		-P usb -B 5 -y -V
 PROGRAM		=		main
 OBJFILES	=		$(PROGRAM).o twi_master.o esp.o uart.o \
 						application.o application-sensor.o application-twi.o application-timer.o \
+						application-led-display.o \
 						stats.o util.o eeprom.o stackmonitor.o sensor.o led-display.o
 HEADERS		=			application.h stats.h util.h eeprom.h stackmonitor.h util.h
 HEXFILE		=		$(PROGRAM).hex

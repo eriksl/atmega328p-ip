@@ -146,5 +146,8 @@ uint8_t display_show(const uint8_t *text)
 
 void display_brightness(uint8_t level)
 {
-	brightness = level & 0x07;
+	if(level > 7)
+		level = 7;
+
+	brightness = level;
 }

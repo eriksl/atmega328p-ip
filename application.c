@@ -206,6 +206,9 @@ void application_periodic(void)
 	application_periodic_timer(missed_ticks);
 	esp_periodic();
 
+	if((t1_interrupts % 122) == 0)
+		PORTD ^= _BV(6);
+
 	static stats_t wd_previous = 0;
 	static uint8_t display_state = 0;
 

@@ -40,16 +40,18 @@ int main(void)
 
 	MCUCR	|= _BV(PUD);		//	disable pullups
 	DDRB	= 0;
-	DDRC	= 0;
+	DDRC	= _BV(3);
 	DDRD	= _BV(3) | _BV(6) | _BV(7);
 
-	PORTD = _BV(6) | _BV(3);
-	msleep(200);
-	PORTD = _BV(7);
-	msleep(200);
-	PORTD = _BV(6) | _BV(7) | _BV(3);
-	msleep(200);
-	PORTD = 0;
+	for(length = 0; length < 8; length++)
+	{
+		PORTD |= _BV(6);
+		msleep(50);
+		PORTD &= ~_BV(6);
+		PORTD |= _BV(7);
+		msleep(50);
+		PORTD &= ~_BV(7);
+	}
 
 	esp_wd_timeout = 0xffff;
 	wdt_enable(WDTO_1S);

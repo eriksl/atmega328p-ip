@@ -30,15 +30,11 @@ void twi_master_send_stop(void)
 
 	while(TWCR & _BV(TWSTO))
 		(void)0;
-
-	PORTD &= ~_BV(6);
 }
 
 uint8_t twi_master_send_start(void)
 {
 	uint8_t stat;
-
-	PORTD |= _BV(6);
 
 	TWCR = _BV(TWINT) | _BV(TWEN) | _BV(TWSTA);
 

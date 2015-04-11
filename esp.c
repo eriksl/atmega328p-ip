@@ -320,7 +320,7 @@ void esp_init(uint16_t rsize, uint8_t *rbuffer, uint16_t ssize, uint8_t *sbuffer
 	uart_init();
 	uart_baud(115200);
 
-	PORTD &= ~_BV(2);
+	PORTC &= ~_BV(3);
 	esp_setup_state = state_setup_init;
 
 	esp_wd_timeout = wd_esp_init;
@@ -341,7 +341,7 @@ void esp_periodic(void)
 		{
 			if(t1_interrupts > 2)
 			{
-				PORTD |= _BV(2);
+				PORTC |= _BV(3);
 				esp_setup_state = state_setup_reset_done;
 			}
 

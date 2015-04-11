@@ -13,8 +13,8 @@
 	9	b6						xtal1	crystal
 	10	b7						xtal2	crystal
 	11	d5												large green
-	12	d6								act 1			large red					activity 1
-	13	d7								act 2			large blue					activity 2
+	12	d6								heartbeat		large red					activity 1
+	13	d7								command			large blue					activity 2
 	14	b0						(b0)	(spi ss)		square green ss
 
 	28	c5				scl				i2c scl

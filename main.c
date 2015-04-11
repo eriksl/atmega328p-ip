@@ -88,8 +88,8 @@ int main(void)
 	sei();
 
 	{
-		char boot[16];
-		strncpy(boot, "boot", sizeof(boot));
+		uint8_t boot[16];
+		strncpy((char *)boot, "boot", sizeof(boot));
 		display_show(boot);
 	}
 

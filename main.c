@@ -38,34 +38,6 @@ int main(void)
 
 	PRR = 0xff;
 
-#if 0
-	b0		/cs				b0		O	square green				spi ss
-	b1						oc1a	O	small red					light
-	b2		(/ss)			oc1b	O	small green					ir
-	b3		mosi					O	square green				spi mosi
-	b4		miso					I	square red					spi miso
-	b5		sck						O	square red					spi sck
-	b6								*								*
-	b7						b7		I								button light down
-
-	c0						adc0	I								tmp36
-	c1						c1		*								*
-	c2						c2		*								*
-	c3						c3		*								*
-	c4				sda				O								i2c sda
-	c5				scl				O								i2c scl
-	c6						RESET	O
-
-	d0						d0		O	small transparent green		led heartbeat
-	d1						d1		O	small transparent red		led command
-	d2						int0	I								enc int
-	d3						d3		O	buzzer
-	d4		 						*								*
-	d5						d5		*								*
-	d6						d6		*								*
-	d7						d7		I								button light up
-#endif
-
 	MCUCR	|= _BV(PUD);		//	disable pullups
 	DDRB	= 0;
 	DDRC	= 0;

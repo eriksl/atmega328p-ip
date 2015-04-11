@@ -105,7 +105,6 @@ void application_periodic_timer(uint16_t missed_ticks)
 {
 	if(beep_length > 0)
 	{
-
 		if((beep_length % beep_period) == 0)
 			PORTD ^= _BV(3);
 

@@ -1,35 +1,33 @@
-MODEL 3 (ATMEGA328), VERSION 3, REVISION 1
-
 *** FEATURES ***
 
-		PORT	SPI		TWI		I/O		USAGE
+		PORT	SPI		TWI		I/O		USAGE			development board led		avr3 board
 
 	1	c6						RESET	reset
-	2	d0						rxd		uart
-	3	d1						txd		uart
-	4	d2						int0	enc int
-	5	d3						d3		buzzer
-	6	d4
+	2	d0						rxd		uart esp2866
+	3	d1						txd		uart esp2866
+	4	d2						(int0)	(enc28j60 int)
+	5	d3						d3						rectangular green			buzzer
+	6	d4						d4						small red
 	7	Vcc								VCC
 	8	GND								GND
 	9	b6						xtal1	crystal
 	10	b7						xtal2	crystal
-	11	d5
-	12	d6						d6		led i2c activity
-	13	d7						d7		led command
-	14	b0		/cs				b0		spi ss
+	11	d5												large green
+	12	d6								act 1			large red					activity 1
+	13	d7								act 2			large blue					activity 2
+	14	b0						(b0)	(spi ss)		square green ss
 
 	28	c5				scl				i2c scl
 	27	c4				sda				i2c sda
-	26	c3
-	25	c2
+	26	c3								reset esp8266
+	25	c2						*pcint10 *anemometer counter
 	24	c1
-	23	c0
+	23	c0						(adc0)	(tmp36)
 	22	GND								GND
 	21	AREF							AREF
 	20	AVcc							AVCC
-	19	b5		sck						spi sck
-	18	b4		miso					spi miso
-	17	b3		mosi					spi mosi
-	16	b2						oc1b	pwm 1
-	15	b1						oc1a	pwm 0
+	19	b5		sck				(sck)	(spi sck)
+	18	b4		miso			(miso)	(spi miso)		square red miso
+	17	b3		mosi			(mosi)	(spi mosi)		square green mosi
+	16	b2						oc1b	pwm 1			small green
+	15	b1						oc1a	pwm 0			small red

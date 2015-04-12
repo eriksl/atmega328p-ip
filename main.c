@@ -70,6 +70,7 @@ int main(void)
 
 			if(length > 0)
 			{
+				receive_buffer[length] = '\0';
 				length = application_content(length, receive_buffer, sizeof(send_buffer), send_buffer);
 
 				if(length > 0)

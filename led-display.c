@@ -1,6 +1,8 @@
 #include "led-display.h"
 #include "twi_master.h"
 
+#include <string.h>
+
 /*
 	+--1--+
 	|     |
@@ -92,7 +94,8 @@ static const uint8_t charrom[] =
 	0x40,		/*	95	_	*/
 };
 
-uint8_t display_string[application_num_args - 1][5];
+static uint8_t display_buffer[32];
+static uint8_t display_scroll_offset;
 static uint8_t brightness = 1;
 
 static uint8_t render_char(uint8_t character)
@@ -122,10 +125,12 @@ static uint8_t render_char(uint8_t character)
 	return(charrom[character] | add_dot);
 }
 
-uint8_t display_show(const uint8_t *text)
+void led_display_update(void)
 {
-	uint8_t ix, twierror;
+	uint8_t ix, length;
 	uint8_t twistring[6];
+
+	length = strlen((const char *)display_buffer);
 
 	twistring[0] =	0x00;	// start at control register (0x00),
 							// followed by four digits segments registers (0x01-0x04)
@@ -135,19 +140,54 @@ uint8_t display_show(const uint8_t *text)
 	for(ix = 0; ix < 4; ix++)
 		twistring[2 + ix] = 0x00;
 
-	for(ix = 0; (ix < 4) && text[ix]; ix++)
-		twistring[5 - ix] = render_char(text[ix]); // reverse digit's position
+	if((display_scroll_offset + 4) > length)
+		display_scroll_offset = 0;
 
-	if((twierror = twi_master_send(0x38, 6, twistring)) != tme_ok)
-		return(twierror);
+	for(ix = 0; ix < 4; ix++)
+		if((ix + display_scroll_offset) < length)
+			twistring[5 - ix] = render_char(display_buffer[ix + display_scroll_offset]); // reverse digit's position
+		else
+			twistring[5 - ix] = render_char(' ');
 
-	return(0);
+	display_scroll_offset++;
+
+	twi_master_send(0x38, 6, twistring);
 }
 
-void display_brightness(uint8_t level)
+uint8_t led_display_brightness(uint8_t level)
 {
 	if(level > 7)
 		level = 7;
 
 	brightness = level;
+
+	led_display_update();
+
+	return(brightness);
+}
+
+void led_display_clear(void)
+{
+	display_buffer[0] = '\0';
+	display_scroll_offset = 0;
+
+	led_display_update();
+}
+
+void led_display_show_chunk(uint8_t length, const uint8_t *string)
+{
+	uint8_t display_length = strlen((const char *)display_buffer);
+
+	if((display_length + length + 1) > sizeof(display_buffer))
+		length = sizeof(display_buffer) - display_length - 1;
+
+	memcpy(display_buffer + display_length, string, length);
+	display_buffer[display_length + length] = '\0';
+
+	led_display_update();
+}
+
+void led_display_show(const uint8_t *string)
+{
+	led_display_show_chunk(strlen((const char *)string), string);
 }

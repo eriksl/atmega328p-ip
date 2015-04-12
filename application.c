@@ -48,10 +48,28 @@ static const __flash application_function_table_t application_function_table[] =
 		"beep duration period",
 	},
 	{
-		"bright",
+		"dbr",
 		1,
-		application_function_bright,
+		application_function_dbr,
 		"set display brightness (0-7)",
+	},
+	{
+		"dclr",
+		0,
+		application_function_dclr,
+		"clear display",
+	},
+	{
+		"dshow",
+		0,
+		application_function_dshow,
+		"show text on display",
+	},
+	{
+		"dhshw",
+		0,
+		application_function_dhshw,
+		"show text/clear display",
 	},
 	{
 		"edmp",
@@ -112,12 +130,6 @@ static const __flash application_function_table_t application_function_table[] =
 		0,
 		application_function_stats,
 		"statistics",
-	},
-	{
-		"show",
-		0,
-		application_function_show,
-		"show text on display",
 	},
 	{
 		"stats",
@@ -183,6 +195,7 @@ void application_init(void)
 
 void application_periodic(void)
 {
+	static stats_t wd_previous = 0;
 	uint16_t missed_ticks;
 
 	if((missed_ticks = t1_unhandled) == 0)
@@ -207,92 +220,10 @@ void application_periodic(void)
 	if((t1_interrupts % 122) == 0)
 		PORTD ^= _BV(6);
 
-	static stats_t wd_previous = 0;
-	static uint8_t display_state = 0;
-
 	if(wd_interrupts != wd_previous)
 	{
-		uint8_t	display[5];
-
+		led_display_update();
 		wd_previous = wd_interrupts;
-
-		switch(display_state)
-		{
-			case(0):
-			{
-				static const __flash char format[] = "%02u%02u";
-				uint8_t	minutes;
-				uint8_t	hours;
-
-				minutes = hours = 0; // fixme
-
-				snprintf_P((char *)display, sizeof(display), format, (int)hours, (int)minutes);
-
-				display[1] |= 0x80; // add dot
-
-				break;
-			}
-
-			case(1):
-			{
-				static const __flash char format[] = "%3d'";
-				float temp_digipicco, temp_digipicco_raw;
-				float hum_digipicco, hum_digipicco_raw;
-				float temp, temp_raw;
-
-				sensor_read_digipicco(&temp_digipicco, &temp_digipicco_raw,
-						&hum_digipicco, &hum_digipicco_raw);
-
-				sensor_read_lm75(&temp, &temp_raw);
-
-				temp = (temp + temp_digipicco) / 2.0;
-
-				snprintf_P((char *)display, sizeof(display), format, (int)temp);
-
-				break;
-			}
-
-			case(2):
-			{
-				static const __flash char format[] = "%3d%%";
-				float temp, temp_raw, hum, hum_raw;
-
-				sensor_read_digipicco(&temp, &temp_raw, &hum, &hum_raw);
-
-				snprintf_P((char *)display, sizeof(display), format, (int)hum);
-
-				break;
-			}
-
-			case(3):
-			{
-				static const __flash char format[] = "%4d";
-				float temp, temp_raw, pressure, pressure_raw;
-
-				sensor_read_bmp085(&temp, &temp_raw, &pressure, &pressure_raw);
-
-				snprintf_P((char *)display, sizeof(display), format, (int)pressure);
-
-				break;
-			}
-
-			default:
-			{
-				strncpy((char *)display, (const char *)display_string[display_state - 4], 4);
-
-				break;
-			}
-		}
-
-		display_show(display);
-
-		display_state++;
-
-		if((display_state - 4) >= (application_num_args - 1))
-			display_state = 0;
-		else
-			if(((display_state - 4) >= 0) && !display_string[display_state - 4][0])
-				display_state = 0;
 	}
 }
 

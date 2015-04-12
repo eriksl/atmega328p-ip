@@ -61,11 +61,9 @@ int main(void)
 
 	sei();
 
-	{
-		uint8_t boot[16];
-		strncpy((char *)boot, "boot", sizeof(boot));
-		display_show(boot);
-	}
+	led_display_clear();
+	led_display_show((const uint8_t *)"012345");
+	led_display_update();
 
 	for(;;)
 	{

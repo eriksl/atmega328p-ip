@@ -161,8 +161,6 @@ uint8_t led_display_brightness(uint8_t level)
 
 	brightness = level;
 
-	led_display_update();
-
 	return(brightness);
 }
 
@@ -170,8 +168,6 @@ void led_display_clear(void)
 {
 	display_buffer[0] = '\0';
 	display_scroll_offset = 0;
-
-	led_display_update();
 }
 
 void led_display_show_chunk(uint8_t length, const uint8_t *string)
@@ -197,7 +193,6 @@ void led_display_show_chunk(uint8_t length, const uint8_t *string)
 	if(to >= sizeof(display_buffer))
 		to = sizeof(display_buffer) - 1;
 
-	led_display_update();
 	display_buffer[to] = '\0';
 }
 

@@ -176,15 +176,29 @@ void led_display_clear(void)
 
 void led_display_show_chunk(uint8_t length, const uint8_t *string)
 {
-	uint8_t display_length = strlen((const char *)display_buffer);
+	uint8_t from, to;
 
-	if((display_length + length + 1) > sizeof(display_buffer))
-		length = sizeof(display_buffer) - display_length - 1;
+	from = 0;
+	to = strlen((const char *)display_buffer);
 
-	memcpy(display_buffer + display_length, string, length);
-	display_buffer[display_length + length] = '\0';
+	while((from < length) && (to < sizeof(display_buffer)))
+	{
+		if(string[from] == '.')
+		{
+			if(to > 0)
+				display_buffer[to - 1] |= 0x80;
+		}
+		else
+			display_buffer[to++] = string[from];
+
+		from++;
+	}
+
+	if(to >= sizeof(display_buffer))
+		to = sizeof(display_buffer) - 1;
 
 	led_display_update();
+	display_buffer[to] = '\0';
 }
 
 void led_display_show(const uint8_t *string)

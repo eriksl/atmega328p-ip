@@ -149,7 +149,7 @@ void led_display_update(void)
 		else
 			twistring[5 - ix] = render_char(' ');
 
-	display_scroll_offset++;
+	display_scroll_offset += 4;
 
 	twi_master_send(0x38, 6, twistring);
 }

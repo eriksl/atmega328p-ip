@@ -54,7 +54,7 @@ int main(void)
 	}
 
 	esp_wd_timeout = 0xffff;
-	wdt_enable(WDTO_1S);
+	wdt_enable(WDTO_2S);
 	twi_master_init();
 	application_init();
 	esp_init(sizeof(receive_buffer), receive_buffer, sizeof(send_buffer), send_buffer);

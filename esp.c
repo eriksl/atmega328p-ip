@@ -13,7 +13,7 @@
 
 typedef enum
 {
-	wd_esp_init = 600, // 600 seconds esp watchdog timeout
+	wd_esp_init = 300, // 600 seconds esp watchdog timeout
 } const_t;
 
 typedef enum

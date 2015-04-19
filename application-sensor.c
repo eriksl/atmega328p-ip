@@ -9,9 +9,12 @@
 
 void application_init_sensor(void)
 {
-	sensor_init_bandgap();
-	sensor_init_tsl2560();
-	sensor_init_bh1750();
+	sensor_init();
+}
+
+void application_periodic_sensor(uint16_t missed_ticks)
+{
+	sensor_periodic(missed_ticks);
 }
 
 uint8_t application_function_bg_write(application_parameters_t ap)

@@ -20,9 +20,8 @@ typedef enum
 	sensor_end
 } sensors_t;
 
-void	sensor_init_bandgap(void);
-void	sensor_init_tsl2560(void);
-void	sensor_init_bh1750(void);
+void	sensor_init(void);
+void	sensor_periodic(uint16_t missed_ticks);
 
 void	sensor_read_bandgap(float *value, float *raw_value);
 uint8_t	sensor_read_digipicco(float *temp, float *temp_raw, float *hum, float *hum_raw);

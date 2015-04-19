@@ -215,6 +215,7 @@ void application_periodic(void)
 	}
 
 	application_periodic_timer(missed_ticks);
+	application_periodic_sensor(missed_ticks);
 	esp_periodic();
 
 	if((t1_interrupts % 122) == 0)

@@ -6,7 +6,7 @@
 
 enum
 {
-	eeprom_cal_size = 12,
+	eeprom_cal_size = 13,
 };
 
 typedef struct

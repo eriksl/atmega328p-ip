@@ -39,6 +39,7 @@ uint8_t application_sensor_read(uint8_t sensor, uint16_t size, uint8_t *dst)
 	static const __flash char format_humidity[]		= "%d/%s: humidity [%.0f] %% (%ld)\n";
 	static const __flash char format_light[]		= "%d/%s: light [%.2f] Lux (%ld)\n";
 	static const __flash char format_airpressure[]	= "%d/%s: pressure [%.2f] hPa (%ld)\n";
+	static const __flash char format_windmeter[]	= "%d/%s: windspeed [%.1f] km/h (%ld)\n";
 	static const __flash char twi_error[]			= "%d/%s: error: twi\n";
 
 	const __flash char *format;
@@ -184,6 +185,16 @@ uint8_t application_sensor_read(uint8_t sensor, uint16_t size, uint8_t *dst)
 
 			if((twierror = sensor_read_am2321_hum(&value, &raw_value)))
 				goto twierror;
+
+			break;
+		}
+
+		case(sensor_windmeter):
+		{
+			id = "wind";
+			format = format_windmeter;
+
+			sensor_read_windmeter(&value, &raw_value);
 
 			break;
 		}

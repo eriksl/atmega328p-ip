@@ -321,7 +321,7 @@ int16_t application_content(uint16_t src_length, const uint8_t *src, uint16_t si
 static uint8_t application_function_edmp(application_parameters_t ap)
 {
 	static const __flash char format1[] = "> bg: %.3f\n";
-	static const __flash char format2[] = "> sensor[%d]: factor %.3f, offset %.3f\n";
+	static const __flash char format2[] = "> %d: *%.3f, +%.3f\n";
 
 	uint8_t index, offset;
 

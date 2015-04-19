@@ -20,7 +20,7 @@
 	28	c5				scl				i2c scl
 	27	c4				sda				i2c sda
 	26	c3								reset esp8266
-	25	c2						*pcint10 *anemometer counter
+	25	c2						pcint10 anemometer counter
 	24	c1
 	23	c0						(adc0)	(tmp36)
 	22	GND								GND

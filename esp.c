@@ -1,7 +1,7 @@
 #include "esp.h"
 
 #include "stats.h"
-#include "uart.h"
+#include "uart-line.h"
 #include "util.h"
 
 #include <avr/io.h>
@@ -18,423 +18,192 @@ typedef enum
 
 typedef enum
 {
-	state_setup_init,
-	state_setup_reset_done,
-	state_setup_ate_sent,
-	state_setup_cipmux_sent,
-	state_setup_cipserver_sent,
-	state_setup_finished,
-} setup_state_t;
+	token_nodata,
+	token_empty,
+	token_error,
+	token_unknown,
+	token_ok,
+	token_link,
+	token_unlink,
+	token_prompt,
+	token_sendok,
+	token_systemready,
+	token_ipd,
+	token_none,
+	token_any,
+} token_t;
 
-typedef enum
+static const __flash char init_string_0[] = "ATE0\r\n";
+static const __flash char init_string_1[] = "AT+CIPMUX=1\r\n";
+static const __flash char init_string_2[] = "AT+CIPSERVER=1,23\r\n";
+
+static const __flash char token_match_ok[]			= "OK";
+static const __flash char token_match_link[]		= "Link";
+static const __flash char token_match_unlink[]		= "Unlink";
+static const __flash char token_match_prompt[]		= "> ";
+static const __flash char token_match_sendok[]		= "SEND OK";
+static const __flash char token_match_systemready[]	= "[System Ready";
+static const __flash char token_match_ipd[]			= "+IPD,";
+
+static uint8_t receive(uint16_t timeout, uint8_t *conn_id, uint16_t buffer_size, uint8_t *buffer)
 {
-	state_pull_reset,
-		state_pull_retry,
-	state_pull_O,
-		state_pull_K,
-		state_pull_cr,
-	state_pull_plus,
-		state_pull_I,
-		state_pull_P,
-		state_pull_D,
-		state_pull_comma_1,
-		state_pull_connection,
-		state_pull_comma_2,
-		state_pull_length,
-		state_pull_data,
-} pull_state_t;
+	uint16_t data_length;
+	uint8_t receive_uart_buffer[255];
+	uint8_t *rup;
 
-typedef enum
-{
-	state_push_idle,
-	state_push_start,
-	state_push_send_data,
-} push_state_t;
+	while((timeout-- > 0) && !uart_receive_ready())
+		pause_idle();
 
-static uint8_t esp_setup_state;
+	if(!uart_receive(sizeof(receive_uart_buffer), receive_uart_buffer))
+		return(token_nodata);
 
-static uint8_t	*data_in;
-static uint16_t	data_in_size;
-static uint16_t	data_in_length;
-static uint8_t	data_in_state;
-static uint8_t	data_in_connection;
-static uint16_t	data_in_length_digits;
-static uint16_t	data_in_todo;
-static uint16_t	data_in_received_ok;
+	if(receive_uart_buffer[0] == '\0')
+		return(token_empty);
 
-static uint8_t	*data_out;
-static uint16_t	data_out_size;
-static uint16_t	data_out_length;
-static uint8_t	data_out_state;
-static uint8_t	data_out_connection;
-static uint16_t data_out_current;
+	if(!strcmp_P(receive_uart_buffer, token_match_ok))
+		return(token_ok);
 
-static void esp_uart_pull(void)
-{
-	uint8_t data;
+	if(!strcmp_P(receive_uart_buffer, token_match_link))
+		return(token_link);
 
-	for(;;)
+	if(!strcmp_P(receive_uart_buffer, token_match_unlink))
+		return(token_unlink);
+
+	if(!strcmp_P(receive_uart_buffer, token_match_prompt))
+		return(token_prompt);
+
+	if(!strcmp_P(receive_uart_buffer, token_match_sendok))
+		return(token_sendok);
+
+	if(!strncmp_P(receive_uart_buffer, token_match_systemready, sizeof(token_match_systemready) - 1))
+		return(token_systemready);
+
+	if(!strncmp_P(receive_uart_buffer, token_match_ipd, sizeof(token_match_ipd) - 1))
 	{
-		if((data_in_state != state_pull_retry) && uart_receive(sizeof(data), &data) != 1)
-			break;
+		rup = receive_uart_buffer + sizeof(token_match_ipd) - 1;
 
-		switch(data_in_state)
+		if(conn_id)
+			*conn_id = *rup - '0';
+
+		rup++;
+
+		if(*rup++ != ',')
+			return(token_error);
+
+		for(data_length = 0; (*rup >= '0') && (*rup <= '9'); rup++)
 		{
-			case(state_pull_reset):
-			case(state_pull_retry):
-			{
-				if(data == '+')
-					data_in_state = state_pull_plus;
-				else
-					if(data == 'O')
-						data_in_state = state_pull_O;
-					else
-						data_in_state = state_pull_reset;
-
-				break;
-			}
-
-			case(state_pull_O):
-			{
-				if(data == 'K')
-					data_in_state = state_pull_K;
-				else
-					data_in_state = state_pull_retry;
-
-				break;
-			}
-
-			case(state_pull_K):
-			{
-				if(data == '\r')
-					data_in_state = state_pull_cr;
-				else
-					data_in_state = state_pull_retry;
-
-				break;
-			}
-
-			case(state_pull_cr):
-			{
-				if(data == '\n')
-				{
-					data_in_received_ok = 1;
-					data_in_state = state_pull_reset;
-				}
-				else
-					data_in_state = state_pull_retry;
-
-				break;
-			}
-
-			case(state_pull_plus):
-			{
-				if(data == 'I')
-					data_in_state = state_pull_I;
-				else
-					data_in_state = state_pull_retry;
-
-				break;
-			}
-
-			case(state_pull_I):
-			{
-				if(data == 'P')
-					data_in_state = state_pull_P;
-				else
-					data_in_state = state_pull_retry;
-
-				break;
-			}
-
-			case(state_pull_P):
-			{
-				if(data == 'D')
-					data_in_state = state_pull_D;
-				else
-					data_in_state = state_pull_retry;
-
-				break;
-			}
-
-			case(state_pull_D):
-			{
-				if(data == ',')
-					data_in_state = state_pull_comma_1;
-				else
-					data_in_state = state_pull_retry;
-
-				break;
-			}
-
-			case(state_pull_comma_1):
-			{
-				if((data >= '0') && (data <= '9'))
-				{
-					data_in_connection = data - '0';
-					data_in_state = state_pull_connection;
-				}
-				else
-					data_in_state = state_pull_retry;
-
-				break;
-			}
-
-			case(state_pull_connection):
-			{
-				if(data == ',')
-					data_in_state = state_pull_comma_2;
-				else
-					data_in_state = state_pull_retry;
-
-				break;
-			}
-
-			case(state_pull_comma_2):
-			{
-				if((data >= '0') && (data <= '9'))
-				{
-					data_in_length_digits = 0;
-					data_in_todo = 0;
-					data_in_state = state_pull_length; // fall through to state_pull_length
-				}
-				else
-				{
-					data_in_state = state_pull_retry;
-
-					break;
-				}
-			}
-
-			case(state_pull_length):
-			{
-				if(data_in_length_digits > 4) // emergency brake
-					data_in_state = state_pull_reset;
-				else
-					if(data == ':')
-					{
-						data_in_state = state_pull_data;
-						data_in_length = 0;
-					}
-					else
-						if((data >= '0') && (data <= '9'))
-						{
-							data_in_length_digits++;
-							data_in_todo = (data_in_todo * 10) + (data - '0');
-						}
-						else
-							data_in_state = state_pull_retry;
-
-				break;
-			}
-
-			case(state_pull_data):
-			{
-				if(data_in_todo > 0)
-				{
-					data_in_todo--;
-
-					if(data_in_length < data_in_size)
-					{
-						if((data >= ' ') && (data <= '~'))
-						{
-							data_in[data_in_length] = data;
-							data_in_length++;
-						}
-					}
-				}
-				else
-				{
-					esp_wd_timeout = wd_esp_init;
-					data_in_state = state_pull_reset;
-				}
-
-				break;
-			}
+			data_length *= 10;
+			data_length += *rup - '0';
 		}
+
+		if(*rup++ != ':')
+			return(token_error);
+
+		if(data_length > (buffer_size - 2))
+			data_length = buffer_size - 2;
+
+		if(buffer)
+			strlcpy(buffer, (const char *)rup, data_length);
+
+		return(token_ipd);
 	}
+
+	return(token_unknown);
 }
 
-static void esp_uart_push(void)
+static uint8_t writeread(uint16_t timeout, const uint8_t *cmd, uint8_t expect_token)
 {
-	static const __flash char cipsendcmd[] = "AT+CIPSEND=%u,%u\r\n";
+	uint8_t token;
+	uint16_t t;
 
-	uint8_t cipsend[24];
-	uint8_t cipsendlength;
-
-	switch(data_out_state)
+	for(t = timeout; t > 0; t--)
 	{
-		case(state_push_idle):
-		{
+		if(!uart_transmit(cmd))
 			break;
-		}
 
-		case(state_push_start):
-		{
-			cipsendlength = snprintf_P((char *)cipsend, sizeof(cipsend), cipsendcmd, data_out_connection, data_out_length);
-			uart_transmit(cipsendlength, cipsend);
-			data_out_state = state_push_send_data;
-
-			break;
-		}
-
-		case(state_push_send_data):
-		{
-			data_out_current += uart_transmit(data_out_length - data_out_current, data_out + data_out_current);
-
-			if(data_out_current >= data_out_length)
-			{
-				data_out_length = 0;
-				data_out_current = 0;
-				data_out_state = state_push_idle;
-			}
-
-			break;
-		}
+		pause_idle();
 	}
+
+	if(t == 0)
+		goto timeout;
+
+	for(t = timeout; t > 0; t--)
+	{
+		token = receive(1, 0, 0, 0);
+
+		if(token == token_nodata)
+			continue;
+
+		if(expect_token == token)
+			goto ok;
+	}
+
+timeout:
+	return(0);
+
+ok:
+	return(1);
 }
 
-static void esp_uart_flush()
+void esp_init(uint32_t baud)
 {
-	data_in_length		= 0;
-	data_in_state		= state_pull_reset;
-	data_in_todo		= 0;
-	data_in_connection	= 0;
-	data_in_length		= 0;
-
-	data_out_length		= 0;
-	data_out_state		= state_push_idle;
-	data_out_connection	= 0;
-	data_out_current	= 0;
-}
-
-void esp_init(uint16_t rsize, uint8_t *rbuffer, uint16_t ssize, uint8_t *sbuffer)
-{
-	data_in			= rbuffer;
-	data_in_size	= rsize;
-	data_out		= sbuffer;
-	data_out_size	= ssize;
-
-	esp_uart_flush();
+	uint8_t buffer[32];
 
 	uart_init();
-	uart_baud(38400);
+	uart_baud(baud);
 
 	PORTC &= ~_BV(3);
-	esp_setup_state = state_setup_init;
+	msleep(10);
+	PORTC |= _BV(3);
+
+	while(receive(0xffff, 0, 0, 0) != token_systemready)
+		(void)0;
+
+	strlcpy_P(buffer, init_string_0, sizeof(buffer));
+	writeread(0xffff, buffer, token_ok);
+
+	strlcpy_P(buffer, init_string_1, sizeof(buffer));
+	writeread(0xffff, buffer, token_ok);
+
+	strlcpy_P(buffer, init_string_2, sizeof(buffer));
+	writeread(0xffff, buffer, token_ok);
 
 	esp_wd_timeout = wd_esp_init;
 }
 
-void esp_periodic(void)
+uint8_t esp_read(uint8_t *conn_id, uint16_t buffer_size, uint8_t *buffer)
 {
-	static const uint8_t *ate		= (uint8_t *)"ATE0\r\n";
-	static const uint8_t *cipmux	= (uint8_t *)"AT+CIPMUX=1\r\n";
-	static const uint8_t *cipserver	= (uint8_t *)"AT+CIPSERVER=1,23\r\n";
+	uint8_t token;
 
-	esp_uart_pull();
-	esp_uart_push();
+	token = receive(0, conn_id, buffer_size, buffer);
 
-	switch(esp_setup_state)
+	if(token == token_ipd)
+		return(1);
+
+	return(0);
+}
+
+void esp_write(uint8_t conn_id, const uint8_t *data)
+{
+	static const __flash char cipsendcmd[] = "AT+CIPSEND=%u,%u\r\n";
+
+	uint8_t cipsend[32];
+	uint8_t data_length;
+	uint8_t attempt;
+
+	data_length = strlen(data);
+
+	if(!data_length)
+		return;
+
+	snprintf_P(cipsend, sizeof(cipsend), cipsendcmd, conn_id, data_length);
+
+	for(attempt = 4; attempt > 0; attempt--)
 	{
-		case(state_setup_init):
+		if(writeread(128, cipsend, token_prompt))
 		{
-			if(t1_interrupts > 2)
-			{
-				PORTC |= _BV(3);
-				esp_setup_state = state_setup_reset_done;
-			}
-
-			break;
-		}
-
-		case(state_setup_reset_done):
-		{
-			if(t1_interrupts > 64)
-			{
-				data_in_received_ok = 0;
-				esp_uart_flush();
-				uart_transmit(strlen((const char *)ate), ate);
-				esp_setup_state = state_setup_ate_sent;
-			}
-
-			break;
-		}
-
-		case(state_setup_ate_sent):
-		{
-			if(data_in_received_ok)
-			{
-				data_in_received_ok = 0;
-				uart_transmit(strlen((const char *)cipmux), cipmux);
-				esp_setup_state = state_setup_cipmux_sent;
-			}
-
-			break;
-		}
-
-		case(state_setup_cipmux_sent):
-		{
-			if(data_in_received_ok)
-			{
-				data_in_received_ok = 0;
-				uart_transmit(strlen((const char *)cipserver), cipserver);
-				esp_setup_state = state_setup_cipserver_sent;
-			}
-
-			break;
-		}
-
-		case(state_setup_cipserver_sent):
-		{
-			if(data_in_received_ok)
-				esp_setup_state = state_setup_finished;
-
-			break;
-		}
-
-		case(state_setup_finished):
-		{
-			break;
+			if(writeread(128, data, token_sendok))
+				break;
 		}
 	}
-}
-
-uint8_t esp_receive_finished(void)
-{
-	if(data_in_todo || (data_in_length == 0))
-		return(0);
-
-	return(1);
-}
-
-uint16_t esp_receive_length(uint8_t *connection)
-{
-	uint16_t length;
-
-	if(!esp_receive_finished())
-		return(0);
-
-	length = data_in_length;
-	data_in_length = 0;
-
-	if(connection)
-		*connection = data_in_connection;
-
-	return(length);
-}
-
-void esp_send_start(uint16_t length, uint8_t *connection)
-{
-	data_out_length		= length;
-	data_out_current	= 0;
-	data_out_state		= state_push_start;
-
-	if(connection)
-		data_out_connection = *connection;
-}
-
-uint8_t esp_send_finished(void)
-{
-	return(data_out_state == state_push_idle);
 }

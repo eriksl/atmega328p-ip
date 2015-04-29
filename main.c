@@ -57,7 +57,6 @@ int main(void)
 	wdt_enable(WDTO_2S);
 	twi_master_init();
 	application_init();
-	esp_init(sizeof(receive_buffer), receive_buffer, sizeof(send_buffer), send_buffer);
 
 	sei();
 
@@ -65,15 +64,17 @@ int main(void)
 	led_display_show((const uint8_t *)"012345");
 	led_display_update();
 
+	esp_init(38400);
+
 	for(;;)
 	{
 		pause_idle();			// gets woken by the ~150 Hz pwm timer1 interrupt or packet arrival or watchdog interrupt
 		WDTCSR |= _BV(WDIE);	// enable wdt interrupt, reset
 
-		if(esp_send_finished() && esp_receive_finished())
+		if(esp_read(&connection, sizeof(receive_buffer), receive_buffer))
 		{
 			application_content(receive_buffer, sizeof(send_buffer) - 1, send_buffer);
-			esp_send_start(strlen(send_buffer), &connection);
+			esp_write(connection, send_buffer);
 		}
 
 		application_periodic();	// run background tasks

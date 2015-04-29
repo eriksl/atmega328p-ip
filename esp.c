@@ -150,7 +150,7 @@ void esp_init(uint32_t baud)
 	uint8_t buffer[32];
 
 	uart_init();
-	uart_baud(baud);
+	//uart_baud(baud);
 
 	PORTC &= ~_BV(3);
 	msleep(10);

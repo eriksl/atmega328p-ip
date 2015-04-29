@@ -22,7 +22,6 @@ inline uint8_t uart_receive_ready(void)
 }
 
 void uart_init(void);
-void uart_baud(uint32_t baud);
 uint8_t uart_transmit(const uint8_t *buffer);
 uint8_t uart_receive(uint16_t size, uint8_t *buffer);
 

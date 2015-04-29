@@ -202,7 +202,6 @@ void application_periodic(void)
 	}
 
 	application_periodic_timer(missed_ticks);
-	esp_periodic();
 
 	if((t1_interrupts % 122) == 0)
 		PORTD ^= _BV(4);

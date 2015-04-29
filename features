@@ -10,8 +10,8 @@
 	6	d4						d4		led heartbeat
 	7	Vcc								VCC
 	8	GND								GND
-	9	b6
-	10	b7
+	9	b6								xtal
+	10	b7								xtal
 	11	d5
 	12	d6
 	13	d7

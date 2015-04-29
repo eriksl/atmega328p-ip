@@ -72,16 +72,8 @@ int main(void)
 
 		if(esp_send_finished() && esp_receive_finished())
 		{
-			length = esp_receive_length(&connection);
-
-			if(length > 0)
-			{
-				receive_buffer[length] = '\0';
-				length = application_content(length, receive_buffer, sizeof(send_buffer), send_buffer);
-
-				if(length > 0)
-					esp_send_start(length, &connection);
-			}
+			application_content(receive_buffer, sizeof(send_buffer) - 1, send_buffer);
+			esp_send_start(strlen(send_buffer), &connection);
 		}
 
 		application_periodic();	// run background tasks

@@ -57,28 +57,16 @@ void uart_init(void)
 	PRR		&= ~_BV(PRUSART0);
 
 	UDR0	= 0;
-	UCSR0A	= 0x00;
-	UCSR0B	= _BV(TXEN0) | _BV(RXEN0);
-	UCSR0C	= _BV(UCSZ00) | _BV(UCSZ01); // 8 bits character size
+	UCSR0A	= _BV(U2X0);					// usart double speed mode
+	UCSR0B	= _BV(TXEN0) | _BV(RXEN0);		// enable transmitter and receiver
+	UCSR0C	= _BV(UCSZ00) | _BV(UCSZ01);	// async uart, 8N1
+
+	UBRR0 = (F_CPU / (460800UL * 8UL)) - 1UL;	// baud rate 460800
 
 	txbuffer_current = 0;
 	rxbuffer_current = 0;
 
 	UCSR0B |= _BV(RXCIE0); // start receiving
-}
-
-void uart_baud(uint32_t baud)
-{
-	uint8_t ucsr0b;
-	uint8_t bitmask = _BV(TXEN0) | _BV(RXEN0) | _BV(UDRIE0) | _BV(RXCIE0);
-
-	ucsr0b = UCSR0B & bitmask;
-	UCSR0B &= ~bitmask;
-
-	baud *= 16;
-	UBRR0 = (uint16_t)(((uint32_t)F_CPU / baud) - (uint32_t)1);
-
-	UCSR0B |= ucsr0b;
 }
 
 uint8_t uart_transmit(const uint8_t *buffer)

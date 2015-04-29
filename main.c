@@ -26,9 +26,9 @@ ISR(WDT_vect)
 
 int main(void)
 {
-	static	uint8_t		receive_buffer[512];
-	static	uint8_t		send_buffer[512];
-			uint16_t	length;
+	static	uint8_t		receive_buffer[255];
+	static	uint8_t		send_buffer[255];
+			int16_t		length;
 			uint8_t		connection;
 
 	cli();

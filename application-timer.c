@@ -165,15 +165,15 @@ uint8_t application_function_beep(application_parameters_t ap)
 	beep_period = 0;
 
 	if(ap.nargs > 1)
-		beep_length = (uint8_t)atoi((const char *)(*ap.args)[1]);
+		beep_length = (uint8_t)atoi((*ap.args)[1]);
 
 	if(ap.nargs > 2)
-		beep_period = (uint8_t)atoi((const char *)(*ap.args)[2]);
+		beep_period = (uint8_t)atoi((*ap.args)[2]);
 
 	if((beep_length > 0) && (beep_period == 0))
 		PORTD |= _BV(3);
 
-    snprintf_P((char *)ap.dst, ap.size, ok, beep_length, beep_period);
+    snprintf_P(ap.dst, ap.size, ok, beep_length, beep_period);
 
 	return(1);
 }
@@ -192,16 +192,16 @@ static uint16_t output_read(uint8_t entry, uint16_t size, uint8_t *dst)
 	if(entry < 2)
 	{
 		if(output[entry].speed != 0)
-			length = snprintf_P((char *)dst, size, output_pwm_dynamic, entry, getoutput(entry), output[entry].min_value, output[entry].max_value, output[entry].speed);
+			length = snprintf_P(dst, size, output_pwm_dynamic, entry, getoutput(entry), output[entry].min_value, output[entry].max_value, output[entry].speed);
 		else
-			length = snprintf_P((char *)dst, size, output_pwm_static, entry, getoutput(entry));
+			length = snprintf_P(dst, size, output_pwm_static, entry, getoutput(entry));
 	}
 	else
 	{
 		if(entry < sizeof_output)
-			length = snprintf_P((char *)dst, size, output_normal, entry, getoutput(entry));
+			length = snprintf_P(dst, size, output_normal, entry, getoutput(entry));
 		else
-			length = snprintf_P((char *)dst, size, output_error, entry);
+			length = snprintf_P(dst, size, output_error, entry);
 	}
 
 	return(length);
@@ -211,7 +211,7 @@ uint8_t application_function_output_read(application_parameters_t ap)
 {
 	uint8_t entry;
 
-	entry = (uint8_t)atoi((const char *)(*ap.args)[1]);
+	entry = (uint8_t)atoi((*ap.args)[1]);
 
 	output_read(entry, ap.size, ap.dst);
 
@@ -229,22 +229,22 @@ uint8_t application_function_output_set(application_parameters_t ap)
 	speed		= 0;
 	maxvalue	= 0xffff;
 
-	entry = (uint8_t)atoi((const char *)(*ap.args)[1]);
+	entry = (uint8_t)atoi((*ap.args)[1]);
 
 	if(entry >= sizeof_output)
 	{
-		snprintf_P((char *)ap.dst, ap.size, output_error, entry);
+		snprintf_P(ap.dst, ap.size, output_error, entry);
 		return(1);
 	}
 
 	if(ap.nargs > 2)
-		minvalue = (uint16_t)atoi((const char *)(*ap.args)[2]);
+		minvalue = (uint16_t)atoi((*ap.args)[2]);
 
 	if(ap.nargs > 3)
-		speed = atof((const char *)(*ap.args)[3]);
+		speed = atof((*ap.args)[3]);
 
 	if(ap.nargs > 4)
-		maxvalue = (uint16_t)atoi((const char *)(*ap.args)[4]);
+		maxvalue = (uint16_t)atoi((*ap.args)[4]);
 
 	setoutput(entry, minvalue);
 	output[entry].speed		= speed;

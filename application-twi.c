@@ -14,9 +14,9 @@ uint8_t application_function_twiaddress(application_parameters_t ap)
 {
 	static const __flash char fmt[] = "> TWI slave address set to 0x%02x\n";
 
-	twi_address = (uint8_t)strtoul((const char *)(*ap.args)[1], 0, 16);
+	twi_address = (uint8_t)strtoul((*ap.args)[1], 0, 16);
 
-	snprintf_P((char *)ap.dst, (size_t)ap.size, fmt, twi_address);
+	snprintf_P(ap.dst, ap.size, fmt, twi_address);
 
 	return(1);
 }
@@ -31,11 +31,11 @@ uint8_t application_function_twiread(application_parameters_t ap)
 	uint8_t src_current, rv, offset, amount;
 	uint8_t bytes[8];
 
-	amount = (uint8_t)strtoul((const char *)(*ap.args)[1], 0, 0);
+	amount = (uint8_t)strtoul((*ap.args)[1], 0, 0);
 
 	if(amount > sizeof(bytes))
 	{
-		snprintf_P((char *)ap.dst, (size_t)ap.size, error, sizeof(bytes), amount);
+		snprintf_P(ap.dst, ap.size, error, sizeof(bytes), amount);
 		return(1);
 	}
 
@@ -43,18 +43,18 @@ uint8_t application_function_twiread(application_parameters_t ap)
 		twi_master_error(ap.dst, ap.size, rv);
 	else
 	{
-		offset = snprintf_P((char *)ap.dst, (size_t)ap.size, header, amount, twi_address);
+		offset = snprintf_P(ap.dst, ap.size, header, amount, twi_address);
 		ap.dst += offset;
 		ap.size -= offset;
 
 		for(src_current = 0; (src_current < amount) && (ap.size > 0); src_current++)
 		{
-			offset = snprintf_P((char *)ap.dst, (size_t)ap.size, entry, bytes[src_current]);
+			offset = snprintf_P(ap.dst, ap.size, entry, bytes[src_current]);
 			ap.dst += offset;
 			ap.size -= offset;
 		}
 
-		strlcpy_P((char *)ap.dst, footer, (size_t)ap.size);
+		strlcpy_P(ap.dst, footer, ap.size);
 	}
 
 	return(1);
@@ -66,7 +66,7 @@ uint8_t application_function_twireset(application_parameters_t ap)
 
 	twi_master_recover();
 
-	strlcpy_P((char *)ap.dst, ok, ap.size);
+	strlcpy_P(ap.dst, ok, ap.size);
 
 	return(1);
 }
@@ -82,13 +82,13 @@ uint8_t application_function_twiwrite(application_parameters_t ap)
 			(src_current < ap.nargs) && (dst_current < sizeof(bytes));
 			src_current++, dst_current++)
 	{
-		bytes[dst_current] = (uint8_t)strtoul((const char *)(*ap.args)[src_current], 0, 16);
+		bytes[dst_current] = (uint8_t)strtoul((*ap.args)[src_current], 0, 16);
 	}
 
 	if((rv = twi_master_send(twi_address, dst_current, bytes)) != tme_ok)
 		twi_master_error(ap.dst, ap.size, rv);
 	else
-		snprintf_P((char *)ap.dst, (size_t)ap.size, fmt, dst_current, twi_address);
+		snprintf_P(ap.dst, ap.size, fmt, dst_current, twi_address);
 
 	return(1);
 }

@@ -287,15 +287,15 @@ int16_t application_content(uint16_t src_length, const uint8_t *src, uint16_t si
 		return(0);
 
 	for(tableptr = application_function_table; tableptr->function; tableptr++)
-		if(!strcmp_P((const char *)args[0], tableptr->command))
+		if(!strcmp_P(args[0], tableptr->command))
 			break;
 
 	if(tableptr->function)
 	{
 		if(args_count < (tableptr->required_args + 1))
 		{
-			snprintf_P((char *)dst, size, error_fmt_args, args_count - 1, tableptr->required_args);
-			return(strlen((char *)dst));
+			snprintf_P(dst, size, error_fmt_args, args_count - 1, tableptr->required_args);
+			return(1);
 		}
 
 		application_parameters_t ap;
@@ -313,9 +313,9 @@ int16_t application_content(uint16_t src_length, const uint8_t *src, uint16_t si
 			return(-1);
 	}
 
-	snprintf_P((char *)dst, size, error_fmt_unknown, args[0]);
 
 	return(strlen((char *)dst));
+	snprintf_P(dst, size, error_fmt_unknown, args[0]);
 }
 
 static uint8_t application_function_edmp(application_parameters_t ap)
@@ -327,7 +327,7 @@ static uint8_t application_function_edmp(application_parameters_t ap)
 
 	float cfactor, coffset;
 
-	offset	= snprintf_P((char *)ap.dst, ap.size, format1, eeprom_read_bandgap());
+	offset	= snprintf_P(ap.dst, ap.size, format1, eeprom_read_bandgap());
 	ap.dst	+= offset;
 	ap.size	-= offset;
 
@@ -335,7 +335,7 @@ static uint8_t application_function_edmp(application_parameters_t ap)
 
 	while(eeprom_read_cal(index, &cfactor, &coffset))
 	{
-		offset	= snprintf_P((char *)ap.dst, ap.size, format2, index, cfactor, coffset);
+		offset	= snprintf_P(ap.dst, ap.size, format2, index, cfactor, coffset);
 		ap.dst	+= offset;
 		ap.size	-= offset;
 		index++;
@@ -357,23 +357,23 @@ static uint8_t application_function_help(application_parameters_t ap)
 	if(ap.nargs > 1)
 	{
 		for(tableptr = application_function_table; tableptr->function; tableptr++)
-			if(!strcmp_P((const char *)(*ap.args)[1], tableptr->command))
+			if(!strcmp_P((*ap.args)[1], tableptr->command))
 				break;
 
 		if(tableptr->function)
 		{
-			snprintf_P((char *)ap.dst, ap.size, detail_header, tableptr->command, tableptr->required_args);
-			strlcat_P((char *)ap.dst, tableptr->description, ap.size);
-			strlcat_P((char *)ap.dst, detail_footer, ap.size);
+			snprintf_P(ap.dst, ap.size, detail_header, tableptr->command, tableptr->required_args);
+			strlcat_P(ap.dst, tableptr->description, ap.size);
+			strlcat_P(ap.dst, detail_footer, ap.size);
 		}
 		else
-			snprintf_P((char *)ap.dst, ap.size, detail_error, (*ap.args)[1]);
+			snprintf_P(ap.dst, ap.size, detail_error, (*ap.args)[1]);
 	}
 	else
 	{
 		for(tableptr = application_function_table; tableptr->function; tableptr++)
 		{
-			offset = snprintf_P((char *)ap.dst, ap.size, list_header, tableptr->command, tableptr->required_args);
+			offset = snprintf_P(ap.dst, ap.size, list_header, tableptr->command, tableptr->required_args);
 			ap.dst	+= offset;
 			ap.size	-= offset;
 		}
@@ -400,7 +400,7 @@ static uint8_t application_function_stack(application_parameters_t ap)
 {
 	static const __flash char stackfree_fmt[] = "Stackmonitor: %d bytes free\n";
 
-	snprintf_P((char *)ap.dst, ap.size, stackfree_fmt, stackmonitor_free());
+	snprintf_P(ap.dst, ap.size, stackfree_fmt, stackmonitor_free());
 
 	return(1);
 }

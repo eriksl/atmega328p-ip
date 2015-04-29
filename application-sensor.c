@@ -20,12 +20,12 @@ uint8_t application_function_bg_write(application_parameters_t ap)
 
 	float value;
 
-	value = atof((const char *)(*ap.args)[1]);
+	value = atof((*ap.args)[1]);
 
 	eeprom_write_bandgap(value);
 	value = eeprom_read_bandgap();
 
-	snprintf_P((char *)ap.dst, (size_t)ap.size, ok, value);
+	snprintf_P(ap.dst, ap.size, ok, value);
 
 	return(1);
 }
@@ -191,11 +191,11 @@ uint8_t application_sensor_read(uint8_t sensor, uint16_t size, uint8_t *dst)
 		}
 	}
 
-	snprintf_P((char *)dst, size, format, sensor, id, value, (int32_t)raw_value);
+	snprintf_P(dst, size, format, sensor, id, value, (int32_t)raw_value);
 	return(1);
 
 twierror:
-	snprintf_P((char *)dst, size, twi_error, sensor, id);
+	snprintf_P(dst, size, twi_error, sensor, id);
 	return(1);
 }
 
@@ -205,10 +205,10 @@ uint8_t application_function_sensor_read(application_parameters_t ap)
 
 	uint8_t sensor;
 
-	sensor = (uint8_t)strtoul((const char *)(*ap.args)[1], 0, 0);
+	sensor = (uint8_t)strtoul((*ap.args)[1], 0, 0);
 
 	if(!application_sensor_read(sensor, ap.size, ap.dst))
-		snprintf_P((char *)ap.dst, ap.size, error, sensor);
+		snprintf_P(ap.dst, ap.size, error, sensor);
 
 	return(1);
 }
@@ -221,23 +221,23 @@ uint8_t application_function_sensor_write(application_parameters_t ap)
 	uint8_t sensor;
 	float factor, offset;
 
-	sensor	= atoi((const char *)(*ap.args)[1]);
-	factor	= atof((const char *)(*ap.args)[2]);
-	offset	= atof((const char *)(*ap.args)[3]);
+	sensor	= atoi((*ap.args)[1]);
+	factor	= atof((*ap.args)[2]);
+	offset	= atof((*ap.args)[3]);
 
 	if(!eeprom_write_cal(sensor, factor, offset))
 	{
-		snprintf_P((char *)ap.dst, (size_t)ap.size, error, sensor);
+		snprintf_P(ap.dst, ap.size, error, sensor);
 		return(1);
 	}
 
 	if(!eeprom_read_cal(sensor, &factor, &offset))
 	{
-		snprintf_P((char *)ap.dst, (size_t)ap.size, error, sensor);
+		snprintf_P(ap.dst, ap.size, error, sensor);
 		return(1);
 	}
 
-	snprintf_P((char *)ap.dst, (size_t)ap.size, ok, sensor, factor, offset);
+	snprintf_P(ap.dst, ap.size, ok, sensor, factor, offset);
 
 	return(1);
 }
@@ -250,7 +250,7 @@ uint8_t application_function_sdmp(application_parameters_t ap)
 
 	while(application_sensor_read(index, ap.size, ap.dst))
 	{
-		offset	= strlen((const char *)ap.dst);
+		offset	= strlen(ap.dst);
 		ap.dst	+= offset;
 		ap.size	-= offset;
 		index++;

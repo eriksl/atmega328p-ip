@@ -20,7 +20,7 @@ void application_init_vfd(void)
 		0x00
 	};
 
-	twi_master_send(0x28, strlen((const char *)init_vfd), init_vfd);
+	twi_master_send(0x28, strlen(init_vfd), init_vfd);
 }
 
 uint8_t application_function_dbr(application_parameters_t ap)
@@ -33,7 +33,7 @@ uint8_t application_function_dbr(application_parameters_t ap)
 	static const uint8_t translate[]	= { 0x03, 0x03, 0x02, 0x01, 0x00 };
 	int16_t bright;
 
-	bright = atoi((const char *)(*ap.args)[1]);
+	bright = atoi((*ap.args)[1]);
 
 	if(bright < 0)
 		bright = 0;
@@ -49,7 +49,7 @@ uint8_t application_function_dbr(application_parameters_t ap)
 	twi_master_send(0x28, sizeof(code_bright), code_bright);
 	twi_master_send(0x28, 1, &translate[bright]);
 
-	snprintf_P((char *)ap.dst, ap.size, ok, bright);
+	snprintf_P(ap.dst, ap.size, ok, bright);
 
 	return(1);
 }
@@ -59,8 +59,8 @@ uint8_t application_function_dclr(application_parameters_t ap)
 	static const			uint8_t clr[]	= { 0xfe, 'X', 0 };
 	static const __flash	char ok[]		= "> dclr\n";
 
-	twi_master_send(0x28, strlen((const char *)clr), clr);
-	snprintf_P((char *)ap.dst, ap.size, ok);
+	twi_master_send(0x28, strlen(clr), clr);
+	snprintf_P(ap.dst, ap.size, ok);
 
 	return(1);
 }
@@ -69,14 +69,14 @@ uint8_t application_function_dshow(application_parameters_t ap)
 {
 	static const __flash char ok[] = "> dshow \"%s\"\n";
 
-	if(ap.cmdline_length >= 6)
+	if(strlen(ap.cmdline) >= 6)
 	{
-		twi_master_send(0x28, ap.cmdline_length - 6, &ap.cmdline[6]);
+		twi_master_send(0x28, strlen(ap.cmdline) - 6, &ap.cmdline[6]);
 
-		snprintf_P((char *)ap.dst, ap.size, ok, &ap.cmdline[6]);
+		snprintf_P(ap.dst, ap.size, ok, &ap.cmdline[6]);
 	}
 	else
-		snprintf_P((char *)ap.dst, ap.size, ok, "<error>");
+		snprintf_P(ap.dst, ap.size, ok, "<error>");
 
 	return(1);
 }
@@ -86,15 +86,15 @@ uint8_t application_function_dhshw(application_parameters_t ap)
 	static const __flash char ok[] = "> dhshw \"%s\"\n";
 	static const uint8_t home[] = { 0xfe, 'H' };
 
-	if(ap.cmdline_length >= 6)
+	if(strlen(ap.cmdline) >= 6)
 	{
 		twi_master_send(0x28, sizeof(home), home);
-		twi_master_send(0x28, ap.cmdline_length - 6, &ap.cmdline[6]);
+		twi_master_send(0x28, strlen(ap.cmdline) - 6, &ap.cmdline[6]);
 
-		snprintf_P((char *)ap.dst, ap.size, ok, &ap.cmdline[6]);
+		snprintf_P(ap.dst, ap.size, ok, &ap.cmdline[6]);
 	}
 	else
-		snprintf_P((char *)ap.dst, ap.size, ok, "<error>");
+		snprintf_P(ap.dst, ap.size, ok, "<error>");
 
 	return(1);
 }

@@ -149,11 +149,11 @@ uint8_t application_function_output_read(application_parameters_t ap)
 	float		speed;
 	uint16_t	minvalue, maxvalue;
 
-	entry = (uint8_t)atoi((const char *)(*ap.args)[1]);
+	entry = (uint8_t)atoi((*ap.args)[1]);
 
 	if(entry > 1)
 	{
-		snprintf_P((char *)ap.dst, ap.size, output_error, entry);
+		snprintf_P(ap.dst, ap.size, output_error, entry);
 		return(1);
 	}
 
@@ -161,7 +161,7 @@ uint8_t application_function_output_read(application_parameters_t ap)
 	minvalue	= getoutput(entry);
 	maxvalue	= output[entry].max_value;
 
-	snprintf_P((char *)ap.dst, ap.size, output_ok, "pwm", entry, minvalue, speed, maxvalue);
+	snprintf_P(ap.dst, ap.size, output_ok, "pwm", entry, minvalue, speed, maxvalue);
 	return(1);
 }
 
@@ -176,20 +176,20 @@ uint8_t application_function_output_set(application_parameters_t ap)
 	speed		= 0;
 	maxvalue	= 0xffff;
 
-	entry = (uint8_t)atoi((const char *)(*ap.args)[1]);
+	entry = (uint8_t)atoi((*ap.args)[1]);
 
 	if(ap.nargs > 2)
-		minvalue = (uint16_t)atoi((const char *)(*ap.args)[2]);
+		minvalue = (uint16_t)atoi((*ap.args)[2]);
 
 	if(ap.nargs > 3)
-		speed = atof((const char *)(*ap.args)[3]);
+		speed = atof((*ap.args)[3]);
 
 	if(ap.nargs > 4)
-		maxvalue = (uint16_t)atoi((const char *)(*ap.args)[4]);
+		maxvalue = (uint16_t)atoi((*ap.args)[4]);
 
 	if(entry > 1)
 	{
-		snprintf_P((char *)ap.dst, ap.size, output_error, entry);
+		snprintf_P(ap.dst, ap.size, output_error, entry);
 		return(1);
 	}
 
@@ -199,6 +199,6 @@ uint8_t application_function_output_set(application_parameters_t ap)
 	output[entry].max_value	= maxvalue;
 	minvalue				= getoutput(entry);
 
-    snprintf_P((char *)ap.dst, ap.size, output_ok, "pwm", entry, minvalue, speed, maxvalue);
+    snprintf_P(ap.dst, ap.size, output_ok, "pwm", entry, minvalue, speed, maxvalue);
 	return(1);
 }

@@ -208,7 +208,7 @@ void application_periodic(void)
 		PORTD ^= _BV(4);
 }
 
-int16_t application_content(uint16_t src_length, const uint8_t *src, uint16_t size, uint8_t *dst)
+uint8_t application_content(const uint8_t *src, uint16_t size, uint8_t *dst)
 {
 	static const __flash char error_fmt_unknown[] = "Command \"%s\" unknown\n";
 	static const __flash char error_fmt_args[] = "Insufficient arguments: %d (%d required)\n";
@@ -220,10 +220,12 @@ int16_t application_content(uint16_t src_length, const uint8_t *src, uint16_t si
 	uint8_t ws_skipped;
 	const application_function_table_t __flash *tableptr;
 
+	*dst = '\0';
+
 	if((src[0] == '\0') || (src[0] == 0xff)) // telnet options
 		return(1);
 
-	src_left = src_length;
+	src_left = strlen(src);
 
 	for(args_count = 0; (src_left > 0) && (args_count < application_num_args);)
 	{
@@ -258,13 +260,11 @@ int16_t application_content(uint16_t src_length, const uint8_t *src, uint16_t si
 		}
 	}
 
-	*dst = '\0';
-
 	cmd_led_timeout = 10;
 	PORTD |= _BV(3);
 
 	if(args_count == 0)
-		return(0);
+		return(1);
 
 	for(tableptr = application_function_table; tableptr->function; tableptr++)
 		if(!strcmp_P(args[0], tableptr->command))
@@ -281,21 +281,16 @@ int16_t application_content(uint16_t src_length, const uint8_t *src, uint16_t si
 		application_parameters_t ap;
 
 		ap.cmdline			= src;
-		ap.cmdline_length	= src_length;
 		ap.nargs			= args_count;
 		ap.args				= &args;
 		ap.size				= size;
 		ap.dst				= dst;
 
-		if(tableptr->function(ap))
-			return(strlen((const char *)dst));
-		else
-			return(-1);
+		return(tableptr->function(ap));
 	}
 
-
-	return(strlen((char *)dst));
 	snprintf_P(dst, size, error_fmt_unknown, args[0]);
+	return(1);
 }
 
 static uint8_t application_function_edmp(application_parameters_t ap)

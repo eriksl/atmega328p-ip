@@ -220,8 +220,8 @@ int16_t application_content(uint16_t src_length, const uint8_t *src, uint16_t si
 	uint8_t ws_skipped;
 	const application_function_table_t __flash *tableptr;
 
-	if((src_length == 0) || (src[0] == 0x0ff)) // telnet options
-		return(0);
+	if((src[0] == '\0') || (src[0] == 0xff)) // telnet options
+		return(1);
 
 	src_left = src_length;
 

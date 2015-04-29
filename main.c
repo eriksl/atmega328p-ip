@@ -68,7 +68,7 @@ int main(void)
 
 	for(;;)
 	{
-		pause_idle();			// gets woken by the ~150 Hz pwm timer1 interrupt or packet arrival or watchdog interrupt
+		pause_idle();			// gets woken by the ~150 Hz pwm timer1 interrupt or byte arrival or watchdog interrupt
 		WDTCSR |= _BV(WDIE);	// enable wdt interrupt, reset
 
 		if(esp_read(&connection, sizeof(receive_buffer), receive_buffer))

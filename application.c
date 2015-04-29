@@ -321,7 +321,6 @@ static uint8_t application_function_edmp(application_parameters_t ap)
 	static const __flash char format2[] = "> %d: *%.3f, +%.3f\n";
 
 	uint8_t index, offset;
-
 	float cfactor, coffset;
 
 	offset	= snprintf_P(ap.dst, ap.size, format1, eeprom_read_bandgap());

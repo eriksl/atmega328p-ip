@@ -19,6 +19,12 @@ ISR(USART_RX_vect)
 
     uart_rx_interrupts++;
 
+	if(UCSR0A & _BV(FE0))
+		uart_fe++;
+
+	if(UCSR0A & _BV(DOR0))
+		uart_overrun++;
+
 	data = UDR0;
 
 	if((data != '\n') && (data != '\r') && ((rxbuffer_current + 2) < sizeof(rxbuffer)))

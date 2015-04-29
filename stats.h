@@ -7,6 +7,8 @@ typedef uint16_t stats_t;
 
 extern stats_t uart_rx_interrupts;
 extern stats_t uart_tx_interrupts;
+extern stats_t uart_fe;
+extern stats_t uart_overrun;
 extern stats_t wd_interrupts;
 extern stats_t adc_interrupts;
 extern stats_t t1_interrupts;

@@ -1,35 +1,26 @@
 #include "twi_master.h"
-#include "esp.h"
 #include "stats.h"
-#include "eeprom.h"
 #include "application.h"
 #include "util.h"
 #include "led-display.h"
+#include "uart-line.h"
 
 #include <avr/interrupt.h>
 #include <avr/io.h>
 #include <avr/wdt.h>
 
-#include <string.h>
 #include <stdint.h>
-#include <stdio.h>
 
 ISR(WDT_vect)
 {
 	wd_interrupts++;
-
-	if(esp_wd_timeout > 0)
-		esp_wd_timeout--;
-	else
-		reset();
 }
 
 int main(void)
 {
-	static	uint8_t		receive_buffer[255];
-	static	uint8_t		send_buffer[255];
-			int16_t		length;
-			uint8_t		connection;
+	uint8_t receive_buffer[32];
+	uint8_t send_buffer[512];
+	uint8_t ix;
 
 	cli();
     wdt_reset();
@@ -39,24 +30,40 @@ int main(void)
 	PRR = 0xff;
 
 	MCUCR	|= _BV(PUD);		//	disable pullups
+
 	DDRB	= 0;
 	DDRC	= _BV(3);
 	DDRD	= _BV(3) | _BV(6) | _BV(7);
 
-	for(length = 0; length < 8; length++)
+	PORTB	= 0x00;
+	PORTC	= 0x00;
+	PORTD	= 0x00;
+
+	for(ix = 8; ix > 0; ix--)
 	{
-		PORTD |= _BV(6);
+		PORTD |= _BV(3);
+
 		msleep(50);
-		PORTD &= ~_BV(6);
-		PORTD |= _BV(7);
+
+		PORTD &= ~_BV(4);
+
 		msleep(50);
-		PORTD &= ~_BV(7);
+
+		PORTD |= _BV(4);
+
+		msleep(50);
+
+		PORTD &= ~_BV(3);
+
+		msleep(50);
 	}
 
-	esp_wd_timeout = 0xffff;
-	wdt_enable(WDTO_2S);
+	PORTD = _BV(2);				// release esp8266 from reset
+
+	wdt_enable(WDTO_4S);
 	twi_master_init();
 	application_init();
+	uart_init();
 
 	sei();
 
@@ -64,17 +71,16 @@ int main(void)
 	led_display_show((const uint8_t *)"012345");
 	led_display_update();
 
-	esp_init(38400);
-
 	for(;;)
 	{
 		pause_idle();			// gets woken by the ~150 Hz pwm timer1 interrupt or byte arrival or watchdog interrupt
 		WDTCSR |= _BV(WDIE);	// enable wdt interrupt, reset
 
-		if(esp_read(&connection, sizeof(receive_buffer), receive_buffer))
+		if(uart_transmit_ready() && uart_receive_ready())
 		{
-			application_content(receive_buffer, sizeof(send_buffer) - 1, send_buffer);
-			esp_write(connection, send_buffer);
+			uart_receive(sizeof(receive_buffer), receive_buffer);
+			application_content(receive_buffer, sizeof(send_buffer), send_buffer);
+			uart_transmit(send_buffer);
 		}
 
 		application_periodic();	// run background tasks

@@ -7,10 +7,10 @@
 
 #include "uart-line.h"
 
-static uint8_t txbuffer[255];
+static uint8_t txbuffer[512];
 static uint16_t txbuffer_current;
 
-static uint8_t rxbuffer[255];
+static uint8_t rxbuffer[32];
 static uint16_t rxbuffer_current;
 
 ISR(USART_RX_vect)
@@ -53,6 +53,8 @@ ISR(USART_UDRE_vect)
 
 void uart_init(void)
 {
+	static const uint16_t ubrr0 = (F_CPU / (460800UL * 8UL)) - 1UL;	// baud rate 460800, double data rate
+
 	PRR		|=  _BV(PRUSART0);
 	PRR		&= ~_BV(PRUSART0);
 
@@ -61,7 +63,7 @@ void uart_init(void)
 	UCSR0B	= _BV(TXEN0) | _BV(RXEN0);		// enable transmitter and receiver
 	UCSR0C	= _BV(UCSZ00) | _BV(UCSZ01);	// async uart, 8N1
 
-	UBRR0 = (F_CPU / (460800UL * 8UL)) - 1UL;	// baud rate 460800
+	UBRR0 = ubrr0;
 
 	txbuffer_current = 0;
 	rxbuffer_current = 0;
@@ -71,9 +73,6 @@ void uart_init(void)
 
 uint8_t uart_transmit(const uint8_t *buffer)
 {
-	if(!uart_transmit_ready())
-		return(0);
-
 	strlcpy(txbuffer, buffer, sizeof(txbuffer));
 
 	txbuffer_current = 0;
@@ -84,9 +83,6 @@ uint8_t uart_transmit(const uint8_t *buffer)
 
 uint8_t uart_receive(uint16_t size, uint8_t *buffer)
 {
-	if(!uart_receive_ready())
-		return(0);
-
 	strlcpy(buffer, rxbuffer, size);
 
 	rxbuffer_current = 0;

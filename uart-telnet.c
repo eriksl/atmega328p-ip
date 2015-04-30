@@ -5,13 +5,22 @@
 #include <stdint.h>
 #include <string.h>
 
-#include "uart-line.h"
+#include "uart-telnet.h"
 
 static uint8_t txbuffer[512];
 static uint16_t txbuffer_current;
 
 static uint8_t rxbuffer[32];
 static uint16_t rxbuffer_current;
+
+enum
+{
+	ts_raw,
+	ts_dodont,
+	ts_data,
+};
+
+static uint8_t telnet_state;
 
 ISR(USART_RX_vect)
 {
@@ -27,13 +36,36 @@ ISR(USART_RX_vect)
 
 	data = UDR0;
 
-	if((data != '\n') && (data != '\r') && ((rxbuffer_current + 2) < sizeof(rxbuffer)))
-		rxbuffer[rxbuffer_current++] = data;
-
-	if(data == '\n')
+	switch(telnet_state)
 	{
-		UCSR0B &= ~_BV(RXCIE0); // stop receiving until buffer fetched by application
-		rxbuffer[rxbuffer_current] = '\0';
+		case(ts_raw):
+		{
+			if((data != 0xff) && (data != '\0') && (data != '\n') && (data != '\r') && ((rxbuffer_current + 2) < sizeof(rxbuffer)))
+				rxbuffer[rxbuffer_current++] = data;
+
+			if(data == '\n')
+			{
+				UCSR0B &= ~_BV(RXCIE0); // stop receiving until buffer fetched by application
+				rxbuffer[rxbuffer_current] = '\0';
+			}
+
+			if(data == 0xff)
+				telnet_state = ts_dodont;
+
+			break;
+		}
+
+		case(ts_dodont):
+		{
+			telnet_state = ts_data;
+			break;
+		}
+
+		case(ts_data):
+		{
+			telnet_state = ts_raw;
+			break;
+		}
 	}
 }
 
@@ -67,6 +99,8 @@ void uart_init(void)
 
 	txbuffer_current = 0;
 	rxbuffer_current = 0;
+
+	telnet_state = ts_raw;
 
 	UCSR0B |= _BV(RXCIE0); // start receiving
 }

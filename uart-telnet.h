@@ -1,5 +1,5 @@
-#ifndef uart_line_h
-#define uart_line_h
+#ifndef uart_telnet_h
+#define uart_telnet_h
 
 #include <avr/io.h>
 

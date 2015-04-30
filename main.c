@@ -3,7 +3,7 @@
 #include "application.h"
 #include "util.h"
 #include "led-display.h"
-#include "uart-line.h"
+#include "uart-telnet.h"
 
 #include <avr/interrupt.h>
 #include <avr/io.h>

@@ -221,7 +221,7 @@ uint8_t application_content(const uint8_t *src, uint16_t size, uint8_t *dst)
 
 	*dst = '\0';
 
-	if((src[0] == '\0') || (src[0] == 0xff)) // telnet options
+	if(src[0] == '\0')
 		return(1);
 
 	src_left = strlen(src);

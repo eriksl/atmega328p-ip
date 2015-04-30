@@ -2,7 +2,7 @@
 #include "stats.h"
 #include "application.h"
 #include "util.h"
-#include "uart-line.h"
+#include "uart-telnet.h"
 
 #include <avr/interrupt.h>
 #include <avr/io.h>

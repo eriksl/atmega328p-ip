@@ -77,6 +77,7 @@ int main(int argc, char ** argv)
 	int					recvto1 = 2000;
 	int					recvto2 = 100;
 	int					sendtr = 8;
+	int					first;
 
 	while((current = getopt_long(argc, argv, shortopts, longopts, 0)) != -1)
 	{
@@ -167,7 +168,7 @@ int main(int argc, char ** argv)
 				if(verbose)
 					perror("connect-poll");
 
-				goto retry;
+				goto retry_connect;
 			}
 
 			int so_error = 0;
@@ -178,7 +179,7 @@ int main(int argc, char ** argv)
 				if(verbose)
 					perror("getsockopt(SO_ERROR)");
 
-				goto retry;
+				goto retry_connect;
 			}
 
 			if(so_error != 0)
@@ -186,7 +187,7 @@ int main(int argc, char ** argv)
 				if(verbose)
 					fprintf(stderr, "socket error: %s\n", strerror(so_error));
 
-				goto retry;
+				goto retry_connect;
 			}
 
 			break;
@@ -197,7 +198,7 @@ int main(int argc, char ** argv)
 				perror("connect");
 		}
 
-retry:
+retry_connect:
 		if(verbose)
 			fprintf(stderr, "connect: retry attempt %d\n", attempt);
 
@@ -246,46 +247,40 @@ retry:
 			}
 
 			pfd.events = POLLIN;
+			current = 0;
 
-			if(poll(&pfd, 1, recvto1) != 1)
+			for(first = 1;; first = 0)
 			{
-				if(verbose)
-					perror("poll-read");
-
-				continue;
-			}
-
-			if((buflen = read(fd, buf, sizeof(buf))) <= 0)
-			{
-				if(verbose)
-					perror("read");
-
-				continue;
-			}
-
-			current = buflen;
-			buf[current] = '\0';
-
-			for(;;)
-			{
-				if(poll(&pfd, 1, recvto2) != 1)
+				if(poll(&pfd, 1, first ? recvto1 : recvto2) != 1)
 				{
 					if(verbose)
-						perror("poll-read2");
+						perror("poll-read");
 
-					break;
+					if(first)
+						goto retry_read;
+					else
+						break;
 				}
 
 				if((buflen = read(fd, buf + current, sizeof(buf) - current)) <= 0)
-					break;
+				{
+					if(verbose)
+						perror("read");
+
+					if(first)
+						goto retry_read;
+					else
+						break;
+				}
 
 				current += buflen;
-				buf[current] = '\0';
 			}
 
+			buf[current] = '\0';
 			fputs(buf, stdout);
-
 			break;
+retry_read:
+			(void)0;
 		}
 
 		if(verbose && (attempt == 0))

@@ -7,10 +7,10 @@
 
 #include "uart-telnet.h"
 
-static uint8_t txbuffer[512];
+static uint8_t txbuffer[768];
 static uint16_t txbuffer_current;
 
-static uint8_t rxbuffer[32];
+static uint8_t rxbuffer[64];
 static uint16_t rxbuffer_current;
 
 enum

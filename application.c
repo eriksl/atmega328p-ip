@@ -19,10 +19,10 @@
 
 typedef struct
 {
-	const char	command[7];
-	uint8_t		required_args;
-	uint8_t		(*function)(application_parameters_t);
-	const char	description[37];
+	const uint8_t	command[7];
+	uint8_t			required_args;
+	uint8_t			(*function)(application_parameters_t);
+	const uint8_t	description[37];
 } application_function_table_t;
 
 static uint8_t cmd_led_timeout = 0;
@@ -229,8 +229,8 @@ void application_periodic(void)
 
 uint8_t application_content(const uint8_t *src, uint16_t size, uint8_t *dst)
 {
-	static const __flash char error_fmt_unknown[] = "Command \"%s\" unknown\n";
-	static const __flash char error_fmt_args[] = "Insufficient arguments: %d (%d required)\n";
+	static const __flash uint8_t error_fmt_unknown[] = "Command \"%s\" unknown\n";
+	static const __flash uint8_t error_fmt_args[] = "Insufficient arguments: %d (%d required)\n";
 
 	args_t	args;
 	uint8_t args_count, arg_current;
@@ -317,8 +317,8 @@ uint8_t application_content(const uint8_t *src, uint16_t size, uint8_t *dst)
 
 static uint8_t application_function_edmp(application_parameters_t ap)
 {
-	static const __flash char format1[] = "> bg: %.3f\n";
-	static const __flash char format2[] = "> %d: *%.3f, +%.3f\n";
+	static const __flash uint8_t format1[] = "> bg: %.3f\n";
+	static const __flash uint8_t format2[] = "> %d: *%.3f, +%.3f\n";
 
 	uint8_t index, offset;
 	float cfactor, coffset;
@@ -342,10 +342,10 @@ static uint8_t application_function_edmp(application_parameters_t ap)
 
 static uint8_t application_function_help(application_parameters_t ap)
 {
-	static const __flash char list_header[]		= "> %S[%d]\n";
-	static const __flash char detail_header[]	= "> %S[%d]: ";
-	static const __flash char detail_footer[]	= "\n";
-	static const __flash char detail_error[]	= "> no help for \"%s\"\n";
+	static const __flash uint8_t list_header[]		= "> %S[%d]\n";
+	static const __flash uint8_t detail_header[]	= "> %S[%d]: ";
+	static const __flash uint8_t detail_footer[]	= "\n";
+	static const __flash uint8_t detail_error[]		= "> no help for \"%s\"\n";
 
 	const application_function_table_t __flash *tableptr;
 	uint8_t		offset;
@@ -394,7 +394,7 @@ static uint8_t application_function_stats(application_parameters_t ap)
 
 static uint8_t application_function_stack(application_parameters_t ap)
 {
-	static const __flash char stackfree_fmt[] = "Stackmonitor: %d bytes free\n";
+	static const __flash uint8_t stackfree_fmt[] = "Stackmonitor: %d bytes free\n";
 
 	snprintf_P(ap.dst, ap.size, stackfree_fmt, stackmonitor_free());
 

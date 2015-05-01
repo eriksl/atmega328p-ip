@@ -183,10 +183,9 @@ uint8_t twi_master_receive(uint8_t address, uint8_t size, uint8_t *buffer)
 
 void twi_master_error(uint8_t *dst, uint16_t size, uint8_t error)
 {
-	static const __flash char format_string[] = "TWI error: %x, state %x\n";
+	static const __flash uint8_t format_string[] = "TWI error: %x, state %x\n";
 
-	snprintf_P((char *)dst, (size_t)size, format_string,
-			error & 0x0f, (error & 0xf0) >> 4);
+	snprintf_P(dst, size, format_string, error & 0x0f, (error & 0xf0) >> 4);
 }
 
 void twi_master_init(void)

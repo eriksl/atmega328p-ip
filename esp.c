@@ -33,17 +33,17 @@ typedef enum
 	token_any,
 } token_t;
 
-static const __flash char init_string_0[] = "ATE0\r\n";
-static const __flash char init_string_1[] = "AT+CIPMUX=1\r\n";
-static const __flash char init_string_2[] = "AT+CIPSERVER=1,23\r\n";
+static const __flash uint8_t init_string_0[] = "ATE0\r\n";
+static const __flash uint8_t init_string_1[] = "AT+CIPMUX=1\r\n";
+static const __flash uint8_t init_string_2[] = "AT+CIPSERVER=1,23\r\n";
 
-static const __flash char token_match_ok[]			= "OK";
-static const __flash char token_match_link[]		= "Link";
-static const __flash char token_match_unlink[]		= "Unlink";
-static const __flash char token_match_prompt[]		= "> ";
-static const __flash char token_match_sendok[]		= "SEND OK";
-static const __flash char token_match_systemready[]	= "[System Ready";
-static const __flash char token_match_ipd[]			= "+IPD,";
+static const __flash uint8_t token_match_ok[]			= "OK";
+static const __flash uint8_t token_match_link[]			= "Link";
+static const __flash uint8_t token_match_unlink[]		= "Unlink";
+static const __flash uint8_t token_match_prompt[]		= "> ";
+static const __flash uint8_t token_match_sendok[]		= "SEND OK";
+static const __flash uint8_t token_match_systemready[]	= "[System Ready";
+static const __flash uint8_t token_match_ipd[]			= "+IPD,";
 
 static uint8_t receive(uint16_t timeout, uint8_t *conn_id, uint16_t buffer_size, uint8_t *buffer)
 {
@@ -103,7 +103,7 @@ static uint8_t receive(uint16_t timeout, uint8_t *conn_id, uint16_t buffer_size,
 			data_length = buffer_size - 2;
 
 		if(buffer)
-			strlcpy(buffer, (const char *)rup, data_length);
+			strlcpy(buffer, rup, data_length);
 
 		return(token_ipd);
 	}
@@ -185,7 +185,7 @@ uint8_t esp_read(uint8_t *conn_id, uint16_t buffer_size, uint8_t *buffer)
 
 void esp_write(uint8_t conn_id, const uint8_t *data)
 {
-	static const __flash char cipsendcmd[] = "AT+CIPSEND=%u,%u\r\n";
+	static const __flash uint8_t cipsendcmd[] = "AT+CIPSEND=%u,%u\r\n";
 
 	uint8_t cipsend[32];
 	uint8_t data_length;

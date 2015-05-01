@@ -13,7 +13,7 @@ stats_t t1_interrupts = 0;
 stats_t t1_unhandled = 0;
 stats_t t1_unhandled_max = 0;
 
-static const __flash char format_string[] =
+static const __flash uint8_t format_string[] =
 {
 	"int uart rx: %u\n"
 	"int uart tx: %u\n"
@@ -27,7 +27,7 @@ static const __flash char format_string[] =
 
 void stats_generate(uint16_t size, uint8_t *dst)
 {
-	snprintf_P((char *)dst, (size_t)size, (const char *)format_string,
+	snprintf_P(dst, size, format_string,
 			uart_rx_interrupts,
 			uart_tx_interrupts,
 			uart_fe,

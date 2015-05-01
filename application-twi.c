@@ -12,7 +12,7 @@ static uint8_t twi_address = 0;
 
 uint8_t application_function_twiaddress(application_parameters_t ap)
 {
-	static const __flash char fmt[] = "> TWI slave address set to 0x%02x\n";
+	static const __flash uint8_t fmt[] = "> TWI slave address set to 0x%02x\n";
 
 	twi_address = (uint8_t)strtoul((*ap.args)[1], 0, 16);
 
@@ -23,10 +23,10 @@ uint8_t application_function_twiaddress(application_parameters_t ap)
 
 uint8_t application_function_twiread(application_parameters_t ap)
 {
-	static const __flash char header[] = "> TWI read %d bytes from %02x:";
-	static const __flash char entry[] = " %02x";
-	static const __flash char footer[] = "\n";
-	static const __flash char error[] = "> TWI read error, read max %d bytes: %d\n";
+	static const __flash uint8_t header[] =	"> TWI read %d bytes from %02x:";
+	static const __flash uint8_t entry[] =	" %02x";
+	static const __flash uint8_t footer[] =	"\n";
+	static const __flash uint8_t error[] =	"> TWI read error, read max %d bytes: %d\n";
 
 	uint8_t src_current, rv, offset, amount;
 	uint8_t bytes[8];
@@ -62,7 +62,7 @@ uint8_t application_function_twiread(application_parameters_t ap)
 
 uint8_t application_function_twireset(application_parameters_t ap)
 {
-	static const __flash char ok[] = "> TWI reset ok\n";
+	static const __flash uint8_t ok[] = "> TWI reset ok\n";
 
 	twi_master_recover();
 
@@ -73,7 +73,7 @@ uint8_t application_function_twireset(application_parameters_t ap)
 
 uint8_t application_function_twiwrite(application_parameters_t ap)
 {
-	static const __flash char fmt[] = "> TWI written %d bytes to %02x\n";
+	static const __flash uint8_t fmt[] = "> TWI written %d bytes to %02x\n";
 
 	uint8_t src_current, dst_current, rv;
 	uint8_t bytes[8];

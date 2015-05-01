@@ -25,7 +25,7 @@ void application_init_vfd(void)
 
 uint8_t application_function_dbr(application_parameters_t ap)
 {
-	static const __flash char ok[] = "> dbr %d\n";
+	static const __flash uint8_t ok[] = "> dbr %d\n";
 
 	static const uint8_t code_on[]		= { 0xfe, 'B', 0 };
 	static const uint8_t code_off[]		= { 0xfe, 'F' };
@@ -57,7 +57,7 @@ uint8_t application_function_dbr(application_parameters_t ap)
 uint8_t application_function_dclr(application_parameters_t ap)
 {
 	static const			uint8_t clr[]	= { 0xfe, 'X', 0 };
-	static const __flash	char ok[]		= "> dclr\n";
+	static const __flash	uint8_t ok[]	= "> dclr\n";
 
 	twi_master_send(0x28, strlen(clr), clr);
 	snprintf_P(ap.dst, ap.size, ok);
@@ -67,7 +67,7 @@ uint8_t application_function_dclr(application_parameters_t ap)
 
 uint8_t application_function_dshow(application_parameters_t ap)
 {
-	static const __flash char ok[] = "> dshow \"%s\"\n";
+	static const __flash uint8_t ok[] = "> dshow \"%s\"\n";
 
 	if(strlen(ap.cmdline) >= 6)
 	{
@@ -83,7 +83,7 @@ uint8_t application_function_dshow(application_parameters_t ap)
 
 uint8_t application_function_dhshw(application_parameters_t ap)
 {
-	static const __flash char ok[] = "> dhshw \"%s\"\n";
+	static const __flash uint8_t ok[] = "> dhshw \"%s\"\n";
 	static const uint8_t home[] = { 0xfe, 'H' };
 
 	if(strlen(ap.cmdline) >= 6)

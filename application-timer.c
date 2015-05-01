@@ -140,8 +140,8 @@ void application_periodic_timer(uint16_t missed_ticks)
 	}
 }
 
-static const __flash char output_ok[] = "> output(%s) %u (min)value %u speed %f max %u\n";
-static const __flash char output_error[] = "> invalid output %u\n";
+static const __flash uint8_t output_ok[] = "> output(%s) %u (min)value %u speed %f max %u\n";
+static const __flash uint8_t output_error[] = "> invalid output %u\n";
 
 uint8_t application_function_output_read(application_parameters_t ap)
 {

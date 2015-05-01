@@ -16,7 +16,7 @@ void application_init_sensor(void)
 
 uint8_t application_function_bg_write(application_parameters_t ap)
 {
-	static const __flash char ok[] = "> bandgap calibration set to %.4f V\n";
+	static const __flash uint8_t ok[] = "> bandgap calibration set to %.4f V\n";
 
 	float value;
 
@@ -32,17 +32,17 @@ uint8_t application_function_bg_write(application_parameters_t ap)
 
 uint8_t application_sensor_read(uint8_t sensor, uint16_t size, uint8_t *dst)
 {
-	static const __flash char format_temperature[]	= "%d/%s: temp [%.2f] C, (%ld)\n";
-	static const __flash char format_humidity[]		= "%d/%s: humidity [%.0f] %% (%ld)\n";
-	static const __flash char format_light[]		= "%d/%s: light [%.2f] Lux (%ld)\n";
-	static const __flash char format_airpressure[]	= "%d/%s: pressure [%.2f] hPa (%ld)\n";
-	static const __flash char twi_error[]			= "%d/%s: error: twi\n";
+	static const __flash uint8_t format_temperature[]	= "%d/%s: temp [%.2f] C, (%ld)\n";
+	static const __flash uint8_t format_humidity[]		= "%d/%s: humidity [%.0f] %% (%ld)\n";
+	static const __flash uint8_t format_light[]			= "%d/%s: light [%.2f] Lux (%ld)\n";
+	static const __flash uint8_t format_airpressure[]	= "%d/%s: pressure [%.2f] hPa (%ld)\n";
+	static const __flash uint8_t twi_error[]			= "%d/%s: error: twi\n";
 
-	const __flash char *format;
+	const __flash uint8_t *format;
 
-	float		value = 0, raw_value = 0;
-	uint8_t		twierror;
-	const char	*id;
+	float			value = 0, raw_value = 0;
+	uint8_t			twierror;
+	const uint8_t	*id;
 
 	switch(sensor)
 	{
@@ -201,7 +201,7 @@ twierror:
 
 uint8_t application_function_sensor_read(application_parameters_t ap)
 {
-	static const __flash char error[] = "> invalid sensor: %d\n";
+	static const __flash uint8_t error[] = "> invalid sensor: %d\n";
 
 	uint8_t sensor;
 
@@ -215,8 +215,8 @@ uint8_t application_function_sensor_read(application_parameters_t ap)
 
 uint8_t application_function_sensor_write(application_parameters_t ap)
 {
-	static const __flash char ok[]		= "> sensor %d calibration set to *=%.4f +=%.4f\n";
-	static const __flash char error[]	= "> no sensor %d\n";
+	static const __flash uint8_t ok[]		= "> sensor %d calibration set to *=%.4f +=%.4f\n";
+	static const __flash uint8_t error[]	= "> no sensor %d\n";
 
 	uint8_t sensor;
 	float factor, offset;

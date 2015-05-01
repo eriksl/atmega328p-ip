@@ -18,8 +18,8 @@ ISR(WDT_vect)
 
 int main(void)
 {
-	uint8_t receive_buffer[32];
-	uint8_t send_buffer[512];
+	uint8_t receive_buffer[64];
+	uint8_t send_buffer[768];
 	uint8_t ix;
 
 	cli();

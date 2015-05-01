@@ -22,7 +22,7 @@ static int resolve(const char * hostname, int port, struct sockaddr_in6 *saddr)
 	memset(&hints, 0, sizeof(hints));
 
 	hints.ai_family		=	AF_INET6;
-	hints.ai_socktype	=	SOCK_DGRAM;
+	hints.ai_socktype	=	SOCK_STREAM;
 	hints.ai_flags		=	AI_NUMERICSERV | AI_V4MAPPED;
 
 	if((s = getaddrinfo(hostname, service, &hints, &res)))

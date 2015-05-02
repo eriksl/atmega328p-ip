@@ -36,9 +36,9 @@ uint8_t application_function_dshow(application_parameters_t ap)
 {
     static const __flash char ok[] = "> dshow \"";
 
-    if(ap.cmdline_length >= 6)
+    if(strlen(ap.cmdline) >= 6)
     {
-		led_display_show_chunk(ap.cmdline_length - 6, &ap.cmdline[6]);
+		led_display_show_chunk(strlen(ap.cmdline) - 6, &ap.cmdline[6]);
 
 		strncpy_P((char *)ap.dst, ok, ap.size);
 		ap.size -= strlen(ok);

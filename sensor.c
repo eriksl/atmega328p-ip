@@ -20,9 +20,17 @@ enum
 	samples = 256
 };
 
+static uint16_t windmeter_rotations[2];
+static uint16_t windmeter_ticks[2];
+
 ISR(ADC_vect)
 {
 	adc_interrupts++;
+}
+
+ISR(PCINT1_vect)
+{
+	windmeter_rotations[0]++;
 }
 
 static uint16_t get_adc(void)
@@ -428,7 +436,7 @@ uint8_t sensor_read_tsl2560(float *value, float *raw_value)
 	else
 		*value = -1;
 
-	*raw_value = (uint16_t)(10000.0 * ch0) + (uint16_t)ch1;
+	*raw_value = 10000 * ch0 + ch1;
 
 	adjust(sensor_tsl2560, value);
 
@@ -625,4 +633,57 @@ uint8_t sensor_read_am2321_hum(float *value, float *raw_value)
 	adjust(sensor_am2321_humidity, value);
 
 	return(tme_ok);
+}
+
+void sensor_init_windmeter(void)
+{
+	windmeter_rotations[0] = 0;
+	windmeter_rotations[1] = 0;
+
+	windmeter_ticks[0] = 0;
+	windmeter_ticks[1] = 0;
+
+	PCMSK1 |= _BV(PCINT10);
+	PCICR |= _BV(PCIE1);
+}
+
+void sensor_periodic_windmeter(uint16_t missed_ticks)
+{
+	windmeter_ticks[0] += missed_ticks;
+
+	if(windmeter_ticks[0] > ((F_CPU >> 16) * 60)) // 60 seconds
+	{
+		PCMSK1 &= ~_BV(PCINT10);
+
+		windmeter_rotations[1] = windmeter_rotations[0];
+		windmeter_ticks[1] = windmeter_ticks[0];
+
+		windmeter_rotations[0] = 0;
+		windmeter_ticks[0] = 0;
+
+		PCMSK1 |= _BV(PCINT10);
+	}
+}
+
+void sensor_init(void)
+{
+	sensor_init_bandgap();
+	sensor_init_tsl2560();
+	sensor_init_bh1750();
+	sensor_init_windmeter();
+}
+
+void sensor_periodic(uint16_t missed_ticks)
+{
+	sensor_periodic_windmeter(missed_ticks);
+}
+
+void sensor_read_windmeter(float *value, float *raw_value)
+{
+	static const float ticks_per_second = (float)(F_CPU >> 16);
+
+	*raw_value = (float)windmeter_rotations[0];
+	*value = (float)(windmeter_rotations[1] >> 2) / ((float)windmeter_ticks[1] / ticks_per_second);
+
+	adjust(sensor_windmeter, value);
 }

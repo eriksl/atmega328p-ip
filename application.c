@@ -83,6 +83,12 @@ static const __flash application_function_table_t application_function_table[] =
 		"help (command)",
 	},
 	{
+		"outd",
+		0,
+		application_function_output_dump,
+		"dump all outputs"
+	},
+	{
 		"outr",
 		1,
 		application_function_output_read,
@@ -219,6 +225,9 @@ uint8_t application_content(const uint8_t *src, uint16_t size, uint8_t *dst)
 	uint8_t ws_skipped;
 	const application_function_table_t __flash *tableptr;
 
+	cmd_led_timeout = 10;
+	PORTD |= _BV(3);
+
 	*dst = '\0';
 
 	if(src[0] == '\0')
@@ -258,9 +267,6 @@ uint8_t application_content(const uint8_t *src, uint16_t size, uint8_t *dst)
 			src_current++;
 		}
 	}
-
-	cmd_led_timeout = 10;
-	PORTD |= _BV(3);
 
 	if(args_count == 0)
 		return(1);

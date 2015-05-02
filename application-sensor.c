@@ -9,9 +9,12 @@
 
 void application_init_sensor(void)
 {
-	sensor_init_bandgap();
-	sensor_init_tsl2560();
-	sensor_init_bh1750();
+	sensor_init();
+}
+
+void application_periodic_sensor(uint16_t missed_ticks)
+{
+	sensor_periodic(missed_ticks);
 }
 
 uint8_t application_function_bg_write(application_parameters_t ap)
@@ -36,6 +39,7 @@ uint8_t application_sensor_read(uint8_t sensor, uint16_t size, uint8_t *dst)
 	static const __flash uint8_t format_humidity[]		= "%d/%s: humidity [%.0f] %% (%ld)\n";
 	static const __flash uint8_t format_light[]			= "%d/%s: light [%.2f] Lux (%ld)\n";
 	static const __flash uint8_t format_airpressure[]	= "%d/%s: pressure [%.2f] hPa (%ld)\n";
+	static const __flash uint8_t format_windmeter[]		= "%d/%s: windspeed [%.1f] km/h (%ld)\n";
 	static const __flash uint8_t twi_error[]			= "%d/%s: error: twi\n";
 
 	const __flash uint8_t *format;
@@ -181,6 +185,16 @@ uint8_t application_sensor_read(uint8_t sensor, uint16_t size, uint8_t *dst)
 
 			if((twierror = sensor_read_am2321_hum(&value, &raw_value)))
 				goto twierror;
+
+			break;
+		}
+
+		case(sensor_windmeter):
+		{
+			id = "wind";
+			format = format_windmeter;
+
+			sensor_read_windmeter(&value, &raw_value);
 
 			break;
 		}

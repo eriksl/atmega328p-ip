@@ -40,7 +40,7 @@ fuse:
 					avrdude -v -c $(PROGRAMMER) -p $(MCU) $(PRGFLAGS) -U lfuse:w:$(LFUSE):m -U hfuse:w:$(HFUSE):m
 
 info:
-					avrdude -v -c $(PROGRAMMER) -p $(MCU) $(PRGFLAGS) -v
+					avrdude -c $(PROGRAMMER) -p $(MCU) $(PRGFLAGS) -v
 
 $(PROGRAM).o:		$(PROGRAM).c $(HEADERS)
 

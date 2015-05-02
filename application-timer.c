@@ -21,6 +21,8 @@ static output_t output[2] =
 	{ 0, 0, 0 },	// PWM OCR1B
 };
 
+#define sizeof_output (sizeof(output) / sizeof(output[0]))
+
 ISR(TIMER1_OVF_vect)
 {
 	t1_interrupts++;
@@ -51,6 +53,7 @@ static void setoutput(uint8_t entry, uint16_t value)
 			}
 			else
 			{
+				OCR1A	= 0;
 				TCCR1A	&= ~_BV(COM1A1);
 				PORTB	&= ~_BV(1);
 			}
@@ -66,6 +69,7 @@ static void setoutput(uint8_t entry, uint16_t value)
 			}
 			else
 			{
+				OCR1B	= 0;
 				TCCR1A	&= ~_BV(COM1B1);
 				PORTB	&= ~_BV(2);
 			}
@@ -79,7 +83,7 @@ void application_init_timer(void)
 {
 	PRR &= ~_BV(PRTIM1);
 
-	DDRB |= _BV(1) | _BV(2);	// b1=oc1a, b2=oc1b
+	DDRB |= _BV(1) | _BV(2); // b1=oc1a, b2=oc1b
 
 	TCCR1A	= _BV(WGM11);
 	TCCR1B	= _BV(WGM13)  | _BV(WGM12); // fast pwm, top = ICR1
@@ -143,25 +147,40 @@ void application_periodic_timer(uint16_t missed_ticks)
 static const __flash uint8_t output_ok[] = "> output(%s) %u (min)value %u speed %f max %u\n";
 static const __flash uint8_t output_error[] = "> invalid output %u\n";
 
+static uint16_t output_read(uint8_t entry, uint16_t size, uint8_t *dst)
+{
+	static const __flash uint8_t output_pwm_dynamic[]	= "> output %u pwm/dynamic %u %u-%u * %f\n";
+	static const __flash uint8_t output_pwm_static[]	= "> output %u pwm/static  %u\n";
+	static const __flash uint8_t output_normal[]		= "> output %u digital     %u\n";
+
+	uint16_t length;
+
+	if(entry < 2)
+	{
+		if(output[entry].speed != 0)
+			length = snprintf_P(dst, size, output_pwm_dynamic, entry, getoutput(entry), output[entry].min_value, output[entry].max_value, output[entry].speed);
+		else
+			length = snprintf_P(dst, size, output_pwm_static, entry, getoutput(entry));
+	}
+	else
+	{
+		if(entry < sizeof_output)
+			length = snprintf_P(dst, size, output_normal, entry, getoutput(entry));
+		else
+			length = snprintf_P(dst, size, output_error, entry);
+	}
+
+	return(length);
+}
+
 uint8_t application_function_output_read(application_parameters_t ap)
 {
-	uint8_t		entry;
-	float		speed;
-	uint16_t	minvalue, maxvalue;
+	uint8_t entry;
 
 	entry = (uint8_t)atoi((*ap.args)[1]);
 
-	if(entry > 1)
-	{
-		snprintf_P(ap.dst, ap.size, output_error, entry);
-		return(1);
-	}
+	output_read(entry, ap.size, ap.dst);
 
-	speed		= output[entry].speed;
-	minvalue	= getoutput(entry);
-	maxvalue	= output[entry].max_value;
-
-	snprintf_P(ap.dst, ap.size, output_ok, "pwm", entry, minvalue, speed, maxvalue);
 	return(1);
 }
 
@@ -178,6 +197,12 @@ uint8_t application_function_output_set(application_parameters_t ap)
 
 	entry = (uint8_t)atoi((*ap.args)[1]);
 
+	if(entry >= sizeof_output)
+	{
+		snprintf_P(ap.dst, ap.size, output_error, entry);
+		return(1);
+	}
+
 	if(ap.nargs > 2)
 		minvalue = (uint16_t)atoi((*ap.args)[2]);
 
@@ -187,18 +212,27 @@ uint8_t application_function_output_set(application_parameters_t ap)
 	if(ap.nargs > 4)
 		maxvalue = (uint16_t)atoi((*ap.args)[4]);
 
-	if(entry > 1)
-	{
-		snprintf_P(ap.dst, ap.size, output_error, entry);
-		return(1);
-	}
-
 	setoutput(entry, minvalue);
 	output[entry].speed		= speed;
 	output[entry].min_value	= minvalue;
 	output[entry].max_value	= maxvalue;
-	minvalue				= getoutput(entry);
 
-    snprintf_P(ap.dst, ap.size, output_ok, "pwm", entry, minvalue, speed, maxvalue);
+	output_read(entry, ap.size, ap.dst);
+
+	return(1);
+}
+
+uint8_t application_function_output_dump(application_parameters_t ap)
+{
+	uint8_t entry;
+	uint16_t length;
+
+	for(entry = 0; entry < sizeof_output; entry++)
+	{
+		length = output_read(entry, ap.size, ap.dst);
+		ap.dst	+= length;
+		ap.size	-= length;
+	}
+
 	return(1);
 }

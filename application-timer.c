@@ -159,7 +159,7 @@ void application_periodic_timer(uint16_t missed_ticks)
 
 uint8_t application_function_beep(application_parameters_t ap)
 {
-	static const __flash char ok[] = "> beep %u %u\n";
+	static const __flash uint8_t ok[] = "> beep %u %u\n";
 
 	beep_length = 60;
 	beep_period = 0;
@@ -183,9 +183,9 @@ static const __flash uint8_t output_error[] = "> invalid output %u\n";
 
 static uint16_t output_read(uint8_t entry, uint16_t size, uint8_t *dst)
 {
-	static const __flash char output_pwm_dynamic[]		= "> output %u pwm/dynamic %u %u-%u * %f\n";
-	static const __flash char output_pwm_static[]		= "> output %u pwm/static  %u\n";
-	static const __flash char output_normal[]			= "> output %u digital     %u\n";
+	static const __flash uint8_t output_pwm_dynamic[]	= "> output %u pwm/dynamic %u %u-%u * %f\n";
+	static const __flash uint8_t output_pwm_static[]	= "> output %u pwm/static  %u\n";
+	static const __flash uint8_t output_normal[]		= "> output %u digital     %u\n";
 
 	uint16_t length;
 

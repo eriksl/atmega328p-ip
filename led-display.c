@@ -130,7 +130,7 @@ void led_display_update(void)
 	uint8_t ix, length;
 	uint8_t twistring[6];
 
-	length = strlen((const char *)display_buffer);
+	length = strlen(display_buffer);
 
 	twistring[0] =	0x00;	// start at control register (0x00),
 							// followed by four digits segments registers (0x01-0x04)
@@ -175,7 +175,7 @@ void led_display_show_chunk(uint8_t length, const uint8_t *string)
 	uint8_t from, to;
 
 	from = 0;
-	to = strlen((const char *)display_buffer);
+	to = strlen(display_buffer);
 
 	while((from < length) && (to < sizeof(display_buffer)))
 	{
@@ -198,5 +198,5 @@ void led_display_show_chunk(uint8_t length, const uint8_t *string)
 
 void led_display_show(const uint8_t *string)
 {
-	led_display_show_chunk(strlen((const char *)string), string);
+	led_display_show_chunk(strlen(string), string);
 }

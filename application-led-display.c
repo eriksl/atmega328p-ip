@@ -9,45 +9,45 @@
 
 uint8_t application_function_dbr(application_parameters_t ap)
 {
-	static const __flash char ok[] = "> dbr %d\n";
+	static const __flash uint8_t ok[] = "> dbr %d\n";
     int16_t level;
 
-    level = atoi((const char *)(*ap.args)[1]);
+    level = atoi((*ap.args)[1]);
 
 	level = led_display_brightness(level);
 
-	snprintf_P((char *)ap.dst, ap.size, ok, level);
+	snprintf_P(ap.dst, ap.size, ok, level);
 
 	return(1);
 }
 
 uint8_t application_function_dclr(application_parameters_t ap)
 {
-    static const __flash char ok[] = "> dclr\n";
+    static const __flash uint8_t ok[] = "> dclr\n";
 
 	led_display_clear();
 
-    snprintf_P((char *)ap.dst, ap.size, ok);
+    snprintf_P(ap.dst, ap.size, ok);
 
     return(1);
 }
 
 uint8_t application_function_dshow(application_parameters_t ap)
 {
-    static const __flash char ok[] = "> dshow \"";
+    static const __flash uint8_t ok[] = "> dshow \"";
 
     if(strlen(ap.cmdline) >= 6)
     {
 		led_display_show_chunk(strlen(ap.cmdline) - 6, &ap.cmdline[6]);
 
-		strncpy_P((char *)ap.dst, ok, ap.size);
+		strncpy_P(ap.dst, ok, ap.size);
 		ap.size -= strlen(ok);
-		strncat((char *)ap.dst, (const char *)&ap.cmdline[6], ap.size);
-		ap.size -= strlen((const char *)&ap.cmdline[6]);
-		strncat((char *)ap.dst, "\"\n", ap.size);
+		strncat(ap.dst, &ap.cmdline[6], ap.size);
+		ap.size -= strlen(&ap.cmdline[6]);
+		strncat(ap.dst, "\"\n", ap.size);
     }
     else
-        snprintf_P((char *)ap.dst, ap.size, ok, "<error>");
+        snprintf_P(ap.dst, ap.size, ok, "<error>");
 
     return(1);
 }

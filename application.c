@@ -60,16 +60,16 @@ static const __flash application_function_table_t application_function_table[] =
 		"clear display",
 	},
 	{
-		"dshow",
-		0,
-		application_function_dshow,
-		"show text on display",
-	},
-	{
 		"dhshw",
 		0,
 		application_function_dhshw,
 		"show text/clear display",
+	},
+	{
+		"dshow",
+		0,
+		application_function_dshow,
+		"show text on display",
 	},
 	{
 		"edmp",
@@ -282,9 +282,6 @@ uint8_t application_content(const uint8_t *src, uint16_t size, uint8_t *dst)
 		}
 	}
 
-	cmd_led_timeout = 10;
-	PORTD |= _BV(3);
-
 	if(args_count == 0)
 		return(1);
 
@@ -318,7 +315,7 @@ uint8_t application_content(const uint8_t *src, uint16_t size, uint8_t *dst)
 static uint8_t application_function_edmp(application_parameters_t ap)
 {
 	static const __flash uint8_t format1[] = "> bg: %.3f\n";
-	static const __flash uint8_t format2[] = "> %d: *%.3f, +%.3f\n";
+	static const __flash uint8_t format2[] = "> sensor[%d]: factor %.3f, offset %.3f\n";
 
 	uint8_t index, offset;
 	float cfactor, coffset;

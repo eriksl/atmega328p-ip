@@ -37,9 +37,9 @@ uint8_t application_sensor_read(uint8_t sensor, uint16_t size, uint8_t *dst)
 {
 	static const __flash uint8_t format_temperature[]	= "%d/%s: temp [%.2f] C, (%ld)\n";
 	static const __flash uint8_t format_humidity[]		= "%d/%s: humidity [%.0f] %% (%ld)\n";
-	static const __flash uint8_t format_light[]		= "%d/%s: light [%.2f] Lux (%ld)\n";
+	static const __flash uint8_t format_light[]			= "%d/%s: light [%.2f] Lux (%ld)\n";
 	static const __flash uint8_t format_airpressure[]	= "%d/%s: pressure [%.2f] hPa (%ld)\n";
-	static const __flash uint8_t format_windmeter[]	= "%d/%s: windspeed [%.1f] km/h (%ld)\n";
+	static const __flash uint8_t format_windmeter[]		= "%d/%s: windspeed [%.1f] km/h (%ld)\n";
 	static const __flash uint8_t twi_error[]			= "%d/%s: error: twi\n";
 
 	const __flash uint8_t *format;

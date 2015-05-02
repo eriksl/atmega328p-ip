@@ -23,7 +23,7 @@ uint8_t application_function_dbr(application_parameters_t ap)
 
 uint8_t application_function_dclr(application_parameters_t ap)
 {
-    static const __flash char ok[]       = "> dclr\n";
+    static const __flash char ok[] = "> dclr\n";
 
 	led_display_clear();
 

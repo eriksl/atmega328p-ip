@@ -32,33 +32,31 @@ int main(void)
 	MCUCR	|= _BV(PUD);		//	disable pullups
 
 	DDRB	= 0;
-	DDRC	= _BV(3);
-	DDRD	= _BV(3) | _BV(6) | _BV(7);
+	DDRC	= _BV(3);					// esp reset
+	DDRD	= _BV(3) | _BV(6) | _BV(7);	// buzzer / activity 1 / activity 2
 
 	PORTB	= 0x00;
-	PORTC	= 0x00;
+	PORTC = _BV(3);				// release esp8266 from reset state
 	PORTD	= 0x00;
 
 	for(ix = 8; ix > 0; ix--)
 	{
-		PORTD |= _BV(3);
+		PORTD |= _BV(6);
 
 		msleep(50);
 
-		PORTD &= ~_BV(4);
+		PORTD &= ~_BV(7);
 
 		msleep(50);
 
-		PORTD |= _BV(4);
+		PORTD |= _BV(7);
 
 		msleep(50);
 
-		PORTD &= ~_BV(3);
+		PORTD &= ~_BV(6);
 
 		msleep(50);
 	}
-
-	PORTD = _BV(2);				// release esp8266 from reset
 
 	wdt_enable(WDTO_4S);
 	twi_master_init();

@@ -35,7 +35,7 @@ int main(void)
 
 	PORTB	= 0x00;
 	PORTC	= 0x00;
-	PORTD	= 0x00;
+	PORTD = _BV(2);				// release esp8266 from reset
 
 	for(ix = 8; ix > 0; ix--)
 	{
@@ -55,8 +55,6 @@ int main(void)
 
 		msleep(50);
 	}
-
-	PORTD = _BV(2);				// release esp8266 from reset
 
 	wdt_enable(WDTO_4S);
 	twi_master_init();
